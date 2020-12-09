@@ -1,0 +1,27 @@
+.axes {
+  text {
+    user-select: none;
+  }
+
+  line {
+    stroke-opacity: 0.6;
+    stroke: rgb(60, 60, 60);
+    stroke-width: 2px;
+    shape-rendering: crispEdges;
+  }
+}
+
+.container {
+  position: relative;
+
+  svg,
+  .linemap {
+    position: absolute;
+    background-color: transparent;
+  }
+
+  .linemap {
+    z-index: 100;
+    cursor: grab;
+  }
+}

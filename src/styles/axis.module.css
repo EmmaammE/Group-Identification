@@ -1,0 +1,5 @@
+.label {
+  text-anchor: left;
+  alignment-baseline: baseline;
+  fill: rgba(30, 30, 30, 0.3);
+}

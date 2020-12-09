@@ -1,0 +1,10 @@
+.scatters {
+  display: flex;
+  flex-wrap: wrap;
+
+  .scatter-wrapper {
+    width: 500px;
+    height: 350px;
+    margin: 10px;
+  }
+}
