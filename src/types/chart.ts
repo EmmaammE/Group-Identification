@@ -11,10 +11,12 @@ interface MariginConfig {
   t: number
 }
 
-export interface ChartProps {
+export interface ChartBasicProps {
   width: number,
   height: number,
+  margin: MariginConfig
+}
+export interface ChartProps extends ChartBasicProps{
   yaxis: AxisConfig,
   xaxis: AxisConfig,
-  margin: MariginConfig
 }

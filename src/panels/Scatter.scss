@@ -1,10 +1,11 @@
+.parallel,
 .scatters {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 50% auto;
+  grid-template-rows: 50% auto;
 
   .scatter-wrapper {
-    width: 500px;
-    height: 350px;
+    position: relative;
     margin: 10px;
   }
 }

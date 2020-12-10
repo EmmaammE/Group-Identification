@@ -39,7 +39,7 @@
     ],
     "react/jsx-props-no-spreading": 0,
     "no-unused-vars": 1,
-    "react/no-array-index-key": 1,
+    "react/no-array-index-key": 0,
     "no-bitwise": 0
   }
 }

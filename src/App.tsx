@@ -1,12 +1,13 @@
 import React from 'react';
 import './App.scss';
+import ParallelContainer from './panels/ParallelContainer';
 import ScatterplotContainer from './panels/ScatterplotContainer';
 
 function App() {
   return (
     <div className="App">
       <ScatterplotContainer />
-      <div className="column-2" />
+      <ParallelContainer />
     </div>
   );
 }

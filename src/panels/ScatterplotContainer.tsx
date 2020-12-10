@@ -6,9 +6,9 @@ import LABEL from '../assets/labels.json';
 import './Scatter.scss';
 
 const chartProps: ChartProps = {
-  width: 500,
+  width: 400,
   height: 350,
-  margin: { t: 25, r: 50, b: 50, l: 100 },
+  margin: { t: 25, r: 0, b: 50, l: 50 },
   // margin:{t: 0, r: 0, b: 0, l: 0},
   yaxis: {
     title: 'PC2',
