@@ -7,8 +7,8 @@ import './Scatter.scss';
 
 const chartProps: ChartProps = {
   width: 400,
-  height: 350,
-  margin: { t: 25, r: 0, b: 50, l: 50 },
+  height: 380,
+  margin: { t: 50, r: 0, b: 20, l: 50 },
   // margin:{t: 0, r: 0, b: 0, l: 0},
   yaxis: {
     title: 'PC2',
@@ -37,7 +37,7 @@ function ScatterplotContainer() {
           <Scatterplot
             chartConfig={chartProps}
             data={datum[index]}
-            render={0}
+            render={1}
           />
         </div>
       ))}

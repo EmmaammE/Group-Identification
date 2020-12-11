@@ -1,9 +1,19 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  Dispatch,
+} from 'react';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import * as d3 from 'd3';
 import ScatterplotProps from '../../types/scatter';
 import './Scatterplot.scss';
 import styles from '../../styles/axis.module.css';
 import tipStyles from '../../styles/tip.module.css';
+import lasso from '../../utils/lasso';
+import { setPoints } from '../../store/action';
+import { PointsState } from '../../types/point';
 
 function strokeType(type: string) {
   switch (type) {
@@ -51,6 +61,18 @@ function Scatterplot({
     d3.zoomIdentity.translate(0, 0).scale(1)
   );
 
+  const [select, setSelect] = useState<boolean>(false);
+  const selectPoints = useSelector(
+    (state: PointsState) => state.points,
+    shallowEqual
+  );
+
+  const dispatch: Dispatch<any> = useDispatch();
+  const saveSelectedPoints = React.useCallback(
+    (points) => dispatch(setPoints(points)),
+    [dispatch]
+  );
+
   useEffect(() => {
     if (data) {
       const extent = [
@@ -76,23 +98,28 @@ function Scatterplot({
   const drawPoints = useCallback(
     (sX: any, sY: any, k: number, ctx: CanvasRenderingContext2D) => {
       // points drawn to scales
-      const pointGen = d3.symbol().context(ctx);
+      // const pointGen = d3.symbol().context(ctx);
 
       // ctx.globalCompositeOperation = 'screen'
 
-      data.forEach((dat) => {
+      data.forEach((dat, index) => {
         const d = dat.pos;
         ctx.save();
         ctx.fillStyle = pointColor(dat.label);
-        ctx.translate(sX(d[0]), sY(d[1]));
+        ctx.moveTo(sX(d[0]), sY(d[1]));
         ctx.beginPath();
-        pointGen.size(50)(d);
+        // pointGen.size(50)(d);
+        ctx.arc(sX(d[0]), sY(d[1]), 3, 0, Math.PI * 2);
         ctx.closePath();
         ctx.fill();
+        if (selectPoints.iIndex.has(index)) {
+          ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+          ctx.stroke();
+        }
         ctx.restore();
       });
     },
-    [data]
+    [data, selectPoints.iIndex]
   );
 
   const drawLines = useCallback(
@@ -165,7 +192,7 @@ function Scatterplot({
   );
 
   const draw = useCallback(
-    (ctx: CanvasRenderingContext2D) => {
+    (ctx: CanvasRenderingContext2D, type: number = 1) => {
       if (domains.length > 0) {
         // 四舍五入到两位有效数字
         const xAxis = d3
@@ -174,13 +201,14 @@ function Scatterplot({
           .tickFormat(d3.format('.2g'));
         const yAxis = d3.axisLeft(yScale).ticks(5).tickFormat(d3.format('.2g'));
 
-        // draw axis
-        d3.select($xaxis.current).call(xAxis.scale(xScale));
-        d3.select($yaxis.current).call(yAxis.scale(yScale));
+        if (type) {
+          // draw axis
+          d3.select($xaxis.current).call(xAxis.scale(xScale));
+          d3.select($yaxis.current).call(yAxis.scale(yScale));
 
-        // clear
-        ctx.clearRect(0, 0, widthMap, heightMap);
-
+          // clear
+          ctx.clearRect(0, 0, widthMap, heightMap);
+        }
         // lines
         drawLines(xScale, yScale, t.k, ctx, xAxis, yAxis);
 
@@ -205,6 +233,57 @@ function Scatterplot({
 
   const chartctx = $chart.current && $chart.current.getContext('2d');
 
+  // drawlasso
+  const drawLasso = useCallback(
+    (polygon: any) => {
+      if (chartctx && select) {
+        const path = d3.geoPath().context(chartctx);
+
+        chartctx.clearRect(0, 0, width, height);
+        chartctx.beginPath();
+        path({
+          type: 'LineString',
+          coordinates: polygon,
+        });
+        chartctx.fillStyle = 'rgba(0,0,0,0.1)';
+        chartctx.fill('evenodd');
+        chartctx.lineWidth = 1.5;
+        chartctx.stroke();
+
+        const selected = new Map();
+
+        data.forEach((d, i) => {
+          if (
+            polygon.length > 2 &&
+            d3.polygonContains(polygon, [xScale(d.pos[0]), yScale(d.pos[1])])
+          ) {
+            selected.set(i, true);
+          }
+        });
+
+        chartctx.closePath();
+
+        draw(chartctx, 0);
+
+        return selected;
+      }
+      return new Map();
+    },
+    [chartctx, data, draw, height, select, width, xScale, yScale]
+  );
+
+  const drawLassoEnd = useCallback(
+    (polygon: any) => {
+      const s = drawLasso(polygon);
+      saveSelectedPoints({
+        oIndex: 0,
+        iIndex: s,
+      });
+      // console.log(s)
+    },
+    [drawLasso, saveSelectedPoints]
+  );
+
   useEffect(() => {
     if (chartctx) {
       chartctx.rect(1, 1, widthMap - 7, heightMap - 1);
@@ -217,10 +296,12 @@ function Scatterplot({
         .scaleExtent([0.9, 100])
         .duration(700)
         .on('zoom', ({ transform }) => {
-          chartctx.save();
-          setTransform(transform);
-          setTooltip(null);
-          chartctx.restore();
+          if (!select) {
+            chartctx.save();
+            setTransform(transform);
+            setTooltip(null);
+            chartctx.restore();
+          }
         });
 
       //  https://github.com/d3/d3-zoom/blob/84a5e7b08b28fc100f80a5facefe7d52d6354ee2/src/zoom.js#L303
@@ -237,45 +318,51 @@ function Scatterplot({
 
       $pointsSelect
         .on('mousemove', (event: any) => {
-          const m = d3.pointer(event);
-          const { k } = t;
-          // setup an array to push the points to when > 1 point matches... i.e. two line pts.
-          let tooltipData: any = null;
-          // get the "points" data
-          const minD: number = Number.MAX_VALUE;
-          data.forEach((dat) => {
-            const d = dat.pos;
-            const dx = xScale(d[0]) - m[0];
-            const dy = yScale(d[1]) - m[1];
+          if (!select) {
+            const m = d3.pointer(event);
+            const { k } = t;
+            // setup an array to push the points to when > 1 point matches... i.e. two line pts.
+            let tooltipData: any = null;
+            // get the "points" data
+            const minD: number = Number.MAX_VALUE;
+            data.forEach((dat) => {
+              const d = dat.pos;
+              const dx = xScale(d[0]) - m[0];
+              const dy = yScale(d[1]) - m[1];
 
-            // Check distance
-            const distance = Math.sqrt(dx ** 2 + dy ** 2);
-            if (
-              distance <= Math.sqrt(50) * (k > 1 ? k * 0.75 : k) &&
-              distance < minD
-            ) {
-              tooltipData = dat;
-            }
-          });
-          if (tooltipData !== null) {
-            const pxDat = [
-              ~~xScale(tooltipData.pos[0]),
-              ~~yScale(tooltipData.pos[1]),
-            ];
-
-            // console.log(pxDat[0], pxDat[1], "mouse:", m[0], m[1])
-            setTooltip({
-              x: pxDat[0],
-              y: pxDat[1],
-              info: tooltipData.label,
+              // Check distance
+              const distance = Math.sqrt(dx ** 2 + dy ** 2);
+              if (
+                distance <= Math.sqrt(50) * (k > 1 ? k * 0.75 : k) &&
+                distance < minD
+              ) {
+                tooltipData = dat;
+              }
             });
-          } else {
-            setTooltip(null);
+            if (tooltipData !== null) {
+              const pxDat = [
+                ~~xScale(tooltipData.pos[0]),
+                ~~yScale(tooltipData.pos[1]),
+              ];
+
+              // console.log(pxDat[0], pxDat[1], "mouse:", m[0], m[1])
+              setTooltip({
+                x: pxDat[0],
+                y: pxDat[1],
+                info: tooltipData.label,
+              });
+            } else {
+              setTooltip(null);
+            }
           }
         })
         .on('mouseout', () => {
           setTooltip(null);
         });
+
+      d3.select(chartctx.canvas).call(
+        lasso().on('start lasso', drawLasso).on('end', drawLassoEnd)
+      );
     }
   }, [
     $points,
@@ -291,10 +378,26 @@ function Scatterplot({
     t,
     xScale,
     yScale,
+    drawLasso,
+    select,
+    drawLassoEnd,
   ]);
+
+  const toSelect = () => {
+    setSelect(!select);
+  };
 
   return (
     <div className="container">
+      <button
+        type="button"
+        onClick={toSelect}
+        style={{
+          color: select ? '#f00' : '#000',
+        }}
+      >
+        select
+      </button>
       <svg width={width} height={height}>
         <clipPath id="myClip">
           <rect width={widthMap} height={heightMap} />
