@@ -6,3 +6,9 @@
 body {
   overflow-x: hidden;
 }
+
+.axes {
+  text {
+    user-select: none;
+  }
+}
