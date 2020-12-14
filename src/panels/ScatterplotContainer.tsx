@@ -4,11 +4,12 @@ import { ChartProps } from '../types/chart';
 import CPCA from '../assets/cpca.json';
 import LABEL from '../assets/labels.json';
 import './Scatter.scss';
+import { DataItem } from '../types/data';
 
 const chartProps: ChartProps = {
   width: 400,
   height: 380,
-  margin: { t: 50, r: 0, b: 20, l: 50 },
+  margin: { t: 50, r: 10, b: 20, l: 50 },
   // margin:{t: 0, r: 0, b: 0, l: 0},
   yaxis: {
     title: 'PC2',
@@ -22,10 +23,12 @@ const chartProps: ChartProps = {
   },
 };
 
-const datum = CPCA.map((data) =>
+let id = 0;
+const datum: Array<DataItem[]> = CPCA.map((data) =>
   data.map((d, i) => ({
-    pos: d,
+    id: id++,
     label: LABEL[i],
+    pos: d,
   }))
 );
 
@@ -38,6 +41,7 @@ function ScatterplotContainer() {
             chartConfig={chartProps}
             data={datum[index]}
             render={1}
+            oIndex={index}
           />
         </div>
       ))}

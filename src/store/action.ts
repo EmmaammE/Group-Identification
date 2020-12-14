@@ -1,8 +1,8 @@
-import {PointsState, PointAction} from '../types/point';
+import {PointsState, PointAction, IPoints} from '../types/point';
 
 export const SET_POINTS = "SET_POINTS";
 
-export function setPoints(points: PointsState) {
+export function setPoints(points: IPoints) {
   const action: PointAction = {
     type: SET_POINTS,
     points,

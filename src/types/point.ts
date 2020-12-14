@@ -1,9 +1,11 @@
+import { type } from "os"
+
 /* eslint-disable no-unused-vars */
-export interface IPoints {
-  // 第几个数据源
-  oIndex: number
-  // 第几个点
-  iIndex: Map<number, boolean>,
+export type IPoints = {
+  // // 第几个数据源, 第几个点
+  // oIndex: number,
+  // iIndex: Map<number, boolean>
+  [key: number]: Map<number, boolean>
 }
 
 export interface PointsState {
@@ -12,7 +14,7 @@ export interface PointsState {
 
 export type PointAction = {
   type: string,
-  points: PointsState
+  points: IPoints
 }
 
 export type PointsDispatchType = (args: PointAction) => PointAction;

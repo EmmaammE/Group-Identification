@@ -1,4 +1,5 @@
 import React, {
+  Dispatch,
   useCallback,
   useEffect,
   useMemo,
@@ -6,17 +7,23 @@ import React, {
   useState,
 } from 'react';
 import * as d3 from 'd3';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { ChartBasicProps } from '../../types/chart';
+import { setPoints } from '../../store/action';
+import { PointsState } from '../../types/point';
+import { DataItem } from '../../types/data';
 
 interface ParallelProps {
   chartConfig: ChartBasicProps;
   dimensions: string[];
-  datum: Object[];
+  datum: DataItem[];
+  oIndex: number;
 }
 interface ActiveItem {
   dimension: number;
   extent: [number, number];
 }
+
 const color = d3
   .scaleOrdinal()
   .domain(['0', '1'])
@@ -26,6 +33,7 @@ export default function Parallel({
   chartConfig: { width, height, margin },
   dimensions,
   datum,
+  oIndex,
 }: ParallelProps) {
   const widthMap: number = width - margin.l - margin.r;
   const heightMap: number = height - margin.t - margin.b;
@@ -38,6 +46,17 @@ export default function Parallel({
 
   const [selected, setSelected] = useState<string>('');
   const [actives, setActives] = useState<Array<ActiveItem> | []>([]);
+
+  const selectPoints = useSelector(
+    (state: PointsState) => state.points,
+    shallowEqual
+  );
+
+  const dispatch: Dispatch<any> = useDispatch();
+  const saveSelectedPoints = React.useCallback(
+    (points) => dispatch(setPoints(points)),
+    [dispatch]
+  );
 
   const brush = useCallback(() => {
     const activesT: Array<ActiveItem> = [];
@@ -58,8 +77,25 @@ export default function Parallel({
         }
       });
 
-    setActives(activesT);
-  }, [yScales]);
+    if (activesT.length > 0) {
+      const points = new Map();
+
+      datum.forEach((dat) => {
+        const isActive = activesT.every((active) => {
+          const value = (dat as any)[active.dimension];
+          return active.extent[0] >= value && active.extent[1] <= value;
+        });
+        if (isActive) {
+          points.set(dat.id, true);
+        }
+      });
+
+      saveSelectedPoints({
+        [oIndex]: points,
+      });
+      setActives(activesT);
+    }
+  }, [datum, oIndex, saveSelectedPoints, yScales]);
 
   const brushes = useMemo(
     () =>
@@ -146,18 +182,23 @@ export default function Parallel({
             setSelected('');
           });
       })
-      .on('dblclick', () => {
+      .on('dblclick', (e) => {
         d3.select($axis.current)
           .selectAll('g.brush')
           .each(function cancle(d, i) {
             d3.select(this)
               .transition()
-              .call((brushes[i] as any).move, null);
+              .call((brushes[i] as any).move, null)
+              .on('end', () => {
+                setActives([]);
+                saveSelectedPoints({
+                  [oIndex]: new Map(),
+                });
+              });
           });
-
-        setActives([]);
-      });
-  }, [$lines, actives.length, brushes]);
+      })
+      .on('dblclick.zoom', null);
+  }, [$lines, actives.length, brushes, oIndex, saveSelectedPoints]);
 
   // draw axis and brush
   useEffect(() => {
@@ -172,10 +213,25 @@ export default function Parallel({
 
       $axisSelect
         .append('g')
+        .attr('class', 'brush')
+        .each(function drawBrush(d, i) {
+          d3.select(this).call(brushes[i] as any);
+        });
+
+      $axisSelect
+        .append('g')
         .attr('class', 'axis')
         .each(function drawAxis(d) {
           const axis = d3.axisLeft(yScales[d]).ticks(5);
-          d3.select(this).call(axis.scale(yScales[d]));
+          d3.select(this)
+            .call(axis.scale(yScales[d]))
+            .call((g) => g.select('.domain').remove())
+            .call((g) =>
+              g
+                .selectAll('.tick:not(:first-of-type) line')
+                .attr('stroke-opacity', 0.5)
+                .attr('stroke-dasharray', '0,25')
+            );
         })
         .append('text')
         .style('text-anchor', 'middle')
@@ -183,12 +239,7 @@ export default function Parallel({
         .text((d) => d)
         .style('fill', 'black');
 
-      $axisSelect
-        .append('g')
-        .attr('class', 'brush')
-        .each(function drawBrush(d, i) {
-          d3.select(this).call(brushes[i] as any);
-        });
+      $axisSelect.on('dblclick.zoom', null);
     }
   }, [$axis, brush, brushes, dimensions, heightMap, xScale, yScales]);
 
@@ -203,28 +254,27 @@ export default function Parallel({
     );
   }
 
-  const getOpacity = (label: string) => {
-    if (selected === '') {
-      return 0.5;
-    }
-    return label === selected ? 1 : 0.3;
-  };
+  const getStyle = ({ label, ...data }: { [key: string]: any }): object => {
+    const pointsMap = selectPoints[oIndex];
+    const hasBrush = pointsMap && pointsMap.size > 0;
 
-  const getColor = ({ label, ...data }: { [key: string]: any }): string => {
-    const isActive = actives.every((active) => {
-      const value = (data as any)[active.dimension];
-      return active.extent[0] >= value && active.extent[1] <= value;
-    });
+    const defaultStyle = { stroke: '#333', opacity: 0.2 };
 
-    const isSelected =
-      actives.length === 0 && (selected === '' || label === selected);
-
-    if (isActive || isSelected) {
-      return color(label) as string;
+    if (hasBrush) {
+      const isActive = pointsMap.has(data.id);
+      if (isActive) {
+        return { stroke: color(label) as string, opacity: 1 };
+      }
+      return defaultStyle;
     }
 
-    return '#333';
-    // TODO 转换为index
+    const isSelected = selected === '' || label === selected;
+
+    if (isSelected) {
+      return { stroke: color(label) as string, opacity: 0.5 };
+    }
+
+    return { stroke: '#333', opacity: 0.2 };
   };
 
   return (
@@ -237,8 +287,7 @@ export default function Parallel({
                 key={index}
                 className={d.label}
                 fill="none"
-                opacity={getOpacity(`${d.label}`)}
-                stroke={getColor(d)}
+                {...getStyle(d)}
                 d={path(d) as string}
                 style={{
                   transition: 'opacity 300ms ease-in-out',
@@ -247,6 +296,17 @@ export default function Parallel({
             ))}
         </g>
         <g ref={$axis} />
+        {dimensions.map((d) => (
+          <line
+            x1={xScale(d)}
+            x2={xScale(d)}
+            y1={heightMap}
+            y2={-10}
+            stroke="rgba(0,0,0,0.8)"
+            markerEnd="url(#arrow)"
+            markerStart="url(#arrow-end)"
+          />
+        ))}
       </g>
     </svg>
   );

@@ -1,11 +1,9 @@
+import { bindActionCreators } from 'redux';
 import {PointsState, PointAction} from '../types/point';
 import {SET_POINTS} from './action'
 
 const initialState = {
-  points: {
-    oIndex: 0,
-    iIndex: new Map
-  }
+  points: {}
 }
 
 const reducer = (
@@ -14,12 +12,10 @@ const reducer = (
 ): PointsState => {
   switch (action.type) {
     case SET_POINTS: {
-        return  {
-          ...state,
-          points: action.points as any
-        }
-      }
-      
+      console.log(action.points)
+      const pointsT = {...state.points, ...action.points};
+      return { ...state, ...{ points: pointsT}}
+    }
     default:
       return state
   }

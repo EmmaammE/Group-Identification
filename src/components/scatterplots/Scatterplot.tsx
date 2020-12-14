@@ -14,6 +14,7 @@ import tipStyles from '../../styles/tip.module.css';
 import lasso from '../../utils/lasso';
 import { setPoints } from '../../store/action';
 import { PointsState } from '../../types/point';
+import Triangle from '../markers/Triangle';
 
 function strokeType(type: string) {
   switch (type) {
@@ -29,7 +30,7 @@ function strokeType(type: string) {
   }
 }
 
-function pointColor(label: number) {
+function pointColor(label: number | string) {
   return label ? 'rgba(84, 122, 167, .7)' : 'rgba(216, 85, 88, .7)';
 }
 
@@ -43,6 +44,7 @@ function Scatterplot({
   chartConfig: { width, height, yaxis, xaxis, margin },
   data,
   render,
+  oIndex,
 }: ScatterplotProps) {
   const widthMap: number = width - margin.l - margin.r;
   const heightMap: number = height - margin.t - margin.b;
@@ -81,7 +83,7 @@ function Scatterplot({
       ];
 
       data.forEach((d) => {
-        d.pos.forEach((v, i) => {
+        d.pos.forEach((v: number, i: number) => {
           if (v < extent[i][0]) {
             extent[i][0] = v;
           }
@@ -102,24 +104,29 @@ function Scatterplot({
 
       // ctx.globalCompositeOperation = 'screen'
 
-      data.forEach((dat, index) => {
+      const pointsMap = selectPoints[oIndex];
+
+      // console.log('drawPoint', pointsMap)
+
+      data.forEach((dat) => {
         const d = dat.pos;
         ctx.save();
         ctx.fillStyle = pointColor(dat.label);
         ctx.moveTo(sX(d[0]), sY(d[1]));
         ctx.beginPath();
+
         // pointGen.size(50)(d);
         ctx.arc(sX(d[0]), sY(d[1]), 3, 0, Math.PI * 2);
         ctx.closePath();
         ctx.fill();
-        if (selectPoints.iIndex.has(index)) {
+        if (pointsMap && pointsMap.has(dat.id)) {
           ctx.strokeStyle = 'rgba(0,0,0,0.5)';
           ctx.stroke();
         }
         ctx.restore();
       });
     },
-    [data, selectPoints.iIndex]
+    [data, oIndex, selectPoints]
   );
 
   const drawLines = useCallback(
@@ -203,9 +210,26 @@ function Scatterplot({
 
         if (type) {
           // draw axis
-          d3.select($xaxis.current).call(xAxis.scale(xScale));
-          d3.select($yaxis.current).call(yAxis.scale(yScale));
+          d3.select($xaxis.current)
+            .call(xAxis.scale(xScale))
+            .call((g) => g.select('.domain').remove())
+            // .call(g => g.select('.domain').append('line').style('marker-end', "url(#hTriangle)"))
+            .call((g) =>
+              g
+                .selectAll('.tick:not(:first-of-type) line')
+                .attr('stroke-opacity', 0.5)
+                .attr('stroke-dasharray', '0,25')
+            );
 
+          d3.select($yaxis.current)
+            .call(yAxis.scale(yScale))
+            .call((g) => g.select('.domain').remove())
+            .call((g) =>
+              g
+                .selectAll('.tick:not(:first-of-type) line')
+                .attr('stroke-opacity', 0.5)
+                .attr('stroke-dasharray', '0,25')
+            );
           // clear
           ctx.clearRect(0, 0, widthMap, heightMap);
         }
@@ -252,12 +276,12 @@ function Scatterplot({
 
         const selected = new Map();
 
-        data.forEach((d, i) => {
+        data.forEach((d) => {
           if (
             polygon.length > 2 &&
             d3.polygonContains(polygon, [xScale(d.pos[0]), yScale(d.pos[1])])
           ) {
-            selected.set(i, true);
+            selected.set(d.id, true);
           }
         });
 
@@ -276,12 +300,11 @@ function Scatterplot({
     (polygon: any) => {
       const s = drawLasso(polygon);
       saveSelectedPoints({
-        oIndex: 0,
-        iIndex: s,
+        [oIndex]: s,
       });
       // console.log(s)
     },
-    [drawLasso, saveSelectedPoints]
+    [drawLasso, oIndex, saveSelectedPoints]
   );
 
   useEffect(() => {
@@ -300,6 +323,9 @@ function Scatterplot({
             chartctx.save();
             setTransform(transform);
             setTooltip(null);
+            saveSelectedPoints({
+              [oIndex]: new Map(),
+            });
             chartctx.restore();
           }
         });
@@ -381,6 +407,8 @@ function Scatterplot({
     drawLasso,
     select,
     drawLassoEnd,
+    saveSelectedPoints,
+    oIndex,
   ]);
 
   const toSelect = () => {
@@ -389,16 +417,11 @@ function Scatterplot({
 
   return (
     <div className="container">
-      <button
-        type="button"
-        onClick={toSelect}
-        style={{
-          color: select ? '#f00' : '#000',
-        }}
-      >
-        select
-      </button>
       <svg width={width} height={height}>
+        <defs>
+          <Triangle />
+        </defs>
+
         <clipPath id="myClip">
           <rect width={widthMap} height={heightMap} />
         </clipPath>
@@ -410,6 +433,22 @@ function Scatterplot({
             ref={$xaxis}
           />
           <g className="axes y-axis" ref={$yaxis} />
+          <line
+            x1={0}
+            x2={widthMap + 5}
+            y1={heightMap}
+            y2={heightMap}
+            stroke="rgba(0,0,0,0.8)"
+            markerEnd="url(#arrow)"
+          />
+          <line
+            x1={0}
+            x2={0}
+            y1={heightMap}
+            y2={-10}
+            stroke="rgba(0,0,0,0.8)"
+            markerEnd="url(#arrow)"
+          />
           <text className={styles.label} x={heightMap / 13} y={heightMap - 5}>
             {xaxis.title}
           </text>
@@ -456,6 +495,16 @@ function Scatterplot({
           {tip.info}
         </div>
       )}
+
+      <button
+        type="button"
+        onClick={toSelect}
+        style={{
+          color: select ? '#f00' : '#000',
+        }}
+      >
+        select
+      </button>
     </div>
   );
 }

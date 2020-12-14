@@ -1,9 +1,12 @@
 import { ChartProps } from "./chart";
-import { Data } from "./data";
+import { DataItem } from "./data";
 
 export default interface ScatterplotProps {
   chartConfig: ChartProps,
-  data: Data[],
+  data: DataItem[],
+  oIndex: number
   // 0：svg  1: canvas
-  render: number
+  render: number,
+  pos?: [number, number]
+  [key: string]: any,
 }
