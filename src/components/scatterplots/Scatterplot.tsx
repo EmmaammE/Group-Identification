@@ -45,6 +45,7 @@ function Scatterplot({
   data,
   render,
   oIndex,
+  dimensions,
 }: ScatterplotProps) {
   const widthMap: number = width - margin.l - margin.r;
   const heightMap: number = height - margin.t - margin.b;
@@ -83,7 +84,8 @@ function Scatterplot({
       ];
 
       data.forEach((d) => {
-        d.pos.forEach((v: number, i: number) => {
+        dimensions.forEach((key: string, i: number) => {
+          const v: number = d[key];
           if (v < extent[i][0]) {
             extent[i][0] = v;
           }
@@ -95,7 +97,7 @@ function Scatterplot({
 
       setDomains(extent);
     }
-  }, [data]);
+  }, [data, dimensions]);
 
   const drawPoints = useCallback(
     (sX: any, sY: any, k: number, ctx: CanvasRenderingContext2D) => {
@@ -109,7 +111,7 @@ function Scatterplot({
       // console.log('drawPoint', pointsMap)
 
       data.forEach((dat) => {
-        const d = dat.pos;
+        const d = dimensions.map((name: string) => dat[name]);
         ctx.save();
         ctx.fillStyle = pointColor(dat.label);
         ctx.moveTo(sX(d[0]), sY(d[1]));
@@ -126,7 +128,7 @@ function Scatterplot({
         ctx.restore();
       });
     },
-    [data, oIndex, selectPoints]
+    [data, dimensions, oIndex, selectPoints]
   );
 
   const drawLines = useCallback(
@@ -261,6 +263,9 @@ function Scatterplot({
   const drawLasso = useCallback(
     (polygon: any) => {
       if (chartctx && select) {
+        const xkey = dimensions[0];
+        const ykey = dimensions[1];
+
         const path = d3.geoPath().context(chartctx);
 
         chartctx.clearRect(0, 0, width, height);
@@ -279,7 +284,7 @@ function Scatterplot({
         data.forEach((d) => {
           if (
             polygon.length > 2 &&
-            d3.polygonContains(polygon, [xScale(d.pos[0]), yScale(d.pos[1])])
+            d3.polygonContains(polygon, [xScale(d[xkey]), yScale(d[ykey])])
           ) {
             selected.set(d.id, true);
           }
@@ -293,7 +298,7 @@ function Scatterplot({
       }
       return new Map();
     },
-    [chartctx, data, draw, height, select, width, xScale, yScale]
+    [chartctx, data, dimensions, draw, height, select, width, xScale, yScale]
   );
 
   const drawLassoEnd = useCallback(
@@ -352,9 +357,8 @@ function Scatterplot({
             // get the "points" data
             const minD: number = Number.MAX_VALUE;
             data.forEach((dat) => {
-              const d = dat.pos;
-              const dx = xScale(d[0]) - m[0];
-              const dy = yScale(d[1]) - m[1];
+              const dx = xScale(dat[dimensions[0]]) - m[0];
+              const dy = yScale(dat[dimensions[1]]) - m[1];
 
               // Check distance
               const distance = Math.sqrt(dx ** 2 + dy ** 2);
@@ -367,8 +371,8 @@ function Scatterplot({
             });
             if (tooltipData !== null) {
               const pxDat = [
-                ~~xScale(tooltipData.pos[0]),
-                ~~yScale(tooltipData.pos[1]),
+                ~~xScale(tooltipData[dimensions[0]]),
+                ~~yScale(tooltipData[dimensions[1]]),
               ];
 
               // console.log(pxDat[0], pxDat[1], "mouse:", m[0], m[1])
@@ -409,6 +413,7 @@ function Scatterplot({
     drawLassoEnd,
     saveSelectedPoints,
     oIndex,
+    dimensions,
   ]);
 
   const toSelect = () => {
@@ -466,8 +471,8 @@ function Scatterplot({
                 data.map((dat, i) => (
                   <circle
                     key={i}
-                    cx={xScale(dat.pos[0])}
-                    cy={yScale(dat.pos[1])}
+                    cx={xScale(dat.dimensions[0])}
+                    cy={yScale(dat.dimensions[1])}
                     r={3}
                     fill={pointColor(dat.label)}
                   />

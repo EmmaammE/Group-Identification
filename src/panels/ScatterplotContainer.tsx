@@ -28,7 +28,9 @@ const datum: Array<DataItem[]> = CPCA.map((data) =>
   data.map((d, i) => ({
     id: id++,
     label: LABEL[i],
-    pos: d,
+    // pos: d,
+    PC1: d[0],
+    PC2: d[1],
   }))
 );
 
@@ -42,6 +44,7 @@ function ScatterplotContainer() {
             data={datum[index]}
             render={1}
             oIndex={index}
+            dimensions={['PC1', 'PC2']}
           />
         </div>
       ))}
