@@ -12,10 +12,11 @@ const chartProps: ChartBasicProps = {
 };
 
 let id = 0;
-const datum: Array<DataItem[]> = CPCA.map((data) =>
+const datum: Array<DataItem[]> = CPCA.map((data, j) =>
   data.map((d, i) => ({
     id: id++,
     label: LABEL[i],
+    dataIndex: j,
     PC1: d[0],
     PC2: d[1],
   }))
@@ -24,12 +25,13 @@ const datum: Array<DataItem[]> = CPCA.map((data) =>
 export default function ParallelContainer() {
   return (
     <div className="parallel">
-      {Array.from({ length: 4 }, (v, i) => i).map((d, index) => (
+      {Array.from({ length: 2 }, (v, i) => i).map((d, index) => (
         <Parallel
           key={index}
           chartConfig={chartProps}
           dimensions={['PC1', 'PC2']}
-          datum={datum[index]}
+          // datum={datum[index]}
+          datum={[...datum[index * 2], ...datum[index * 2 + 1]]}
           oIndex={index}
         />
       ))}

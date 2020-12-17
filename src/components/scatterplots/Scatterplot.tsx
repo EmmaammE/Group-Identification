@@ -1,12 +1,15 @@
+/* eslint-disable no-nested-ternary */
 import React, {
   useState,
   useRef,
   useEffect,
   useCallback,
   Dispatch,
+  useMemo,
 } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import * as d3 from 'd3';
+import { zoom } from 'd3';
 import ScatterplotProps from '../../types/scatter';
 import './Scatterplot.scss';
 import styles from '../../styles/axis.module.css';
@@ -15,6 +18,7 @@ import lasso from '../../utils/lasso';
 import { setPoints } from '../../store/action';
 import { PointsState } from '../../types/point';
 import Triangle from '../markers/Triangle';
+import ConvexHull from './ConvexHull';
 
 function strokeType(type: string) {
   switch (type) {
@@ -30,8 +34,11 @@ function strokeType(type: string) {
   }
 }
 
-function pointColor(label: number | string) {
-  return label ? 'rgba(84, 122, 167, .7)' : 'rgba(216, 85, 88, .7)';
+function pointColor(label: number | string, opacity: number) {
+  // return label ? `rgba(84, 124, 124, ${opacity})` : `rgba(216, 85, 88, ${opacity})`;
+  return label
+    ? `rgba(84, 122, 167, ${opacity})`
+    : `rgba(216, 85, 88, ${opacity})`;
 }
 
 interface TooltipData {
@@ -76,6 +83,12 @@ function Scatterplot({
     [dispatch]
   );
 
+  const [dataIndex, setDataIndex] = useState<number>(-1);
+  const [merge, setMerge] = useState<boolean>(false);
+
+  // 0 x 1 y 2 both
+  const [zoomFlag, setZoomflag] = useState<number>(1);
+
   useEffect(() => {
     if (data) {
       const extent = [
@@ -83,15 +96,17 @@ function Scatterplot({
         [Number.MAX_VALUE, Number.MIN_VALUE],
       ];
 
-      data.forEach((d) => {
-        dimensions.forEach((key: string, i: number) => {
-          const v: number = d[key];
-          if (v < extent[i][0]) {
-            extent[i][0] = v;
-          }
-          if (v > extent[i][1]) {
-            extent[i][1] = v;
-          }
+      data.forEach((darray) => {
+        darray.forEach((d) => {
+          dimensions.forEach((key: string, i: number) => {
+            const v: number = d[key];
+            if (v < extent[i][0]) {
+              extent[i][0] = v;
+            }
+            if (v > extent[i][1]) {
+              extent[i][1] = v;
+            }
+          });
         });
       });
 
@@ -110,25 +125,32 @@ function Scatterplot({
 
       // console.log('drawPoint', pointsMap)
 
-      data.forEach((dat) => {
-        const d = dimensions.map((name: string) => dat[name]);
-        ctx.save();
-        ctx.fillStyle = pointColor(dat.label);
-        ctx.moveTo(sX(d[0]), sY(d[1]));
-        ctx.beginPath();
+      const flag = dataIndex !== -1;
 
-        // pointGen.size(50)(d);
-        ctx.arc(sX(d[0]), sY(d[1]), 3, 0, Math.PI * 2);
-        ctx.closePath();
-        ctx.fill();
-        if (pointsMap && pointsMap.has(dat.id)) {
-          ctx.strokeStyle = 'rgba(0,0,0,0.5)';
-          ctx.stroke();
-        }
-        ctx.restore();
+      data.forEach((darray, index) => {
+        darray.forEach((dat) => {
+          const d = dimensions.map((name: string) => dat[name]);
+          ctx.save();
+          ctx.fillStyle = pointColor(
+            dat.label,
+            flag ? (index === dataIndex ? 0.7 : 0.1) : 0.7
+          );
+          ctx.moveTo(sX(d[0]), sY(d[1]));
+          ctx.beginPath();
+
+          // pointGen.size(50)(d);
+          ctx.arc(sX(d[0]), sY(d[1]), 3, 0, Math.PI * 2);
+          ctx.closePath();
+          ctx.fill();
+          if (pointsMap && pointsMap.has(dat.id)) {
+            ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+            ctx.stroke();
+          }
+          ctx.restore();
+        });
       });
     },
-    [data, dimensions, oIndex, selectPoints]
+    [data, dataIndex, dimensions, oIndex, selectPoints]
   );
 
   const drawLines = useCallback(
@@ -184,21 +206,35 @@ function Scatterplot({
     [heightMap, widthMap, xaxis.grid, yaxis.grid]
   );
 
-  const xScale = t.rescaleX(
-    d3
-      .scaleLinear()
-      .range([0, widthMap])
-      .domain(domains[0] || [])
-      .nice()
-  );
+  const xScale =
+    zoomFlag !== 1
+      ? t.rescaleX(
+          d3
+            .scaleLinear()
+            .range([0, widthMap])
+            .domain(domains[0] || [])
+            .nice()
+        )
+      : d3
+          .scaleLinear()
+          .range([0, widthMap])
+          .domain(domains[0] || [])
+          .nice();
 
-  const yScale = t.rescaleY(
-    d3
-      .scaleLinear()
-      .range([heightMap, 0])
-      .domain(domains[1] || [])
-      .nice()
-  );
+  const yScale =
+    zoomFlag !== 0
+      ? t.rescaleY(
+          d3
+            .scaleLinear()
+            .range([heightMap, 0])
+            .domain(domains[1] || [])
+            .nice()
+        )
+      : d3
+          .scaleLinear()
+          .range([0, widthMap])
+          .domain(domains[0] || [])
+          .nice();
 
   const draw = useCallback(
     (ctx: CanvasRenderingContext2D, type: number = 1) => {
@@ -281,13 +317,15 @@ function Scatterplot({
 
         const selected = new Map();
 
-        data.forEach((d) => {
-          if (
-            polygon.length > 2 &&
-            d3.polygonContains(polygon, [xScale(d[xkey]), yScale(d[ykey])])
-          ) {
-            selected.set(d.id, true);
-          }
+        data.forEach((darray) => {
+          darray.forEach((d) => {
+            if (
+              polygon.length > 2 &&
+              d3.polygonContains(polygon, [xScale(d[xkey]), yScale(d[ykey])])
+            ) {
+              selected.set(d.id, true);
+            }
+          });
         });
 
         chartctx.closePath();
@@ -356,20 +394,25 @@ function Scatterplot({
             let tooltipData: any = null;
             // get the "points" data
             const minD: number = Number.MAX_VALUE;
-            data.forEach((dat) => {
-              const dx = xScale(dat[dimensions[0]]) - m[0];
-              const dy = yScale(dat[dimensions[1]]) - m[1];
+            data.forEach((darray, index) => {
+              darray.forEach((dat) => {
+                const dx = xScale(dat[dimensions[0]]) - m[0];
+                const dy = yScale(dat[dimensions[1]]) - m[1];
 
-              // Check distance
-              const distance = Math.sqrt(dx ** 2 + dy ** 2);
-              if (
-                distance <= Math.sqrt(50) * (k > 1 ? k * 0.75 : k) &&
-                distance < minD
-              ) {
-                tooltipData = dat;
-              }
+                // Check distance
+                const distance = Math.sqrt(dx ** 2 + dy ** 2);
+                if (
+                  distance <= Math.sqrt(50) * (k > 1 ? k * 0.75 : k) &&
+                  distance < minD
+                ) {
+                  tooltipData = dat;
+                  if (merge) {
+                    setDataIndex(index);
+                  }
+                }
+              });
             });
-            if (tooltipData !== null) {
+            if (!merge && tooltipData !== null) {
               const pxDat = [
                 ~~xScale(tooltipData[dimensions[0]]),
                 ~~yScale(tooltipData[dimensions[1]]),
@@ -388,6 +431,7 @@ function Scatterplot({
         })
         .on('mouseout', () => {
           setTooltip(null);
+          setDataIndex(-1);
         });
 
       d3.select(chartctx.canvas).call(
@@ -414,11 +458,27 @@ function Scatterplot({
     saveSelectedPoints,
     oIndex,
     dimensions,
+    merge,
   ]);
 
   const toSelect = () => {
     setSelect(!select);
   };
+
+  const toMerge = () => {
+    setMerge(!merge);
+  };
+
+  const convexHullPoints = useMemo(
+    () =>
+      data.map((darray) =>
+        darray.map((dat) => [
+          xScale(dat[dimensions[0]]),
+          yScale(dat[dimensions[1]]),
+        ])
+      ),
+    [data, dimensions, xScale, yScale]
+  );
 
   return (
     <div className="container">
@@ -466,17 +526,23 @@ function Scatterplot({
             {yaxis.title}
           </text>
           <g clipPath="url(#myClip)">
+            {convexHullPoints.map((hullPoints, i) => (
+              <ConvexHull points={hullPoints} key={`hull-${i}`} />
+            ))}
+
             {render ||
               (domains.length > 0 &&
-                data.map((dat, i) => (
-                  <circle
-                    key={i}
-                    cx={xScale(dat.dimensions[0])}
-                    cy={yScale(dat.dimensions[1])}
-                    r={3}
-                    fill={pointColor(dat.label)}
-                  />
-                )))}
+                data.map((darray, i) =>
+                  darray.map((dat, j) => (
+                    <circle
+                      key={`${i}${j}`}
+                      cx={xScale(dat.dimensions[0])}
+                      cy={yScale(dat.dimensions[1])}
+                      r={3}
+                      fill={pointColor(dat.label, 0.7)}
+                    />
+                  ))
+                ))}
           </g>
         </g>
       </svg>
@@ -509,6 +575,16 @@ function Scatterplot({
         }}
       >
         select
+      </button>
+      <button
+        type="button"
+        onClick={toMerge}
+        style={{
+          color: merge ? '#f00' : '#000',
+          left: '15%',
+        }}
+      >
+        merge
       </button>
     </div>
   );

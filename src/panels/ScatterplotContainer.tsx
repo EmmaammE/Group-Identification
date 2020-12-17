@@ -24,10 +24,11 @@ const chartProps: ChartProps = {
 };
 
 let id = 0;
-const datum: Array<DataItem[]> = CPCA.map((data) =>
+const datum: Array<DataItem[]> = CPCA.map((data, j) =>
   data.map((d, i) => ({
     id: id++,
     label: LABEL[i],
+    dataIndex: j,
     // pos: d,
     PC1: d[0],
     PC2: d[1],
@@ -37,11 +38,12 @@ const datum: Array<DataItem[]> = CPCA.map((data) =>
 function ScatterplotContainer() {
   return (
     <div className="scatters">
-      {Array.from({ length: 4 }, (v, i) => i).map((d, index) => (
+      {Array.from({ length: 2 }, (v, i) => i).map((d, index) => (
         <div className="scatter-wrapper" key={index}>
           <Scatterplot
             chartConfig={chartProps}
-            data={datum[index]}
+            data={[datum[index * 2], datum[index * 2 + 1]]}
+            // data={datum[index]}
             render={1}
             oIndex={index}
             dimensions={['PC1', 'PC2']}

@@ -8,5 +8,7 @@ export interface DataItem {
   id: number,
   // 数据分类
   label: number | string,
+  // dataset编号
+  dataIndex: number,
   [k: string]: any
 }
