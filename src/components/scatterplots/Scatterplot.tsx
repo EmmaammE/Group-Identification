@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useCallback,
   Dispatch,
+  useMemo,
 } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import * as d3 from 'd3';
@@ -15,6 +16,7 @@ import lasso from '../../utils/lasso';
 import { setPoints } from '../../store/action';
 import { PointsState } from '../../types/point';
 import Triangle from '../markers/Triangle';
+import ExtentHull from './ExtentHull';
 
 function strokeType(type: string) {
   switch (type) {
@@ -46,6 +48,7 @@ function Scatterplot({
   render,
   oIndex,
   dimensions,
+  extents,
 }: ScatterplotProps) {
   const widthMap: number = width - margin.l - margin.r;
   const heightMap: number = height - margin.t - margin.b;
@@ -321,7 +324,7 @@ function Scatterplot({
 
       const zoomer = d3
         .zoom()
-        .scaleExtent([0.9, 100])
+        .scaleExtent([-50, 100])
         .duration(700)
         .on('zoom', ({ transform }) => {
           if (!select) {
@@ -420,6 +423,15 @@ function Scatterplot({
     setSelect(!select);
   };
 
+  const hullExtents = useMemo(
+    () =>
+      extents.map((extentArr) => [
+        extentArr[0].map((d) => xScale(d)),
+        extentArr[1].map((d) => yScale(d)),
+      ]),
+    [extents, xScale, yScale]
+  );
+
   return (
     <div className="container">
       <svg width={width} height={height}>
@@ -466,6 +478,11 @@ function Scatterplot({
             {yaxis.title}
           </text>
           <g clipPath="url(#myClip)">
+            <g>
+              {hullExtents.map((e) => (
+                <ExtentHull extent={e as any} />
+              ))}
+            </g>
             {render ||
               (domains.length > 0 &&
                 data.map((dat, i) => (
