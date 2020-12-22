@@ -114,10 +114,7 @@ export default function Parallel({
 
   useEffect(() => {
     if (datum) {
-      const extent = [
-        [Number.MAX_VALUE, Number.MIN_VALUE],
-        [Number.MAX_VALUE, Number.MIN_VALUE],
-      ];
+      const extent = dimensions.map(() => [Number.MAX_VALUE, Number.MIN_VALUE]);
 
       datum.forEach((d: any) => {
         dimensions.forEach((name, i) => {

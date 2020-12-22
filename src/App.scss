@@ -1,10 +1,23 @@
-.App {
-  display: grid;
-  grid-template-columns: 50% auto;
+:root {
+  --primary-color: rgba(0, 0, 0, 0.87);
+  --secondar-color: rgba(0, 0, 0, 0.54);
+  --divider-color: rgba(0, 0, 0, 0.12);
+  --default-color: #fff;
+  --background-color: #dcdddd;
+  --disabled-color: rgba(0, 0, 0, 0.26);
+  --shadow-color: rgba(34, 36, 38, 0.15);
 }
 
-body {
-  overflow-x: hidden;
+.App {
+  display: grid;
+  grid-template-columns: 25% 25% auto;
+
+  .panel {
+    border: 1px solid var(--divider-color);
+    height: 100vh;
+    box-sizing: border-box;
+    padding: 10px;
+  }
 }
 
 svg {

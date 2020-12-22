@@ -1,13 +1,15 @@
 import React from 'react';
 import './App.scss';
-import ParallelContainer from './panels/ParallelContainer';
-import ScatterplotContainer from './panels/ScatterplotContainer';
+import LeftPanel from './panels/leftPanel/LeftPanel';
+import MiddlePanel from './panels/middlePanel/MiddlePanel';
+import RightPanel from './panels/rightPanel/RightPanel';
 
 function App() {
   return (
     <div className="App">
-      <ScatterplotContainer />
-      <ParallelContainer />
+      <LeftPanel />
+      <MiddlePanel />
+      <RightPanel />
     </div>
   );
 }
