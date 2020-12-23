@@ -17,6 +17,7 @@ import { setPoints } from '../../store/action';
 import { PointsState } from '../../types/point';
 import Triangle from '../markers/Triangle';
 import ExtentHull from './ExtentHull';
+import Button from '../ui/Button';
 
 function strokeType(type: string) {
   switch (type) {
@@ -33,7 +34,8 @@ function strokeType(type: string) {
 }
 
 function pointColor(label: number | string) {
-  return label ? 'rgba(84, 122, 167, .7)' : 'rgba(216, 85, 88, .7)';
+  // return label ? 'rgba(84, 122, 167, .7)' : 'rgba(216, 85, 88, .7)';
+  return label ? 'rgba(84, 122, 167, .7)' : 'rgba(128, 128, 128, .7)';
 }
 
 interface TooltipData {
@@ -43,18 +45,30 @@ interface TooltipData {
 }
 
 function Scatterplot({
-  chartConfig: { width, height, yaxis, xaxis, margin },
+  chartConfig: { width: widthP, height: heightP, yaxis, xaxis, margin },
   data,
   render,
   oIndex,
   dimensions,
   extents,
 }: ScatterplotProps) {
-  const widthMap: number = width - margin.l - margin.r;
-  const heightMap: number = height - margin.t - margin.b;
-
   const $chart: any = useRef(null);
   const $points: any = useRef(null);
+
+  const [width, setWidth] = useState<number>(widthP);
+  const [height, setHeight] = useState<number>(heightP);
+
+  const [widthMap, setWidthMap] = useState<number>(0);
+  const [heightMap, setHeightMap] = useState<number>(0);
+
+  useEffect(() => {
+    const { offsetWidth, offsetHeight } = $chart.current;
+    setWidth(offsetWidth);
+    setHeight(offsetHeight);
+
+    setWidthMap(offsetWidth - margin.l - margin.r);
+    setHeightMap(offsetHeight - margin.t - margin.b);
+  }, [$chart, margin.b, margin.l, margin.r, margin.t]);
 
   const $xaxis: any = useRef(null);
   const $yaxis: any = useRef(null);
@@ -221,7 +235,7 @@ function Scatterplot({
             // .call(g => g.select('.domain').append('line').style('marker-end', "url(#hTriangle)"))
             .call((g) =>
               g
-                .selectAll('.tick:not(:first-of-type) line')
+                .selectAll('.tick line')
                 .attr('stroke-opacity', 0.5)
                 .attr('stroke-dasharray', '0,25')
             );
@@ -433,100 +447,120 @@ function Scatterplot({
   );
 
   return (
-    <div className="container">
-      <svg width={width} height={height}>
-        <defs>
-          <Triangle />
-        </defs>
-
-        <clipPath id="myClip">
-          <rect width={widthMap} height={heightMap} />
-        </clipPath>
-
-        <g transform={`translate(${margin.l},${margin.t})`}>
-          <g
-            transform={`translate(0, ${heightMap})`}
-            className="axes x-axis"
-            ref={$xaxis}
-          />
-          <g className="axes y-axis" ref={$yaxis} />
-          <line
-            x1={0}
-            x2={widthMap + 5}
-            y1={heightMap}
-            y2={heightMap}
-            stroke="rgba(0,0,0,0.8)"
-            markerEnd="url(#arrow)"
-          />
-          <line
-            x1={0}
-            x2={0}
-            y1={heightMap}
-            y2={-10}
-            stroke="rgba(0,0,0,0.8)"
-            markerEnd="url(#arrow)"
-          />
-          <text className={styles.label} x={heightMap / 13} y={heightMap - 5}>
-            {xaxis.title}
-          </text>
-          <text
-            className={styles.label}
-            transform="rotate(-90)"
-            x={(-heightMap * 12) / 13}
-            dy="20"
-          >
-            {yaxis.title}
-          </text>
-          <g clipPath="url(#myClip)">
-            <g>
-              {hullExtents.map((e) => (
-                <ExtentHull extent={e as any} />
-              ))}
-            </g>
-            {render ||
-              (domains.length > 0 &&
-                data.map((dat, i) => (
-                  <circle
-                    key={i}
-                    cx={xScale(dat.dimensions[0])}
-                    cy={yScale(dat.dimensions[1])}
-                    r={3}
-                    fill={pointColor(dat.label)}
-                  />
-                )))}
-          </g>
-        </g>
-      </svg>
-      <canvas
-        width={width}
-        height={height - 2}
-        ref={$chart}
-        className="linemap"
-        style={{
-          margin: `${margin.t + 1}px ${margin.r}px ${margin.b}px ${margin.l}px`,
-        }}
-      />
-      {tip && (
-        <div
-          className={tipStyles.tip}
-          style={{
-            left: tip.x + margin.l,
-            top: tip.y + margin.t,
-          }}
-        >
-          {tip.info}
-        </div>
-      )}
-
-      <button
-        type="button"
-        onClick={toSelect}
+    <div className="scatter-box">
+      <Button
+        handleClick={toSelect}
         style={{
           color: select ? '#f00' : '#000',
         }}
       >
         select
-      </button>
+      </Button>
+      <div className="container">
+        <svg width={width} height={height}>
+          <defs>
+            <Triangle />
+          </defs>
+
+          <clipPath id="myClip">
+            <rect width={widthMap} height={heightMap} />
+          </clipPath>
+
+          <g>
+            {new Array(2).fill(null).map((d, i) => (
+              <>
+                <circle
+                  cx={widthMap - 25 - i * 70}
+                  cy={10}
+                  r={6}
+                  fill={pointColor(i)}
+                />
+                <text x={widthMap - 15 - i * 70} y={15}>
+                  label: {i}
+                </text>
+              </>
+            ))}
+          </g>
+
+          <g transform={`translate(${margin.l},${margin.t})`}>
+            <g
+              transform={`translate(0, ${heightMap})`}
+              className="axes x-axis"
+              ref={$xaxis}
+            />
+            <g className="axes y-axis" ref={$yaxis} />
+            <line
+              x1={0}
+              x2={widthMap + 5}
+              y1={heightMap}
+              y2={heightMap}
+              stroke="rgba(0,0,0,0.8)"
+              markerEnd="url(#arrow)"
+            />
+            <line
+              x1={0}
+              x2={0}
+              y1={heightMap}
+              y2={-10}
+              stroke="rgba(0,0,0,0.8)"
+              markerEnd="url(#arrow)"
+            />
+            <text className={styles.label} x={heightMap / 13} y={heightMap - 5}>
+              {xaxis.title}
+            </text>
+            <text
+              className={styles.label}
+              transform="rotate(-90)"
+              x={(-heightMap * 12) / 13}
+              dy="20"
+            >
+              {yaxis.title}
+            </text>
+            <g clipPath="url(#myClip)">
+              <g>
+                {hullExtents.map((e) => (
+                  <ExtentHull extent={e as any} />
+                ))}
+              </g>
+              {render ||
+                (domains.length > 0 &&
+                  data.map((dat, i) => (
+                    <circle
+                      key={i}
+                      cx={xScale(dat.dimensions[0])}
+                      cy={yScale(dat.dimensions[1])}
+                      r={3}
+                      fill={pointColor(dat.label)}
+                    />
+                  )))}
+            </g>
+          </g>
+        </svg>
+        <canvas
+          width={width}
+          height={height - 2}
+          ref={$chart}
+          className="linemap"
+          style={{
+            width: '100%',
+            height: '100%',
+            margin: `${margin.t + 1}px ${margin.r}px ${margin.b}px ${
+              margin.l
+            }px`,
+          }}
+        />
+        {tip && (
+          <div
+            className={tipStyles.tip}
+            style={{
+              left: tip.x + margin.l,
+              top: tip.y + margin.t,
+            }}
+          >
+            {tip.info}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

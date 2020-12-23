@@ -2,16 +2,14 @@
   cursor: pointer;
   display: inline-block;
   width: 100%;
-  min-height: 1em;
+  min-height: 2.2rem;
   outline: 0;
   border: none;
   vertical-align: baseline;
   background: var(--background-color) none;
-  padding: 0.78571429em 1.5em 0.78571429em;
+  padding: 0 1rem;
   text-transform: none;
   text-shadow: none;
-  line-height: 1em;
-  font-style: normal;
   text-align: center;
   text-decoration: none;
   border-radius: 2px;

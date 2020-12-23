@@ -1,13 +1,18 @@
 /* eslint-disable import/prefer-default-export */
-import * as d3 from 'd3';
-import csv from '../assets/data/pppub20.csv';
+import CPCA from '../assets/cpca.json';
+import LABEL from '../assets/labels.json';
 
 async function handle() {
-  const data = await d3.csv(csv);
-  console.log(data.length);
+  const datum = CPCA[0].map((d, i) => ({
+    id: i,
+    label: LABEL[i],
+    PC1: d[0],
+    PC2: d[1],
+  }));
+
+  return datum;
 }
 
 export function processData() {
-  handle();
-  return csv.length;
+  return handle();
 }

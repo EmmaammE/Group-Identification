@@ -11,8 +11,14 @@
   }
 }
 
+.scatter-box {
+  overflow: hidden;
+}
+
 .container {
   position: relative;
+  min-height: 38vh;
+  margin: 5px 0 0 0;
 
   svg,
   .linemap {

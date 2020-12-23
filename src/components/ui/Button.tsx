@@ -4,15 +4,22 @@ import styles from './button.module.css';
 interface ButtonProps {
   children: ReactChild;
   handleClick?: any;
+  style?: Object;
 }
 
 Button.defaultProps = {
   handleClick: null,
+  style: {},
 };
 
-function Button({ children, handleClick }: ButtonProps) {
+function Button({ children, handleClick, style }: ButtonProps) {
   return (
-    <button type="button" className={styles.button} onClick={handleClick}>
+    <button
+      type="button"
+      className={styles.button}
+      onClick={handleClick}
+      style={style}
+    >
       {children}
     </button>
   );
