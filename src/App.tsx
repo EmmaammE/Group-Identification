@@ -7,8 +7,8 @@ import RightPanel from './panels/rightPanel/RightPanel';
 function App() {
   return (
     <div className="App">
-      <LeftPanel />
       <MiddlePanel />
+      <LeftPanel />
       <RightPanel />
     </div>
   );
