@@ -1,0 +1,10 @@
+#MiddlePanel {
+  &.panel {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .wrapper {
+    flex: 2;
+  }
+}

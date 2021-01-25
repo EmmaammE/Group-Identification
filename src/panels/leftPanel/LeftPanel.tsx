@@ -61,11 +61,7 @@ function LeftPanel() {
   return (
     <div className="panel" id="first-panel">
       <div className="info-container">
-        <h2>XXXX</h2>
-        <p>Dataset: pppub20</p>
-        <h3>Cohort Definition</h3>
-
-        {/* <Button handleClick={handleClick}>upload</Button> */}
+        <h3>Data Heterogeneous Location</h3>
       </div>
 
       <div className="scatter-container">
@@ -101,7 +97,6 @@ function LeftPanel() {
       <div>
         <h3>Outlier filter</h3>
         <Lineplot chartConfig={lineChartProps} />
-        <h3>Statistic Information</h3>
       </div>
     </div>
   );
