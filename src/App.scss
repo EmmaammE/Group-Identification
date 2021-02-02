@@ -10,7 +10,7 @@
 
 .App {
   display: grid;
-  grid-template-columns: 25% 25% auto;
+  grid-template-columns: 23% 25% auto;
 
   .panel {
     border: 1px solid var(--divider-color);
@@ -23,5 +23,12 @@
 svg {
   text {
     user-select: none;
+  }
+
+  .axes {
+    .tick line,
+    .domain {
+      opacity: 0;
+    }
   }
 }

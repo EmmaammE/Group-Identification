@@ -6,6 +6,7 @@ import Worker from '../../worker';
 import './leftPanel.scss';
 import inputStyles from '../../styles/input.module.css';
 import Lineplot from '../../components/line/Lineplot';
+import PairRect from '../../components/PairRect.tsx/PairRect';
 
 const instance = new Worker();
 
@@ -64,6 +65,25 @@ function LeftPanel() {
         <h3>Data Heterogeneous Location</h3>
       </div>
 
+      <div>
+        <PairRect
+          data={[
+            [0.1, 0.2, -0.3],
+            [0.1, 0.2, -0.3],
+          ]}
+          title="Parameter Comparison"
+          names={['Federated model', 'Self-trained model']}
+        />
+
+        <PairRect
+          data={[
+            [0.1, 0.2, -0.3],
+            [0.1, 0.2, -0.3],
+          ]}
+          title="Difference Component"
+          names={['Cp1', 'Cp2']}
+        />
+      </div>
       <div className="scatter-container">
         <Scatterplot
           chartConfig={chartProps}
@@ -71,20 +91,24 @@ function LeftPanel() {
           render={1}
           oIndex={0}
           dimensions={['PC1', 'PC2']}
-          extents={[]}
+          // extents={[]}
+          extents={[
+            [
+              [-4.507507196724417, 5.439853437485293],
+              [-5.433762242260121, 4.392136043505268],
+            ],
+            // [
+            //   [-1.1896514994207771e-11, 1.9374724750371005e-11],
+            //   [-2.7053692224873465, 4.478693806767255],
+            // ],
+          ]}
         />
 
         <div className="btns">
           <div className="input-wrapper">
             <div className="label">Step Size: </div>
             <div className={inputStyles.wrapper}>
-              <input
-                className={inputStyles.input}
-                type="number"
-                min="0.1"
-                max="15"
-                defaultValue={10}
-              />
+              <input className={inputStyles.input} type="number" min="0.1" max="15" defaultValue={10} />
             </div>
           </div>
 

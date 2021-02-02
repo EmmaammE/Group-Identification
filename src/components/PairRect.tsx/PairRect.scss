@@ -1,0 +1,24 @@
+.pair-rect-container {
+  display: flex;
+  flex-direction: column;
+
+  .wrapper {
+    display: flex;
+    height: 45px;
+    margin: 5px 0;
+
+    .names {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+
+      p {
+        line-height: 22.5px;
+      }
+    }
+
+    .svg-wrapper {
+      flex: 60% 0 0;
+    }
+  }
+}

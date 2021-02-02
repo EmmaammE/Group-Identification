@@ -6,10 +6,10 @@ import LineChart from '../../components/lineChart/Linechart';
 import './MiddlePanel.scss';
 
 const lineChartMargin = {
-  r: 10,
-  b: 50,
-  l: 100,
-  t: 10,
+  r: 50,
+  b: 18,
+  l: 36,
+  t: 36,
 };
 
 const fakeData = {
@@ -48,10 +48,7 @@ function MiddlePanel() {
   const [index, setIndex] = useState(1);
   // TODO 初始化fakeData
   const [overviewData, setData] = useState(fakeData);
-  const lineChartData = [
-    (data as any).federated.loss,
-    (data as any).others[index].loss,
-  ];
+  const lineChartData = [(data as any).federated.loss, (data as any).others[index].loss];
 
   // TODO如果请求获取数据，这里要加一点东西
   useEffect(() => {
@@ -74,10 +71,16 @@ function MiddlePanel() {
 
   return (
     <div id="MiddlePanel" className="panel">
-      <h2>Dataset Description</h2>
+      <h2>XXXX</h2>
       <div className="info-container">
-        <h2>XXXX</h2>
-        <p>Dataset: pppub20</p>
+        <h3>Dataset Description</h3>
+        <p>Name: xxx</p>
+        <p>Label: xxx</p>
+        <p>Attributes</p>
+
+        <h3>Federated Learning Description</h3>
+        <p>Party number</p>
+        <p>Iteration</p>
         <h3>Federated Process Overview</h3>
       </div>
 

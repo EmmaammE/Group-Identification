@@ -1,11 +1,12 @@
 #first-panel {
   display: grid;
-  grid-template-rows: auto 50% 35%;
+  grid-template-rows: auto 22% 50% 28%;
 
   .info-container {
     display: flex;
     flex-direction: column;
     justify-content: space-around;
+    margin: 8px 0;
   }
 
   .scatter-container {

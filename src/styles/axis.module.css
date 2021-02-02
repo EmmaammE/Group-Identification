@@ -5,8 +5,10 @@
 }
 
 .overlay {
-  fill: lightslategray;
+  /* fill: lightslategray; */
 
   /* stroke: lightslategray; */
   fill-opacity: 0.2;
+  stroke: #111;
+  fill: none;
 }
