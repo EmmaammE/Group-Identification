@@ -7,6 +7,6 @@ export interface DataItem {
   // 序号
   id: number,
   // 数据分类
-  label: number | string,
+  label: number | boolean,
   [k: string]: any
 }

@@ -1,10 +1,32 @@
 #MiddlePanel {
-  &.panel {
-    display: flex;
-    flex-direction: column;
-  }
+  // &.panel {
+  //   display: grid;
+  //   grid-template-rows: auto 24% 45% 28%;
+  // }
 
-  .wrapper {
-    flex: 2;
+  // .wrapper {
+  //   flex: 2;
+  // }
+
+  .overview-wrapper {
+    .overview-content {
+      display: flex;
+
+      // Ovewview.tsx
+      #Overview {
+        padding: 10px 0;
+        flex: 0 1 23vw;
+      }
+
+      .info {
+        padding: 10px 5px;
+        flex-grow: 1;
+        margin: 0 10px;
+
+        p {
+          white-space: nowrap;
+        }
+      }
+    }
   }
 }

@@ -1,5 +1,3 @@
-import { type } from "os"
-
 /* eslint-disable no-unused-vars */
 export type IPoints = {
   // // 第几个数据源, 第几个点

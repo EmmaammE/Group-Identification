@@ -14,12 +14,7 @@ Button.defaultProps = {
 
 function Button({ children, handleClick, style }: ButtonProps) {
   return (
-    <button
-      type="button"
-      className={styles.button}
-      onClick={handleClick}
-      style={style}
-    >
+    <button type="button" className={styles.button} onClick={handleClick} style={style}>
       {children}
     </button>
   );

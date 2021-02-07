@@ -4,23 +4,28 @@ import './PairRect.scss';
 
 export interface PairRectProps {
   data: number[][];
-  title: string;
   names: string[];
+  size: number;
+  index: number;
+  handleClick: any;
 }
 
-const color = d3.scaleLinear<string>().domain([-1, 0, 1]).range(['#e60d17', '#ccc', '#0b69b6']);
+const color = d3.scaleLinear<string>().domain([-1, 0, 1]).range(['#e60d17', '#eee', '#0b69b6']);
 
 const rectWidth = 10;
 const rectHeight = 20;
 const rectPadding = 5;
-const PairRect = ({ data, title, names }: PairRectProps) => {
+const PairRect = ({ data, names, size, index, handleClick }: PairRectProps) => {
   const WIDTH = rectWidth * data[0].length;
   const HEIGHT = rectHeight * data.length + rectPadding * (data.length - 1);
   const xScale = d3.scaleLinear().domain([0, data[0].length]).range([0, WIDTH]);
 
   return (
-    <div className="pair-rect-container">
-      <p>{title}</p>
+    <div className="pair-rect-container" onClick={handleClick} onKeyDown={handleClick} role="menuitem" tabIndex={0}>
+      <div className="title">
+        <span>Heterogeneous block {index + 1}</span>
+        <span>Size: {size}</span>
+      </div>
       <div className="wrapper">
         <div className="names">
           {names.map((name) => (

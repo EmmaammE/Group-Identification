@@ -1,0 +1,37 @@
+#RightPanel {
+  display: flex;
+  flex-direction: column;
+  padding: 0 10px;
+
+  .grid-wrapper {
+    width: 20vw;
+    height: 20vw;
+  }
+
+  .container.grid-wrapper {
+    position: relative;
+
+    .legend {
+      display: flex;
+      position: absolute;
+      left: 55%;
+      right: 9%;
+
+      svg {
+        margin: 0 5px;
+        position: relative;
+      }
+    }
+  }
+
+  .lines {
+    display: flex;
+    flex-wrap: wrap;
+    height: 60vh;
+    overflow: auto;
+
+    .line-wrapper {
+      // flex-basis: 50%;
+    }
+  }
+}

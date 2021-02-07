@@ -12,7 +12,7 @@ const reducer = (
 ): PointsState => {
   switch (action.type) {
     case SET_POINTS: {
-      console.log(action.points)
+      // console.log(action.points)
       const pointsT = {...state.points, ...action.points};
       return { ...state, ...{ points: pointsT}}
     }

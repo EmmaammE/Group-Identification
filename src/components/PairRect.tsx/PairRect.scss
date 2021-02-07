@@ -1,6 +1,18 @@
 .pair-rect-container {
   display: flex;
   flex-direction: column;
+  user-select: none;
+  cursor: pointer;
+  padding: 5px;
+
+  &:focus {
+    outline: 1px solid #777;
+  }
+
+  .title {
+    display: flex;
+    justify-content: space-between;
+  }
 
   .wrapper {
     display: flex;
@@ -18,7 +30,7 @@
     }
 
     .svg-wrapper {
-      flex: 60% 0 0;
+      flex: 85% 0 0;
     }
   }
 }

@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import './Overview.scss';
 import * as d3 from 'd3';
 
 export interface OverviewProps {
@@ -16,7 +15,7 @@ const PADDING = 10;
 const dot = (v1: [number, number], v2: [number, number]) =>
   (v1[0] * v2[0] + v1[1] * v2[1]) / ((v1[0] * v1[0] + v1[1] * v1[1]) ** 0.5 * (v2[0] * v2[0] + v2[1] * v2[1]) ** 0.5);
 
-const color = d3.scaleLinear<string>().domain([-1, 0, 1]).range(['#e60d17', '#ccc', '#0b69b6']);
+const color = d3.scaleLinear<string>().domain([-1, 0, 1]).range(['#ff7303', '#ffae7f', '#e6e6e6']);
 
 const path = (fedPoints: number[][], localPoints: number[][]) => {
   // 计算x y 范围的极值
@@ -90,8 +89,8 @@ function Overview({ data }: OverviewProps) {
   const colorScaleLinear = d3.scaleSequential(d3.interpolateRgb('#efefef', '#000')).domain([0, data.fed.length]);
 
   return (
-    <div className="Overview">
-      <svg width="100%" height="100%" viewBox="0 0 400 400">
+    <div id="Overview">
+      <svg width="100%" viewBox="0 0 400 400">
         <defs>
           {paths.local.map((pathPoint, i) => (
             <marker
@@ -109,6 +108,7 @@ function Overview({ data }: OverviewProps) {
             </marker>
           ))}
         </defs>
+        <rect height="100%" width="100%" strokeWidth="2" strokeDasharray="2" fill="none" stroke="#000" />
         {paths.local.map(({ x1, x2, y1, y2, ...pro }, i) => (
           <line
             key={`local${i}`}
@@ -138,7 +138,7 @@ function Overview({ data }: OverviewProps) {
         ))}
 
         {paths.fed.map(({ x1, y1 }, i) => (
-          <circle key={`${i}circle`} stroke={colorScaleLinear(i)} r={data.batchSize[i] * 1.5} cx={xScale(x1)} cy={yScale(y1)} fill="#fff" />
+          <circle key={`${i}circle`} stroke="#777" r={data.batchSize[i] * 1.5} cx={xScale(x1)} cy={yScale(y1)} fill="#fff" />
         ))}
       </svg>
     </div>

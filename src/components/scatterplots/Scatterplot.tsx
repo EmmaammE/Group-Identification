@@ -26,9 +26,9 @@ function strokeType(type: string) {
   }
 }
 
-function pointColor(label: number | string) {
+function pointColor(label: boolean | number) {
   // return label ? 'rgba(84, 122, 167, .7)' : 'rgba(216, 85, 88, .7)';
-  return label ? 'rgba(84, 122, 167, .7)' : 'rgba(128, 128, 128, .7)';
+  return label ? 'rgba(221,221,221, .2)' : 'rgba(255,155,3,.7)';
 }
 
 interface TooltipData {
@@ -143,96 +143,96 @@ function Scatterplot({
     return [];
   }, [data, xScale, yScale, dimensions]);
 
-  const quadtree = useMemo(
-    () =>
-      d3
-        .quadtree<any>()
-        .extent([
-          [-1, -1],
-          [width + 1, height + 1],
-        ])
-        .x((d: any) => d.pos[0])
-        .y((d: any) => d.pos[1])
-        .addAll(points),
-    [points, width, height]
-  );
+  // const quadtree = useMemo(
+  //   () =>
+  //     d3
+  //       .quadtree<any>()
+  //       .extent([
+  //         [-1, -1],
+  //         [width + 1, height + 1],
+  //       ])
+  //       .x((d: any) => d.pos[0])
+  //       .y((d: any) => d.pos[1])
+  //       .addAll(points),
+  //   [points, width, height]
+  // );
 
-  const search = useCallback(
-    (x0, y0, x3, y3) => {
-      const validData: any = [];
-      quadtree.visit((node, x1, y1, x2, y2) => {
-        const pData = (node as any).data;
+  // const search = useCallback(
+  //   (x0, y0, x3, y3) => {
+  //     const validData: any = [];
+  //     quadtree.visit((node, x1, y1, x2, y2) => {
+  //       const pData = (node as any).data;
 
-        if (pData) {
-          const p = pData.pos;
-          p.selected = p[0] >= x0 && p[0] < x3 && p[1] >= y0 && p[1] < y3;
-          if (p.selected) {
-            validData.push(pData);
-          }
-        }
-        return x1 >= x3 || y1 >= y3 || x2 < x0 || y2 < y0;
-      });
-      return validData;
-    },
-    [quadtree]
-  );
+  //       if (pData) {
+  //         const p = pData.pos;
+  //         p.selected = p[0] >= x0 && p[0] < x3 && p[1] >= y0 && p[1] < y3;
+  //         if (p.selected) {
+  //           validData.push(pData);
+  //         }
+  //       }
+  //       return x1 >= x3 || y1 >= y3 || x2 < x0 || y2 < y0;
+  //     });
+  //     return validData;
+  //   },
+  //   [quadtree]
+  // );
 
-  const grids = useMemo(() => {
-    const yticks = yAxis.scale().ticks(5);
-    const gridYticks: number[] = [heightMap];
-    yticks.forEach((yy: any) => {
-      gridYticks.push(yScale(yy));
-    });
-    gridYticks.push(0);
+  // const grids = useMemo(() => {
+  //   const yticks = yAxis.scale().ticks(5);
+  //   const gridYticks: number[] = [heightMap];
+  //   yticks.forEach((yy: any) => {
+  //     gridYticks.push(yScale(yy));
+  //   });
+  //   gridYticks.push(0);
 
-    const xticks = xAxis.scale().ticks(9);
-    const gridXticks: number[] = [0];
-    xticks.forEach((xx: any) => {
-      if (xScale(xx) !== 0 && xScale(xx) !== widthMap) {
-        gridXticks.push(xScale(xx));
-      }
-    });
-    gridXticks.push(widthMap);
-    const size1 = gridYticks.length;
-    const size2 = gridXticks.length;
-    const gridsArr: GridCell[][] = Array.from({ length: size1 }, () => Array(size2));
-    for (let i = 0; i < size1; i++) {
-      for (let j = 0; j < size2; j++) {
-        gridsArr[i][j] = {
-          x: gridXticks[j],
-          y: gridYticks[i + 1],
-          width: gridXticks[j + 1] - gridXticks[j],
-          height: gridYticks[i] - gridYticks[i + 1],
-        };
-      }
-    }
-    return gridsArr;
-  }, [yAxis, heightMap, xAxis, yScale, xScale, widthMap]);
+  //   const xticks = xAxis.scale().ticks(9);
+  //   const gridXticks: number[] = [0];
+  //   xticks.forEach((xx: any) => {
+  //     if (xScale(xx) !== 0 && xScale(xx) !== widthMap) {
+  //       gridXticks.push(xScale(xx));
+  //     }
+  //   });
+  //   gridXticks.push(widthMap);
+  //   const size1 = gridYticks.length;
+  //   const size2 = gridXticks.length;
+  //   const gridsArr: GridCell[][] = Array.from({ length: size1 }, () => Array(size2));
+  //   for (let i = 0; i < size1; i++) {
+  //     for (let j = 0; j < size2; j++) {
+  //       gridsArr[i][j] = {
+  //         x: gridXticks[j],
+  //         y: gridYticks[i + 1],
+  //         width: gridXticks[j + 1] - gridXticks[j],
+  //         height: gridYticks[i] - gridYticks[i + 1],
+  //       };
+  //     }
+  //   }
+  //   return gridsArr;
+  // }, [yAxis, heightMap, xAxis, yScale, xScale, widthMap]);
 
-  const clusterPoints = useMemo(() => {
-    // 遍历每一个格子，找到格子里有多少个点
-    const size = grids[0].length;
-    const pointsArr: any = [];
+  // const clusterPoints = useMemo(() => {
+  //   // 遍历每一个格子，找到格子里有多少个点
+  //   const size = grids[0].length;
+  //   const pointsArr: any = [];
 
-    grids.forEach((gridRow, i) => {
-      for (let j = 0; j < size - 1; ++j) {
-        const { x, y, width: gWidth, height: gHeight } = gridRow[j];
-        const searched = search(x, y, x + gWidth, y + gHeight);
+  //   grids.forEach((gridRow, i) => {
+  //     for (let j = 0; j < size - 1; ++j) {
+  //       const { x, y, width: gWidth, height: gHeight } = gridRow[j];
+  //       const searched = search(x, y, x + gWidth, y + gHeight);
 
-        const label1 = searched.filter((d: any) => d.label === 1);
+  //       const label1 = searched.filter((d: any) => d.label === 1);
 
-        const node = {
-          i,
-          j,
-          rate: label1.length / searched.length,
-        };
-        if (searched.length) {
-          pointsArr.push(node);
-        }
-      }
-    });
-    return pointsArr;
-  }, [grids, search]);
+  //       const node = {
+  //         i,
+  //         j,
+  //         rate: label1.length / searched.length,
+  //       };
+  //       if (searched.length) {
+  //         pointsArr.push(node);
+  //       }
+  //     }
+  //   });
+  //   return pointsArr;
+  // }, [grids, search]);
 
   const drawPoints = useCallback(
     (sX: any, sY: any, k: number, ctx: CanvasRenderingContext2D) => {
@@ -515,14 +515,14 @@ function Scatterplot({
 
   return (
     <div className="scatter-box">
-      <Button
+      {/* <Button
         handleClick={toSelect}
         style={{
           color: select ? '#f00' : '#000',
         }}
       >
         select
-      </Button>
+      </Button> */}
       <div className="container">
         <svg width={width} height={height}>
           <defs>
@@ -536,9 +536,9 @@ function Scatterplot({
           <g>
             {new Array(2).fill(null).map((d, i) => (
               <g key={i}>
-                <circle cx={widthMap - 25 - i * 70} cy={10} r={6} fill={pointColor(i)} />
-                <text x={widthMap - 15 - i * 70} y={15}>
-                  label: {i}
+                <circle cx={widthMap - 57 - i * 110} cy={10} r={6} fill={pointColor(i)} />
+                <text x={widthMap - 50 - i * 110} y={15}>
+                  {i === 0 ? 'Consistency' : 'Inconsistency'}
                 </text>
               </g>
             ))}
@@ -563,11 +563,11 @@ function Scatterplot({
                   fill="#efefef"
               />))
             } */}
-            {clusterPoints.map((cluster: any) => {
+            {/* {clusterPoints.map((cluster: any) => {
               const { i, j, rate } = cluster;
               const grid = grids[i][j];
               return <rect {...grid} key={`${grid.x},${grid.y}`} fill={colorScale(rate)} />;
-            })}
+            })} */}
             <g clipPath="url(#myClip)">
               {/* <g>
                 {hullExtents.map((e,i) => (

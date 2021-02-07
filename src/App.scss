@@ -1,22 +1,51 @@
 :root {
-  --primary-color: rgba(0, 0, 0, 0.87);
+  --primary-color: #aa815d;
   --secondar-color: rgba(0, 0, 0, 0.54);
-  --divider-color: rgba(0, 0, 0, 0.12);
+  --divider-color: #868686;
   --default-color: #fff;
-  --background-color: #dcdddd;
+  --background-color: #efefef;
   --disabled-color: rgba(0, 0, 0, 0.26);
   --shadow-color: rgba(34, 36, 38, 0.15);
 }
 
 .App {
   display: grid;
-  grid-template-columns: 23% 25% auto;
+  grid-template-columns: 37% 33% auto;
+  grid-gap: 10px;
+  background: var(--background-color);
 
   .panel {
-    border: 1px solid var(--divider-color);
     height: 100vh;
+    overflow: hidden;
     box-sizing: border-box;
-    padding: 0 10px;
+    background: var(--default-color);
+    // h2 title
+    h2 {
+      margin: 0;
+      text-align: center;
+      background: var(--primary-color);
+      color: var(--default-color);
+      line-height: 40px;
+    }
+
+    .content {
+      padding: 0 10px;
+    }
+
+    // 分割线
+    .divider {
+      width: 100%;
+      height: 1px;
+      margin: 1px 0;
+      border-bottom: 1px solid var(--divider-color);
+    }
+
+    .dashed-divider {
+      width: 100%;
+      height: 1px;
+      margin: 1px 0;
+      border-bottom: 1px dashed var(--divider-color);
+    }
   }
 }
 

@@ -1,12 +1,7 @@
 #first-panel {
-  display: grid;
-  grid-template-rows: auto 22% 50% 28%;
-
-  .info-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around;
-    margin: 8px 0;
+  .content {
+    display: grid;
+    grid-template-rows: 47% 25% 24%;
   }
 
   .scatter-container {
@@ -33,5 +28,27 @@
         display: flex;
       }
     }
+  }
+
+  .info-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    margin: 8px 0 0 0;
+    position: relative;
+
+    .legend {
+      display: flex;
+      margin-left: 55%;
+      // svg {
+      //   margin: 0 5px;
+      // }
+    }
+  }
+
+  .pair-rect-wrapper {
+    overflow: auto;
+    height: 22vh;
+    padding: 10px;
   }
 }

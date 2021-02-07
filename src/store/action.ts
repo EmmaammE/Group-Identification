@@ -1,3 +1,4 @@
+
 import {PointsState, PointAction, IPoints} from '../types/point';
 
 export const SET_POINTS = "SET_POINTS";
