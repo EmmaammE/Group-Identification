@@ -4,12 +4,13 @@
   padding: 0 10px;
 
   .grid-wrapper {
-    width: 20vw;
-    height: 20vw;
+    // width: 20vw;
+    // height: 20vw;
   }
 
-  .container.grid-wrapper {
+  .grid-container {
     position: relative;
+    display: flex;
 
     .legend {
       display: flex;
@@ -18,8 +19,24 @@
       right: 9%;
 
       svg {
-        margin: 0 5px;
         position: relative;
+      }
+    }
+
+    .grid-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-evenly;
+      margin-left: 10px;
+
+      p {
+        white-space: nowrap;
+      }
+
+      .input-wrapper {
+        display: flex;
+        align-items: center;
       }
     }
   }

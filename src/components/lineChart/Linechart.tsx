@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import Triangle from '../markers/Triangle';
 
@@ -21,6 +21,8 @@ const R = 5;
 const LineChart = ({ margin, data, time }: LineChartProps) => {
   const widthMap: number = WIDTH - margin.l - margin.r;
   const heightMap: number = HEIGHT - margin.t - margin.b;
+
+  const $lines = useRef(null);
 
   const xScale = d3
     .scaleLinear()
@@ -50,7 +52,15 @@ const LineChart = ({ margin, data, time }: LineChartProps) => {
     d3.select($xaxis.current).call(xAxis.scale(xScale));
 
     d3.select($yaxis.current).call(yAxis.scale(yScale));
-  }, [data, time, xScale, yScale]);
+
+    d3.select($lines.current).call(
+      d3
+        .axisLeft(yScale)
+        .ticks(3)
+        .tickSize(-widthMap)
+        .tickFormat('' as any) as any
+    );
+  }, [data, time, widthMap, xScale, yScale, $lines]);
 
   return (
     <svg width="100%" height="100%" viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
@@ -79,21 +89,15 @@ const LineChart = ({ margin, data, time }: LineChartProps) => {
         <text dy={-22} textAnchor="middle">
           Loss
         </text>
-        <g transform={`translate(${WIDTH - 50},${heightMap + 25})`}>
+        <g transform={`translate(${WIDTH - margin.r - 10},${heightMap + 25})`}>
           <text textAnchor="end"> Communication round</text>
         </g>
-        {/* {
-          data.map((d,i) => (
-            <path d={line(d as any) || ''}
-              stroke={i === 0 ? '#ccc' : '#000'}
-              fill="none"
-            />
-          ))
-        } */}
         <path d={line(data[0] as any) || ''} stroke="#777" fill="none" />
         {data[1].map((d, i) => (
           <circle cx={xScale(time[i])} cy={yScale(d)} r={R} key={i} style={{ fill: 'var(--primary-color)' }} />
         ))}
+
+        <g ref={$lines} className="lines" />
       </g>
     </svg>
   );

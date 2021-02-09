@@ -22,8 +22,15 @@ function RightPanel({ cpArray, gridData }: RightPanelPorps) {
     <div className="panel" id="RightPanel">
       <h2>Data Space Exploration</h2>
       <div className="content">
-        <div className="grid-wrapper">{gridData && <GridRect data={gridData} />}</div>
+        <div className="grid-wrapper">
+          <h3>Ground Truth Comparison</h3>
+          {/* {gridData && <GridRect data={gridData} />} */}
+          <GridRect data={[[1]]} />
+          <div className="divider" />
+        </div>
         <div className="lines">
+          <h3>Attribute Distribution</h3>
+
           {data.map((arr: number[], i: number) => (
             <CpLineChart key={i} margin={margin} data={arr} title="" />
           ))}

@@ -1,12 +1,29 @@
 #MiddlePanel {
-  // &.panel {
-  //   display: grid;
-  //   grid-template-rows: auto 24% 45% 28%;
-  // }
+  .range-brush {
+    .selection {
+      fill: url(#range);
+      fill-opacity: 1;
+    }
+  }
 
-  // .wrapper {
-  //   flex: 2;
-  // }
+  .my-handle {
+    user-select: none;
+    pointer-events: none;
+    fill: #fff;
+    stroke: #000;
+  }
+
+  .update-wrapper {
+    display: flex;
+
+    p {
+      line-height: 20px;
+    }
+
+    svg {
+      margin-right: 10px;
+    }
+  }
 
   .overview-wrapper {
     .overview-content {
@@ -22,11 +39,25 @@
         padding: 10px 5px;
         flex-grow: 1;
         margin: 0 10px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
 
         p {
           white-space: nowrap;
         }
+
+        .legend-wrapper,
+        .update-wrapper {
+          margin: 10px 0;
+        }
       }
+    }
+  }
+
+  .lines {
+    path {
+      stroke: #efefef;
     }
   }
 }

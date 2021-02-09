@@ -15,7 +15,7 @@ const PADDING = 10;
 const dot = (v1: [number, number], v2: [number, number]) =>
   (v1[0] * v2[0] + v1[1] * v2[1]) / ((v1[0] * v1[0] + v1[1] * v1[1]) ** 0.5 * (v2[0] * v2[0] + v2[1] * v2[1]) ** 0.5);
 
-const color = d3.scaleLinear<string>().domain([-1, 0, 1]).range(['#ff7303', '#ffae7f', '#e6e6e6']);
+const color = d3.scaleLinear<string>().domain([-1, 0, 1]).range(['#aa815d', '#ffae7f', '#e6e6e6']);
 
 const path = (fedPoints: number[][], localPoints: number[][]) => {
   // 计算x y 范围的极值

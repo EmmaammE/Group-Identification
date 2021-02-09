@@ -4,10 +4,13 @@ import Overview, { OverviewProps } from '../../components/overview/Overview';
 // import data from '../../assets/data/test_data.json';
 import LineChart from '../../components/lineChart/Linechart';
 import './MiddlePanel.scss';
+import Gradient from '../../components/ui/Gradient';
+import RangeSlider from '../../components/ui/Range';
+import Dropdown from '../../components/ui/Dropdown';
 
 const lineChartMargin = {
-  r: 36,
-  b: 100,
+  r: 15,
+  b: 80,
   l: 20,
   t: 36,
 };
@@ -61,6 +64,8 @@ interface dataType {
 // inputData is a nested array which can be converted into an ndarray
 // alternatively, it can be an array of coordinates (second argument should be specified as 'sparse')
 
+const GRADIENT = ['#fff', '#aa815d'];
+
 function MiddlePanel() {
   // TODO 修改local数据集
   const [index, setIndex] = useState(1);
@@ -69,6 +74,7 @@ function MiddlePanel() {
   const [lineChartData, setLineChartData] = useState<LineChartData>([[], []]);
   const [name, setName] = useState<string>('');
   const [time, setTime] = useState<Array<number>>([]);
+  const [maxRound, setMaxRound] = useState<number>(40);
 
   useEffect(() => {
     fetch('/fl-hetero/initialize/')
@@ -95,11 +101,14 @@ function MiddlePanel() {
         setLineChartData([res.federated.loss, res.others[index].loss]);
         setName(res.others[index].clientName);
         setTime(timeEnd);
+        setMaxRound(timeEnd[timeEnd.length - 1]);
       })
       .catch((err) => {
         console.error(err);
       });
   }, []);
+
+  const items = ['1', '2'];
 
   return (
     <div id="MiddlePanel" className="panel">
@@ -108,7 +117,10 @@ function MiddlePanel() {
       <div className="content">
         <div className="info-container">
           <h3>Data Description</h3>
-          <p>Dataset: {name} Dataset</p>
+          <div className="row">
+            <p>Dataset: {name} Dataset</p>
+            <Dropdown items={items} index={0} />
+          </div>
           <p>Label: xxx</p>
           <p>Size: </p>
 
@@ -129,9 +141,47 @@ function MiddlePanel() {
             <div className="info">
               <div>
                 <p>Communication round range:</p>
-                <svg width="80px" viewBox="0 0 80 20">
-                  <rect />
-                </svg>
+                <div className="legend-wrapper">
+                  <p>1</p>
+                  <RangeSlider minValue={1} maxValue={maxRound} />
+                  <p>{maxRound}(max)</p>
+                </div>
+                <div className="dashed-divider" />
+              </div>
+
+              <div>
+                <p>Updates:</p>
+                <div className="update-wrapper">
+                  <svg width="80px" viewBox="0 0 80 30">
+                    <defs>
+                      <marker
+                        id="o-marker"
+                        refX="6 "
+                        refY="6"
+                        viewBox="0 0 16 16"
+                        markerWidth="10"
+                        markerHeight="10"
+                        markerUnits="userSpaceOnUse"
+                        orient="auto"
+                      >
+                        <path d="M 0 0 12 6 0 12 3 6 Z" fill="var(--primary-color)" />
+                      </marker>
+                    </defs>
+                    <line x1="0" y1="22.5%" x2="100%" y2="22.5%" stroke="#777" />
+                    <line x1="0" y1="87.5%" x2="95%" y2="87.5%" stroke="var(--primary-color)" markerEnd="url(#o-marker)" />
+                  </svg>
+
+                  <div>
+                    <p>Federated results</p>
+                    <p>Local uploads</p>
+                  </div>
+                </div>
+                <div className="dashed-divider" />
+              </div>
+
+              <div>
+                <p>Gradient similarity(Cosine)</p>
+                <Gradient colors={GRADIENT} legends={['-1', '1']} />
               </div>
             </div>
           </div>

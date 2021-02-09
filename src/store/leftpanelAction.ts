@@ -21,22 +21,19 @@ export interface DataType {
   }>
 }
 
-// export const getData = () => async (dispatch: any, getState: any) => {
-//   const state = getState();
-//   try {
-//     const res: any = await fetch('/fl-hetero/initialize/');
-//       .then(resp => res.json())
-//       .then(resp => {
-//         dispatch({
-//           type: SET_LEFT_PANEL_DATA,
-//           data: resp
-//         })
-//       })
-//   } catch(err) {
-//     console.log(err);
-//   }
-
-// }
+export const getData = () => async (dispatch: any, getState: any) => {
+  const state = getState();
+  try {
+    const res: any = await fetch('/fl-hetero/initialize/')
+      .then(resp => resp.json())
+    dispatch({
+      type: SET_LEFT_PANEL_DATA,
+      data: res
+    })
+  } catch(err) {
+    console.log(err);
+  }
+}
 
 export const updateData = (args: updatePCAParams) => async (dispatch: any, getState: any) => {
   const state = getState();
@@ -54,23 +51,4 @@ export const updateData = (args: updatePCAParams) => async (dispatch: any, getSt
   } catch(err) {
     console.log(err);
   }
-
 }
-
-// export const fetchData = args => async (dispatch, getState) => {
-//   const state = getState();
-//   const url = `https://jsonplaceholder.typicode.com/users/${  args}`;
-
-//   try {
-//     const response = await fetch(url)
-//       .then(resp => resp)
-//       .then(resp => resp.json());
-
-//     dispatch({
-//       type: REMOTE_DATA_RECEIVED,
-//       data: response
-//     });
-//   } catch (error) {
-//     console.log(error);
-//   }
-// };

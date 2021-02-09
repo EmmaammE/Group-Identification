@@ -140,33 +140,39 @@ function LeftPanel({ setCp, setGridData }: LeftPanelProps) {
       <h2>Model Comparison</h2>
 
       <div className="content">
-        <h3>Data Heterogeneous Location</h3>
+        <h3>Output Comparison</h3>
         <div className="scatter-container">
-          {status
-            ? data && (
-                <Scatterplot
-                  chartConfig={chartProps}
-                  data={data}
-                  render={1}
-                  oIndex={0}
-                  dimensions={['PC1', 'PC2']}
-                  // extents={[]}
-                  extents={[
-                    [
-                      [-4.507507196724417, 5.439853437485293],
-                      [-5.433762242260121, 4.392136043505268],
-                    ],
-                    // [
-                    //   [-1.1896514994207771e-11, 1.9374724750371005e-11],
-                    //   [-2.7053692224873465, 4.478693806767255],
-                    // ],
-                  ]}
-                />
-              )
-            : rawData !== null && <GridRect data={rawData[index].dataMatrix} />}
+          <div>Inputs:</div>
+          {
+            data && (
+              <Scatterplot
+                chartConfig={chartProps}
+                data={data}
+                render={1}
+                oIndex={0}
+                dimensions={['PC1', 'PC2']}
+                // extents={[]}
+                extents={[
+                  [
+                    [-4.507507196724417, 5.439853437485293],
+                    [-5.433762242260121, 4.392136043505268],
+                  ],
+                  // [
+                  //   [-1.1896514994207771e-11, 1.9374724750371005e-11],
+                  //   [-2.7053692224873465, 4.478693806767255],
+                  // ],
+                ]}
+              />
+            )
+            // <GridRect data={rawData[index].dataMatrix} />
+          }
+
+          <div className="divider" />
         </div>
 
         <div className="info-container">
+          <h3>Inconsistent Block Analysis</h3>
+
           <div className="legend">
             <span>-1</span>
             <svg viewBox="0 0 55 5">
