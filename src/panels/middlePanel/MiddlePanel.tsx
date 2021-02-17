@@ -1,17 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import TSNE from 'tsne-js';
 import Overview, { OverviewProps } from '../../components/overview/Overview';
 // import data from '../../assets/data/test_data.json';
 import LineChart from '../../components/lineChart/Linechart';
 import './MiddlePanel.scss';
 import Gradient from '../../components/ui/Gradient';
-import RangeSlider from '../../components/ui/Range';
+import RangeSlider from '../../components/ui/RangeSlider';
 import Dropdown from '../../components/ui/Dropdown';
+import { DataType, getData } from '../../store/leftpanelAction';
 
 const lineChartMargin = {
   r: 15,
-  b: 80,
-  l: 20,
+  b: 50,
+  l: 30,
   t: 36,
 };
 
@@ -65,132 +67,160 @@ interface dataType {
 // alternatively, it can be an array of coordinates (second argument should be specified as 'sparse')
 
 const GRADIENT = ['#fff', '#aa815d'];
+const items = ['Client-Northeast', 'Client-Midwest', 'Client-South', 'Client-West'];
 
 function MiddlePanel() {
   // TODO 修改local数据集
-  const [index, setIndex] = useState(1);
+  const [index, setIndex] = useState(-1);
   const [overviewData, setOverviewData] = useState<OverviewData>(fakeData);
   // const [data, setData] = useState<dataType | null>(null);
   const [lineChartData, setLineChartData] = useState<LineChartData>([[], []]);
   const [name, setName] = useState<string>('');
   const [time, setTime] = useState<Array<number>>([]);
-  const [maxRound, setMaxRound] = useState<number>(40);
+
+  const [range, setRange] = useState<number[]>([1, 10]);
+  const [extent, setExtent] = useState<number[]>([1, 10]);
+  const [rangeMap, setRangeMap] = useState<number[]>([0, 0]);
+
+  const rawData = useSelector((state: any) => state.leftPanel, shallowEqual);
+  const dispatch = useDispatch();
+  const initialize = useCallback(() => dispatch(getData()), [dispatch]);
 
   useEffect(() => {
-    fetch('/fl-hetero/initialize/')
-      .then((res) => res.json())
-      .then((res: dataType) => {
-        // console.log(res)
-        model.init({
-          data: res.federated.weight,
-          type: 'dense',
-        });
-
-        const fed = model.getOutput();
-
-        model.init({
-          data: res.others[index].weight,
-          type: 'dense',
-        });
-        const local = model.getOutput();
-
-        const batchSize: number[] = res.time.map((d: number[]) => d.length);
-        const timeEnd: number[] = res.time.map((d: number[]) => d[1]);
-
-        setOverviewData({ fed, local, batchSize });
-        setLineChartData([res.federated.loss, res.others[index].loss]);
-        setName(res.others[index].clientName);
-        setTime(timeEnd);
-        setMaxRound(timeEnd[timeEnd.length - 1]);
-      })
-      .catch((err) => {
-        console.error(err);
-      });
+    initialize();
   }, []);
 
-  const items = ['1', '2'];
+  useEffect(() => {
+    if (index === -1) {
+      return;
+    }
+
+    model.init({
+      data: rawData.federated.weight,
+      type: 'dense',
+    });
+
+    const fed = model.getOutput();
+
+    model.init({
+      data: rawData.others[index].weight,
+      type: 'dense',
+    });
+    const local = model.getOutput();
+
+    const batchSize: number[] = rawData.time.map((d: number[]) => d.length);
+    const timeEnd: number[] = rawData.time.map((d: number[]) => d[1]);
+
+    setOverviewData({ fed, local, batchSize });
+    setLineChartData([rawData.federated.loss, rawData.others[index].loss]);
+    setName(rawData.others[index].clientName);
+    setTime(timeEnd);
+
+    const maxV = timeEnd.length;
+    setRange([1, maxV]);
+    setExtent([1, maxV]);
+    setRangeMap([0, maxV - 1]);
+  }, [index, rawData]);
 
   return (
     <div id="MiddlePanel" className="panel">
       <h2>Federated Learning Overview</h2>
 
       <div className="content">
-        <div className="info-container">
-          <h3>Data Description</h3>
-          <div className="row">
-            <p>Dataset: {name} Dataset</p>
-            <Dropdown items={items} index={0} />
+        <div>
+          <div className="info-container">
+            <h3>Information Panel</h3>
+            <div className="info-row">
+              {index === -1 ? (
+                <>
+                  <span>Dataset: </span>
+                  <Dropdown items={items} setIndex={setIndex} />
+                </>
+              ) : (
+                <p>Dataset: {name} Dataset</p>
+              )}
+            </div>
+            <p>Size: XXX in training set and 234 in test set</p>
+
+            <div className="divider" />
+
+            <p>Total number of clients: 123</p>
+            <p>Name of the client: xxx</p>
+            <p>Current communication round: No.123</p>
+
+            <div className="divider" />
           </div>
-          <p>Label: xxx</p>
-          <p>Size: </p>
 
-          <div className="divider" />
-
-          <h3>Federated Learning Description</h3>
-          <p>Total number of clients: 123</p>
-          <p>Name of the client: xxx</p>
-          <p>Current communication round: No.123 (Updating)</p>
-
-          <div className="divider" />
+          <div className="loss-wrapper">
+            <h3>Federated Training Process</h3>
+            <LineChart data={lineChartData} margin={lineChartMargin} time={time} />
+          </div>
         </div>
-
         <div className="overview-wrapper">
+          <div className="divider" />
+
           <h3>Model Updates Projection</h3>
           <div className="overview-content">
-            <Overview data={overviewData} />
             <div className="info">
-              <div>
+              <div className="row">
                 <p>Communication round range:</p>
-                <div className="legend-wrapper">
-                  <p>1</p>
-                  <RangeSlider minValue={1} maxValue={maxRound} />
-                  <p>{maxRound}(max)</p>
-                </div>
-                <div className="dashed-divider" />
+                {/* <div className="legend-wrapper">
+                  <p>{range[0]}</p>
+                  <p>{range[1]}</p>
+                </div> */}
+                <RangeSlider
+                  minValue={range[0]}
+                  maxValue={range[1]}
+                  setRange={setRange}
+                  extent={extent}
+                  invoke={setRangeMap}
+                />
               </div>
 
-              <div>
-                <p>Updates:</p>
-                <div className="update-wrapper">
-                  <svg width="80px" viewBox="0 0 80 30">
-                    <defs>
-                      <marker
-                        id="o-marker"
-                        refX="6 "
-                        refY="6"
-                        viewBox="0 0 16 16"
-                        markerWidth="10"
-                        markerHeight="10"
-                        markerUnits="userSpaceOnUse"
-                        orient="auto"
-                      >
-                        <path d="M 0 0 12 6 0 12 3 6 Z" fill="var(--primary-color)" />
-                      </marker>
-                    </defs>
-                    <line x1="0" y1="22.5%" x2="100%" y2="22.5%" stroke="#777" />
-                    <line x1="0" y1="87.5%" x2="95%" y2="87.5%" stroke="var(--primary-color)" markerEnd="url(#o-marker)" />
-                  </svg>
-
-                  <div>
-                    <p>Federated results</p>
-                    <p>Local uploads</p>
-                  </div>
-                </div>
-                <div className="dashed-divider" />
+              <div className="row">
+                <svg height="20px" viewBox="0 0 180 20">
+                  <circle cx="4" cy="10" r="2" stroke="#000" fill="#fff" />
+                  <text x="9" y="15">
+                    Federated parameters
+                  </text>
+                </svg>
+                <svg height="20px" viewBox="0 0 160 20">
+                  <defs>
+                    <marker
+                      id="arrow-tip"
+                      refX="6 "
+                      refY="6"
+                      viewBox="0 0 16 16"
+                      markerWidth="8"
+                      markerHeight="8"
+                      markerUnits="userSpaceOnUse"
+                      orient="auto"
+                    >
+                      <path d="M 0 0 12 6 0 12 3 6 Z" fill="var(--primary-color)" />
+                    </marker>
+                  </defs>
+                  <line
+                    x1="0"
+                    y1="10"
+                    x2="10"
+                    y2="10"
+                    stroke="var(--primary-color)"
+                    markerEnd="url(#arrow-tip)"
+                  />
+                  <text x="20" y="15">
+                    Local gradient
+                  </text>
+                </svg>
               </div>
 
-              <div>
+              <div className="row">
                 <p>Gradient similarity(Cosine)</p>
-                <Gradient colors={GRADIENT} legends={['-1', '1']} />
+                <Gradient colors={GRADIENT} legends={['1', '-1']} />
               </div>
             </div>
-          </div>
-          <div className="divider" />
-        </div>
 
-        <div className="loss-wrapper">
-          <h3>Federated Training Process</h3>
-          <LineChart data={lineChartData} margin={lineChartMargin} time={time} />
+            <Overview data={overviewData} range={rangeMap} />
+          </div>
         </div>
       </div>
     </div>

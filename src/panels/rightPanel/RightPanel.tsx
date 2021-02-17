@@ -26,14 +26,44 @@ function RightPanel({ cpArray, gridData }: RightPanelPorps) {
           <h3>Ground Truth Comparison</h3>
           {/* {gridData && <GridRect data={gridData} />} */}
           <GridRect data={[[1]]} />
-          <div className="divider" />
         </div>
-        <div className="lines">
-          <h3>Attribute Distribution</h3>
+        <div className="attr-container">
+          <div className="divider" />
 
-          {data.map((arr: number[], i: number) => (
-            <CpLineChart key={i} margin={margin} data={arr} title="" />
-          ))}
+          <div className="row">
+            <h3>Attribute Distribution</h3>
+
+            <div className="legends">
+              <svg height="20px" viewBox="0 0 120 20">
+                <line x1="0" y1="10" x2="18" y2="10" stroke="#5082b3" />
+                <text x="20" y="15">
+                  Positive
+                </text>
+              </svg>
+
+              <svg height="20px" viewBox="0 0 120 20">
+                <line x1="0" y1="10" x2="18" y2="10" stroke="#c84649" />
+                <text x="20" y="15">
+                  Negative
+                </text>
+              </svg>
+
+              <svg height="20px" viewBox="0 0 120 20">
+                <line x1="0" y1="10" x2="18" y2="10" stroke="var(--primary-color)" />
+                <text x="20" y="15">
+                  Inconsistency
+                </text>
+              </svg>
+            </div>
+          </div>
+
+          <div className="lines-container">
+            <div className="lines">
+              {data.map((arr: number[], i: number) => (
+                <CpLineChart key={i} margin={margin} data={arr} title="" />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

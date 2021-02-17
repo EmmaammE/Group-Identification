@@ -5,7 +5,12 @@ import ScatterplotProps from '../../types/scatter';
 import './Scatterplot.scss';
 import styles from '../../styles/axis.module.css';
 import tipStyles from '../../styles/tip.module.css';
+import lasso from '../../utils/lasso';
+import { setPoints } from '../../store/action';
+import { PointsState } from '../../types/point';
 import Triangle from '../markers/Triangle';
+import ExtentHull from './ExtentHull';
+import Button from '../ui/Button';
 
 function strokeType(type: string) {
   switch (type) {
@@ -24,6 +29,19 @@ function strokeType(type: string) {
 function pointColor(label: boolean | number) {
   // return label ? 'rgba(84, 122, 167, .7)' : 'rgba(216, 85, 88, .7)';
   return label ? 'rgba(221,221,221, .2)' : 'rgba(149, 98, 53,.7)';
+}
+
+interface TooltipData {
+  x: number;
+  y: number;
+  info: string;
+}
+
+interface GridCell {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 function Scatterplot({
@@ -58,9 +76,15 @@ function Scatterplot({
 
   const [domains, setDomains] = useState<any>([]);
 
+  const [tip, setTooltip] = useState<TooltipData | null>(null);
+
   const [t, setTransform] = useState<d3.ZoomTransform>(d3.zoomIdentity.translate(0, 0).scale(1));
 
   const [select, setSelect] = useState<boolean>(false);
+  const selectPoints = useSelector((state: PointsState) => state.points, shallowEqual);
+
+  const dispatch: Dispatch<any> = useDispatch();
+  const saveSelectedPoints = React.useCallback((points) => dispatch(setPoints(points)), [dispatch]);
 
   useEffect(() => {
     if (data) {
@@ -124,8 +148,101 @@ function Scatterplot({
     return [];
   }, [data, xScale, yScale, dimensions]);
 
+  // const quadtree = useMemo(
+  //   () =>
+  //     d3
+  //       .quadtree<any>()
+  //       .extent([
+  //         [-1, -1],
+  //         [width + 1, height + 1],
+  //       ])
+  //       .x((d: any) => d.pos[0])
+  //       .y((d: any) => d.pos[1])
+  //       .addAll(points),
+  //   [points, width, height]
+  // );
+
+  // const search = useCallback(
+  //   (x0, y0, x3, y3) => {
+  //     const validData: any = [];
+  //     quadtree.visit((node, x1, y1, x2, y2) => {
+  //       const pData = (node as any).data;
+
+  //       if (pData) {
+  //         const p = pData.pos;
+  //         p.selected = p[0] >= x0 && p[0] < x3 && p[1] >= y0 && p[1] < y3;
+  //         if (p.selected) {
+  //           validData.push(pData);
+  //         }
+  //       }
+  //       return x1 >= x3 || y1 >= y3 || x2 < x0 || y2 < y0;
+  //     });
+  //     return validData;
+  //   },
+  //   [quadtree]
+  // );
+
+  // const grids = useMemo(() => {
+  //   const yticks = yAxis.scale().ticks(5);
+  //   const gridYticks: number[] = [heightMap];
+  //   yticks.forEach((yy: any) => {
+  //     gridYticks.push(yScale(yy));
+  //   });
+  //   gridYticks.push(0);
+
+  //   const xticks = xAxis.scale().ticks(9);
+  //   const gridXticks: number[] = [0];
+  //   xticks.forEach((xx: any) => {
+  //     if (xScale(xx) !== 0 && xScale(xx) !== widthMap) {
+  //       gridXticks.push(xScale(xx));
+  //     }
+  //   });
+  //   gridXticks.push(widthMap);
+  //   const size1 = gridYticks.length;
+  //   const size2 = gridXticks.length;
+  //   const gridsArr: GridCell[][] = Array.from({ length: size1 }, () => Array(size2));
+  //   for (let i = 0; i < size1; i++) {
+  //     for (let j = 0; j < size2; j++) {
+  //       gridsArr[i][j] = {
+  //         x: gridXticks[j],
+  //         y: gridYticks[i + 1],
+  //         width: gridXticks[j + 1] - gridXticks[j],
+  //         height: gridYticks[i] - gridYticks[i + 1],
+  //       };
+  //     }
+  //   }
+  //   return gridsArr;
+  // }, [yAxis, heightMap, xAxis, yScale, xScale, widthMap]);
+
+  // const clusterPoints = useMemo(() => {
+  //   // 遍历每一个格子，找到格子里有多少个点
+  //   const size = grids[0].length;
+  //   const pointsArr: any = [];
+
+  //   grids.forEach((gridRow, i) => {
+  //     for (let j = 0; j < size - 1; ++j) {
+  //       const { x, y, width: gWidth, height: gHeight } = gridRow[j];
+  //       const searched = search(x, y, x + gWidth, y + gHeight);
+
+  //       const label1 = searched.filter((d: any) => d.label === 1);
+
+  //       const node = {
+  //         i,
+  //         j,
+  //         rate: label1.length / searched.length,
+  //       };
+  //       if (searched.length) {
+  //         pointsArr.push(node);
+  //       }
+  //     }
+  //   });
+  //   return pointsArr;
+  // }, [grids, search]);
+
   const drawPoints = useCallback(
     (sX: any, sY: any, k: number, ctx: CanvasRenderingContext2D) => {
+      const pointsMap = selectPoints[oIndex];
+
       // console.log('drawPoint', pointsMap)
 
       points.forEach((point: any) => {
@@ -137,10 +254,14 @@ function Scatterplot({
         ctx.arc(point.pos[0], point.pos[1], 3, 0, Math.PI * 2);
         ctx.closePath();
         ctx.fill();
+        if (pointsMap && pointsMap.has(point.id)) {
+          ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+          ctx.stroke();
+        }
         ctx.restore();
       });
     },
-    [points]
+    [points, oIndex, selectPoints]
   );
 
   const drawLines = useCallback(
@@ -300,6 +421,17 @@ function Scatterplot({
     [chartctx, data, dimensions, draw, height, select, width, xScale, yScale]
   );
 
+  const drawLassoEnd = useCallback(
+    (polygon: any) => {
+      const s = drawLasso(polygon);
+      saveSelectedPoints({
+        [oIndex]: s,
+      });
+      // console.log(s)
+    },
+    [drawLasso, oIndex, saveSelectedPoints]
+  );
+
   useEffect(() => {
     if (chartctx) {
       chartctx.rect(1, 1, widthMap - 7, heightMap - 1);
@@ -315,6 +447,10 @@ function Scatterplot({
           if (!select) {
             chartctx.save();
             setTransform(transform);
+            setTooltip(null);
+            saveSelectedPoints({
+              [oIndex]: new Map(),
+            });
             chartctx.restore();
           }
         });
@@ -330,6 +466,48 @@ function Scatterplot({
       });
 
       draw(chartctx);
+
+      $pointsSelect
+        .on('mousemove', (event: any) => {
+          if (!select) {
+            const m = d3.pointer(event);
+            const { k } = t;
+            // setup an array to push the points to when > 1 point matches... i.e. two line pts.
+            let tooltipData: any = null;
+            // get the "points" data
+            const minD: number = Number.MAX_VALUE;
+            data.forEach((dat) => {
+              const dx = xScale(dat[dimensions[0]]) - m[0];
+              const dy = yScale(dat[dimensions[1]]) - m[1];
+
+              // Check distance
+              const distance = Math.sqrt(dx ** 2 + dy ** 2);
+              if (distance <= Math.sqrt(50) * (k > 1 ? k * 0.75 : k) && distance < minD) {
+                tooltipData = dat;
+              }
+            });
+            if (tooltipData !== null) {
+              const pxDat = [
+                ~~xScale(tooltipData[dimensions[0]]),
+                ~~yScale(tooltipData[dimensions[1]]),
+              ];
+
+              // console.log(pxDat[0], pxDat[1], "mouse:", m[0], m[1])
+              setTooltip({
+                x: pxDat[0],
+                y: pxDat[1],
+                info: tooltipData.label,
+              });
+            } else {
+              setTooltip(null);
+            }
+          }
+        })
+        .on('mouseout', () => {
+          setTooltip(null);
+        });
+
+      d3.select(chartctx.canvas).call(lasso().on('start lasso', drawLasso).on('end', drawLassoEnd));
     }
   }, [
     $points,
@@ -347,6 +525,8 @@ function Scatterplot({
     yScale,
     drawLasso,
     select,
+    drawLassoEnd,
+    saveSelectedPoints,
     oIndex,
     dimensions,
   ]);
@@ -368,6 +548,14 @@ function Scatterplot({
 
   return (
     <div className="scatter-box">
+      {/* <Button
+        handleClick={toSelect}
+        style={{
+          color: select ? '#f00' : '#000',
+        }}
+      >
+        select
+      </Button> */}
       <div className="container">
         <svg width={`${width}px`} height={`${height}px`}>
           <defs>
@@ -377,6 +565,17 @@ function Scatterplot({
           <clipPath id="myClip">
             <rect width={widthMap} height={heightMap} />
           </clipPath>
+
+          <g>
+            {new Array(2).fill(null).map((d, i) => (
+              <g key={i}>
+                <circle cx={widthMap - 57 - i * 110} cy={10} r={6} fill={pointColor(i)} />
+                <text x={widthMap - 50 - i * 110} y={15}>
+                  {i === 0 ? 'Consistency' : 'Inconsistency'}
+                </text>
+              </g>
+            ))}
+          </g>
 
           <g transform={`translate(${margin.l},${margin.t})`}>
             <g transform={`translate(0, ${heightMap})`} className="axes x-axis" ref={$xaxis} />
@@ -447,11 +646,22 @@ function Scatterplot({
           ref={$chart}
           className="linemap"
           style={{
-            width: '100%',
-            // height: '100%',
+            // width: '100%',
+            height: '100%',
             margin: `${margin.t}px ${margin.r}px ${margin.b}px ${margin.l}px`,
           }}
         />
+        {tip && (
+          <div
+            className={tipStyles.tip}
+            style={{
+              left: tip.x + margin.l,
+              top: tip.y + margin.t,
+            }}
+          >
+            {tip.info}
+          </div>
+        )}
       </div>
     </div>
   );

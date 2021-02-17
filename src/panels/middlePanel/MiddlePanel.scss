@@ -3,6 +3,7 @@
     .selection {
       fill: url(#range);
       fill-opacity: 1;
+      stroke: none;
     }
   }
 
@@ -28,17 +29,24 @@
   .overview-wrapper {
     .overview-content {
       display: flex;
+      flex-direction: column;
 
       // Ovewview.tsx
       #Overview {
-        padding: 10px 0;
-        flex: 0 1 23vw;
+        // padding: 10px 0;
+        // flex: 0 1 23vw;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        svg {
+          margin: 5px;
+        }
       }
 
       .info {
-        padding: 10px 5px;
+        // padding: 10px 5px;
         flex-grow: 1;
-        margin: 0 10px;
         display: flex;
         flex-direction: column;
         justify-content: space-around;
@@ -46,17 +54,16 @@
         p {
           white-space: nowrap;
         }
-
-        .legend-wrapper,
-        .update-wrapper {
-          margin: 10px 0;
-        }
       }
     }
   }
 
   .lines {
-    path {
+    .domain {
+      opacity: 0;
+    }
+
+    .tick line {
       stroke: #efefef;
     }
   }

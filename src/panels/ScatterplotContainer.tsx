@@ -1,5 +1,5 @@
 import React from 'react';
-import Scatterplot from '../components/scatterplots/Scatterplot';
+import Scatterplot from '../components/scatterplots/Scatterplot2';
 import { ChartProps } from '../types/chart';
 import CPCA from '../assets/cpca.json';
 import LABEL from '../assets/labels.json';

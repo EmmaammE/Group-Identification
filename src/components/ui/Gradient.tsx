@@ -8,16 +8,19 @@ export interface GradientProps {
 }
 
 const Gradient = ({ colors, legends, width }: GradientProps) => {
-  const scale = d3.scaleLinear<string>().domain([0, colors.length]).range(['0%', '100%']);
+  const scale = d3
+    .scaleLinear<string>()
+    .domain([0, colors.length - 1])
+    .range(['0%', '100%']);
 
   return (
     <div className="legend-wrapper">
       <p>{legends[0]}</p>
-      <svg width={width || '160px'} viewBox={width ? `0 0 80 20` : '0 0 160 20'}>
+      <svg width={width || '120px'} viewBox={width ? `0 0 80 15` : '0 0 120 15'}>
         <defs>
           <linearGradient id={colors.join('')} x1="0%" y1="0%" x2="100%" y2="0%">
             {colors.map((color, i) => (
-              <stop offset={scale(i)} stopColor={color} />
+              <stop offset={scale(i)} stopColor={color} key={color} />
             ))}
           </linearGradient>
         </defs>

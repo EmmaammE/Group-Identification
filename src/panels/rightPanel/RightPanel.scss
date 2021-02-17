@@ -1,16 +1,8 @@
 #RightPanel {
-  display: flex;
-  flex-direction: column;
-  padding: 0 10px;
-
-  .grid-wrapper {
-    // width: 20vw;
-    // height: 20vw;
-  }
-
   .grid-container {
     position: relative;
     display: flex;
+    height: 90%;
 
     .legend {
       display: flex;
@@ -23,12 +15,22 @@
       }
     }
 
+    .svg-wrapper {
+      flex: 1 1 80%;
+
+      .label {
+        writing-mode: tb;
+      }
+    }
+
     .grid-info {
-      flex: 1;
+      flex: 1 0 20%;
       display: flex;
       flex-direction: column;
       justify-content: space-evenly;
-      margin-left: 10px;
+      margin: 0 5px;
+      padding-left: 5px;
+      border-left: 2px solid var(--background-color);
 
       p {
         white-space: nowrap;
@@ -41,14 +43,39 @@
     }
   }
 
-  .lines {
+  .legends {
     display: flex;
-    flex-wrap: wrap;
-    height: 60vh;
-    overflow: auto;
+    align-items: center;
+  }
 
-    .line-wrapper {
-      // flex-basis: 50%;
+  .line-wrapper {
+    flex-basis: 50%;
+  }
+
+  .attr-container {
+    flex: 2 1 44%;
+    min-height: 44vh;
+    display: flex;
+    flex-direction: column;
+
+    .lines-container {
+      overflow: auto;
+      flex: 1;
+
+      .lines {
+        display: flex;
+        flex-wrap: wrap;
+        height: 100%;
+      }
     }
+  }
+
+  .op-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #dfd0c2;
+    border-radius: 10px;
+    padding: 5px 0;
   }
 }

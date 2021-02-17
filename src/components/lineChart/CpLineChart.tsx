@@ -12,8 +12,8 @@ export interface CpLineChartProps {
   title: string;
 }
 
-const WIDTH = 500;
-const HEIGHT = 200;
+const WIDTH = 350;
+const HEIGHT = 180;
 
 const CpLineChart = ({ margin, data: rawData, title }: CpLineChartProps) => {
   const widthMap: number = WIDTH - margin.l - margin.r;
@@ -52,7 +52,9 @@ const CpLineChart = ({ margin, data: rawData, title }: CpLineChartProps) => {
   const $xaxis: any = useRef(null);
   const $yaxis: any = useRef(null);
 
-  const dataKey = useMemo(() => Object.keys(data).sort((a: any, b: any) => Number(a) - Number(b)), [data]);
+  const dataKey = useMemo(() => Object.keys(data).sort((a: any, b: any) => Number(a) - Number(b)), [
+    data,
+  ]);
 
   const line = d3
     .line()
@@ -70,17 +72,32 @@ const CpLineChart = ({ margin, data: rawData, title }: CpLineChartProps) => {
 
   return (
     <div className="line-wrapper">
-      <svg width="100%" height="100%" viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
+      <p style={{ textAlign: 'center' }}>Attribute name</p>
+      <svg width="100%" viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
         <g transform={`translate(${margin.l}, ${margin.t})`}>
           <g transform={`translate(0, ${heightMap})`} className="axes x-axis" ref={$xaxis} />
           <g className="axes y-axis" ref={$yaxis} />
 
-          <line x1={0} x2={widthMap + 5} y1={heightMap} y2={heightMap} stroke="rgba(0,0,0,0.8)" markerEnd="url(#arrow)" />
-          <line x1={0} x2={0} y1={heightMap} y2={-10} stroke="rgba(0,0,0,0.8)" markerEnd="url(#arrow)" />
+          <line
+            x1={0}
+            x2={widthMap + 5}
+            y1={heightMap}
+            y2={heightMap}
+            stroke="rgba(0,0,0,0.8)"
+            markerEnd="url(#arrow)"
+          />
+          <line
+            x1={0}
+            x2={0}
+            y1={heightMap}
+            y2={-10}
+            stroke="rgba(0,0,0,0.8)"
+            markerEnd="url(#arrow)"
+          />
           <text dy={-25} textAnchor="middle">
-            数量
+            Percentage
           </text>
-          <text transform={`translate(${widthMap + 20},${heightMap + 5})`}>属性值</text>
+          <text transform={`translate(${widthMap + 20},${heightMap + 5})`}>Value</text>
 
           {dataKey.length > 0 && <path d={line(dataKey as any) || ''} stroke="#777" fill="none" />}
         </g>

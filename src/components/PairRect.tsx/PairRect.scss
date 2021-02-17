@@ -5,8 +5,11 @@
   cursor: pointer;
   padding: 5px;
 
+  &:active,
   &:focus {
-    outline: 1px solid #777;
+    // outline: 1px solid #777;
+    outline: none;
+    background: #dfd0c2;
   }
 
   .title {

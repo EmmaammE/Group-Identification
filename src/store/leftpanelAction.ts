@@ -21,33 +21,29 @@ export interface DataType {
   }>
 }
 
-export const getData = () => async (dispatch: any, getState: any) => {
-  const state = getState();
+export const getData = () => async (dispatch: any) => {
   try {
-    const res: any = await fetch('/fl-hetero/initialize/')
+    fetch('/fl-hetero/initialize/')
       .then(resp => resp.json())
-    dispatch({
-      type: SET_LEFT_PANEL_DATA,
-      data: res
-    })
+      .then(res => dispatch({
+          type: SET_LEFT_PANEL_DATA,
+          data: res
+        }))
   } catch(err) {
     console.log(err);
   }
 }
 
-export const updateData = (args: updatePCAParams) => async (dispatch: any, getState: any) => {
-  const state = getState();
+export const updateData = (args: updatePCAParams) => async (dispatch: any) => {
   try {
     fetch('/fl-hetero/customize', {
       method: 'POST',
       body: JSON.stringify(args)
     }).then(res => res.json())
-      .then(res => {
-        dispatch({
+      .then(res => dispatch({
           type: SET_LEFT_PANEL_DATA,
           data: res
-        })
-      })
+        }))
   } catch(err) {
     console.log(err);
   }

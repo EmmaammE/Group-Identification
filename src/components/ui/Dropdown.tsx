@@ -1,20 +1,29 @@
+/* eslint-disable jsx-a11y/no-onchange */
 import React from 'react';
 
 interface DropdownProps {
   items: string[];
-  index: number;
+  // index: number,
+  setIndex: Function;
 }
 
-const Dropdown = ({ items, index }: DropdownProps) => (
-  <div className="select-dropdown">
-    <select>
-      {items.map((item) => (
-        <option key={item} value="Option 1">
-          {item}
-        </option>
-      ))}
-    </select>
-  </div>
-);
+const Dropdown = ({ items, setIndex }: DropdownProps) => {
+  const handleChange = (e: any) => {
+    console.log(e.target.value);
+    setIndex(e.target.value);
+  };
+  return (
+    <div className="select-dropdown">
+      <select onChange={handleChange}>
+        <option style={{ display: 'none' }} />
+        {items.map((item, i) => (
+          <option key={item} value={i}>
+            {item}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+};
 
 export default Dropdown;

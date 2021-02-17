@@ -12,17 +12,23 @@
 }
 
 .scatter-box {
-  overflow: hidden;
+  // overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .container {
   position: relative;
-  min-height: 38vh;
-  margin: 5px 0 0 0;
+  min-height: 43vh;
+  width: 43vh;
+  // margin: 5px 0 0 0;
 
   svg,
   .linemap {
     position: absolute;
+    top: 0;
+    left: 0;
     background-color: transparent;
   }
 
