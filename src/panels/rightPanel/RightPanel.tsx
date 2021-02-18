@@ -8,13 +8,21 @@ interface RightPanelPorps {
   cpArray: any;
   gridData: number[][] | null;
 }
-const margin = { t: 50, r: 80, b: 20, l: 50 };
+const margin = { t: 50, r: 60, b: 20, l: 50 };
 const titles = ['cp1', 'cp2'];
 
-const data: number[][] = [...Array(31)].map((x) => []);
+const size = 31;
+const data: number[][][] = [...Array(size)].map(() => [[], []]);
+const labels = (rawData as any).labels_real;
 
-(rawData as any).samples.forEach((d: number[]) => {
-  d.forEach((value, i) => data[i].push(value));
+(rawData as any).samples.forEach((d: number[], j: number) => {
+  if (!labels[j]) {
+    // negative labels
+    d.forEach((value, i) => i < size && data[i][0].push(value));
+  } else {
+    // positive labels,
+    d.forEach((value, i) => i < size && data[i][1].push(value));
+  }
 });
 
 function RightPanel({ cpArray, gridData }: RightPanelPorps) {
@@ -27,6 +35,7 @@ function RightPanel({ cpArray, gridData }: RightPanelPorps) {
           {/* {gridData && <GridRect data={gridData} />} */}
           <GridRect data={[[1]]} />
         </div>
+
         <div className="attr-container">
           <div className="divider" />
 
@@ -59,8 +68,8 @@ function RightPanel({ cpArray, gridData }: RightPanelPorps) {
 
           <div className="lines-container">
             <div className="lines">
-              {data.map((arr: number[], i: number) => (
-                <CpLineChart key={i} margin={margin} data={arr} title="" />
+              {data.map((arr: number[][], i: number) => (
+                <CpLineChart key={i} margin={margin} data={arr} title={`${i}`} />
               ))}
             </div>
           </div>
