@@ -1,36 +1,28 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo } from 'react';
 import * as d3 from 'd3';
-// import { cp1, cp2} from './test'
-import { line } from 'd3';
-import data from '../../assets/source/samples.json';
-
-const transpose = (a: number[][]) => a[0].map((x, i) => a.map((y) => y[i]));
-const dotproduct = (a: number[], b: number[]) =>
-  a.map((x, i) => a[i] * b[i]).reduce((m, n) => m + n);
-const mmultiply = (a: number[][], b: number[][]) =>
-  a.map((x) => transpose(b).map((y) => dotproduct(x, y)));
+import { transpose, mmultiply } from '../../utils/mm';
 
 const WIDTH = 60;
 const HEIGHT = 60;
 
-const rawData = (data as any).samples;
 // const MARGIN = {top: 30, right: 30, bottom: 30, left: 30};
 const MARGIN = { top: 0, right: 0, bottom: 0, left: 0 };
 
 interface HeatmapProps {
   cpArray: number[][];
+  data: number[][];
+  // 异构点的序号
+  heteroIndex: number[];
 }
 
-const Heatmap = ({ cpArray }: HeatmapProps) => {
+const Heatmap = ({ cpArray, data, heteroIndex }: HeatmapProps) => {
   const points = useMemo(() => {
-    const cpT = transpose(cpArray); // 31*2
-    return mmultiply(rawData, cpT);
-  }, [cpArray]);
+    const cpT = transpose(cpArray); // 784*2
+    return mmultiply(data, cpT);
+  }, [cpArray, data]);
 
   const width = WIDTH - MARGIN.left - MARGIN.right;
   const height = HEIGHT - MARGIN.bottom - MARGIN.right;
-
-  const $axes = useRef(null);
 
   const x = [Number.MAX_VALUE, Number.MIN_VALUE];
   const y = x.slice();
@@ -65,7 +57,12 @@ const Heatmap = ({ cpArray }: HeatmapProps) => {
 
   const color = d3.scaleLinear<string>().domain([0, 0.2, 1]).range(['#fff', '#ccc', '#666']);
 
-  const hull = d3.polygonHull(points.map((point) => [xScale(point[0]), yScale(point[1])]));
+  const hull = d3.polygonHull(
+    heteroIndex.map((index) => {
+      const point = points[index];
+      return [xScale(point[0]), yScale(point[1])];
+    })
+  );
 
   // useEffect(() => {
   //   if($axes.current) {
@@ -92,14 +89,21 @@ const Heatmap = ({ cpArray }: HeatmapProps) => {
       </defs>
 
       <g transform={`translate(${MARGIN.left}, ${MARGIN.top})`}>
-        {/* <g className="axes" ref={$axes} /> */}
         <g clipPath="url(#cut-off)">
           {densityData.map((d, i) => (
             <path d={d3.geoPath()(d) as string} key={i} fill={color(linear(d.value))} />
           ))}
         </g>
 
-        {hull && <path d={`M${hull.join('L')}Z`} fill="none" stroke="var(--primary-color)" />}
+        {hull && (
+          <path
+            d={`M${hull.join('L')}Z`}
+            // fill="var(--primary-color)"
+            fill="none"
+            strokeWidth={4}
+            stroke="var(--primary-color)"
+          />
+        )}
       </g>
 
       <rect

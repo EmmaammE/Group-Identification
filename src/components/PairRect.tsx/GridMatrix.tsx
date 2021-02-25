@@ -7,7 +7,9 @@ interface GridMatrixProps {
   // 一个二维数组，表示点的投影坐标
   data: number[][];
   // 点的位置和label的id
-  dataId: number[];
+  // dataId: number[];
+  // 不一致的点的投影坐标
+  // inconsistentData: number[][],
   xLabels: number[];
   yLabels: number[];
 }
@@ -23,7 +25,7 @@ const colorScale = d3
   // 红白蓝
   .range(['#e60d17', '#fff', '#0b69b6']);
 
-const GridMatrix = ({ data, dataId, xLabels, yLabels }: GridMatrixProps) => {
+const GridMatrix = ({ data, xLabels, yLabels }: GridMatrixProps) => {
   const $chart = useRef(null);
 
   const [svgWidth, setWidth] = useState(350);
@@ -84,12 +86,11 @@ const GridMatrix = ({ data, dataId, xLabels, yLabels }: GridMatrixProps) => {
   const points: number[][] = useMemo(
     () =>
       data.map((point, k) => {
-        const id = dataId[k];
-        const pointX = xLabels[id];
-        const pointY = yLabels[id];
+        const pointX = xLabels[k];
+        const pointY = yLabels[k];
         return [xScale(point[0]), yScale(point[1]), pointX, pointY];
       }),
-    [data, dataId, xLabels, yLabels, xScale, yScale]
+    [data, xLabels, yLabels, xScale, yScale]
   );
 
   const quadtree = d3
@@ -166,9 +167,9 @@ const GridMatrix = ({ data, dataId, xLabels, yLabels }: GridMatrixProps) => {
       return;
     }
 
-    console.log('draw gridmatrix');
+    // console.log('draw gridmatrix');
+    // console.log('xLabelsArr', xLabelsArr, 'ylabels:', yLabelsArr)
     const ctx = ($chart.current as any).getContext('2d');
-    // ctx.save();
     ctx.clearRect(1, 0, svgWidth, svgHeight);
     ctx.fillStyle = 'rgba(149, 98, 53,.5)';
 
@@ -182,12 +183,12 @@ const GridMatrix = ({ data, dataId, xLabels, yLabels }: GridMatrixProps) => {
           const posX = xScale(point[0]) + left;
           const posY = yScale(point[1]) + top;
 
-          const id = dataId[k];
-          const pointX = xLabels[id];
-          const pointY = yLabels[id];
+          const pointX = xLabels[k];
+          const pointY = yLabels[k];
 
           if (pointX === xLabel && pointY === yLabel) {
             // ctx.fillStyle="rgba(149, 98, 53,.5)";
+
             ctx.moveTo(posX, posY);
             ctx.beginPath();
 
@@ -197,6 +198,13 @@ const GridMatrix = ({ data, dataId, xLabels, yLabels }: GridMatrixProps) => {
           }
           // else {
           //   ctx.fillStyle = 'rgba(200,200,200,0.1)';
+
+          //   ctx.moveTo(posX, posY);
+          //   ctx.beginPath();
+
+          //   ctx.arc(posX, posY, 2, 0, Math.PI * 2);
+          //   ctx.closePath();
+          //   ctx.fill();
           // }
         });
       });
@@ -204,7 +212,6 @@ const GridMatrix = ({ data, dataId, xLabels, yLabels }: GridMatrixProps) => {
   }, [
     $chart,
     data,
-    dataId,
     height,
     indexXScale,
     indexYScale,
@@ -250,7 +257,7 @@ const GridMatrix = ({ data, dataId, xLabels, yLabels }: GridMatrixProps) => {
               height={`${svgHeight}px`}
             >
               <g transform={`translate(${margin.l},${margin.t})`}>
-                <rect x={0} y={0} width={width} height={height} fill="none" stroke="#efefef" />
+                {/* <rect x={0} y={0} width={width} height={height} fill="none" stroke="#efefef" /> */}
 
                 {xLabelsArr.map((x, i) =>
                   yLabelsArr.map((y, j) => {

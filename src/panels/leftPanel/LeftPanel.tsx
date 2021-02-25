@@ -1,24 +1,18 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import Scatterplot from '../../components/scatterplots/Scatterplot';
-import Button from '../../components/ui/Button';
 import { ChartProps } from '../../types/chart';
-import Worker from '../../worker';
 import './leftPanel.scss';
 import inputStyles from '../../styles/input.module.css';
-import Lineplot from '../../components/line/Lineplot';
 import PairRect from '../../components/PairRect.tsx/PairRect';
-import GridRect from '../../components/PairRect.tsx/GridMatrix';
-import { DataItem } from '../../types/data';
 import Gradient from '../../components/ui/Gradient';
-import Heatmap from '../../components/heatmap/Heatmap';
 import Dropdown from '../../components/ui/Dropdown';
-
-const instance = new Worker();
 
 const chartProps: ChartProps = {
   width: 400,
   height: 400,
-  margin: { t: 25, r: 25, b: 25, l: 25 },
+  // margin: { t: 25, r: 25, b: 25, l: 25 },
+  margin: { t: 10, r: 10, b: 10, l: 10 },
   yaxis: {
     title: 'PC2',
     color: 'rgba(174, 174, 174, 1)',
@@ -31,45 +25,15 @@ const chartProps: ChartProps = {
   },
 };
 
-const lineChartProps: ChartProps = {
-  width: 390,
-  height: 150,
-  margin: { t: 20, r: 10, b: 20, l: 30 },
-  yaxis: {
-    title: '数量',
-    color: 'rgba(174, 174, 174, 1)',
-    grid: false,
-  },
-  xaxis: {
-    title: '个体到团体中心距离',
-    color: 'rgba(174, 174, 174, 1)',
-    grid: false,
-  },
-};
+function LeftPanel() {
+  const rawData = useSelector((state: any) => state.identify.heteroList);
 
-interface LeftPanelProps {
-  setCp: Function;
-  setGridData: Function;
-}
-function LeftPanel({ setCp, setGridData }: LeftPanelProps) {
-  const [data, setData] = useState<any>(null);
-  const [rawData, setRawData] = useState<any>(null);
-
-  const [status, setStatus] = useState<boolean>(true);
   const [index, setIndex] = useState<number>(0);
 
   const [dataIndex, setDataIndex] = useState<number>(0);
 
-  const handleClick = async () => {
-    // console.log(result)
-    const dataFromWorker = await instance.processData();
-    setData(dataFromWorker);
-  };
-
-  const changeStatus = () => {
-    setStatus(!status);
-    console.log(status);
-  };
+  // cluster number 输入时的映射
+  const [nOfCluster, setNOfCluster] = useState<number | ''>(2);
 
   useEffect(() => {
     // fetch('/fl-hetero/identify/', {
@@ -117,29 +81,16 @@ function LeftPanel({ setCp, setGridData }: LeftPanelProps) {
     //   });
   }, []);
 
-  // useEffect(() => {
-  // async function load() {
-  //   const dataFromWorker = await instance.processData();
-  //   setData(dataFromWorker);
-  // }
-  // load();
-  // }, [])
-
-  useEffect(() => {
-    if (rawData) {
-      setCp([rawData[index].cpca.cp1, rawData[index].cpca.cp2]);
-    }
-  }, [rawData, index, setCp]);
-
-  useEffect(() => {
-    if (rawData) {
-      setGridData(rawData[index].dataMatrix);
-    }
-  }, [index, rawData, setGridData]);
-
   const onInputNumber = (e: any) => {
-    console.log(e);
+    const reg = new RegExp('^[1-9]*$');
+    if (e.target.value.match(reg)) {
+      // console.log(e.target.value)
+      setNOfCluster(+e.target.value);
+    } else {
+      setNOfCluster('');
+    }
   };
+
   return (
     <div className="panel" id="first-panel">
       <h2>Model Comparison</h2>
@@ -158,26 +109,14 @@ function LeftPanel({ setCp, setGridData }: LeftPanelProps) {
               <span>Inconsistency</span>
             </div>
           </div>
-          {data && (
-            <Scatterplot
-              chartConfig={chartProps}
-              data={data}
-              render={1}
-              oIndex={0}
-              dimensions={['PC1', 'PC2']}
-              // extents={[]}
-              extents={[
-                [
-                  [-4.507507196724417, 5.439853437485293],
-                  [-5.433762242260121, 4.392136043505268],
-                ],
-                // [
-                //   [-1.1896514994207771e-11, 1.9374724750371005e-11],
-                //   [-2.7053692224873465, 4.478693806767255],
-                // ],
-              ]}
-            />
-          )}
+          <Scatterplot
+            chartConfig={chartProps}
+            // data={data}
+            render={1}
+            oIndex={0}
+            dimensions={['PC1', 'PC2']}
+            extents={[]}
+          />
         </div>
 
         <div>
@@ -195,7 +134,7 @@ function LeftPanel({ setCp, setGridData }: LeftPanelProps) {
                     min="1"
                     max="15"
                     step="1"
-                    defaultValue={1}
+                    defaultValue={nOfCluster}
                     onInput={onInputNumber}
                   />
                 </div>
@@ -240,18 +179,18 @@ function LeftPanel({ setCp, setGridData }: LeftPanelProps) {
           <div className="pair-rect-wrapper">
             {rawData !== null &&
               rawData.map((d: any, i: number) => (
-                <>
-                  {/* {i!==0 && <div className="dashed-divider" />} */}
+                <div key={i}>
                   <div className="dashed-divider" />
                   <PairRect
-                    key={i}
-                    data={[d.cpca.cp1, d.cpca.cp2]}
+                    data={[d.cpca.cpc1, d.cpca.cpc2]}
                     names={['cPC1', 'cPC2']}
                     index={i}
                     size={d.heteroSize}
                     handleClick={() => setIndex(i)}
+                    heteroIndex={d.heteroIndex}
+                    rate={d.heteroRate}
                   />
-                </>
+                </div>
               ))}
           </div>
         </div>

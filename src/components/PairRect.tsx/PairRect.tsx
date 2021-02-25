@@ -1,6 +1,7 @@
 import React from 'react';
 import * as d3 from 'd3';
 import './PairRect.scss';
+import { useSelector } from 'react-redux';
 import Heatmap from '../heatmap/Heatmap';
 
 export interface PairRectProps {
@@ -9,18 +10,21 @@ export interface PairRectProps {
   size: number;
   index: number;
   handleClick: any;
+  heteroIndex: number[];
+  rate: number;
 }
 
 // const color = d3.scaleLinear<string>().domain([-1, 0, 1]).range(['#e60d17', '#eee', '#0b69b6']);
 const color = d3.scaleLinear<string>().domain([-1, 0, 1]).range(['#9ccb3c', '#fff', '#f7b326']);
 
 const rectWidth = 10;
-const rectHeight = 20;
+const rectHeight = 500;
 const rectPadding = 5;
-const PairRect = ({ data, names, size, index, handleClick }: PairRectProps) => {
+const PairRect = ({ data, names, size, index, handleClick, heteroIndex, rate }: PairRectProps) => {
   const WIDTH = rectWidth * data[0].length;
   const HEIGHT = rectHeight * data.length + rectPadding * (data.length - 1);
   const xScale = d3.scaleLinear().domain([0, data[0].length]).range([0, WIDTH]);
+  const samples = useSelector((state: any) => state.identify.samples);
 
   return (
     <div
@@ -32,16 +36,20 @@ const PairRect = ({ data, names, size, index, handleClick }: PairRectProps) => {
     >
       <div className="title">
         <span>Inconsistent block {index + 1}</span>
-        <span>Size: {size}</span>
+        <div>
+          <span>Size: {size}</span>
+          <span>Purity: {d3.format('.0%')(rate)}</span>
+        </div>
       </div>
       <div className="wrapper">
-        <Heatmap cpArray={data} />
+        <Heatmap cpArray={data} data={samples} heteroIndex={heteroIndex} />
         <div className="names">
           {names.map((name) => (
             <p key={name}>{name}</p>
           ))}
         </div>
         <div className="svg-wrapper">
+          {/* <svg width={`${WIDTH}px`} height={`${HEIGHT}px`} viewBox={`0 0 ${WIDTH} ${HEIGHT}`}> */}
           <svg width="100%" height="100%" viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
             {data.map((datum, i) => (
               <g key={`g-${i}}`}>
@@ -53,6 +61,7 @@ const PairRect = ({ data, names, size, index, handleClick }: PairRectProps) => {
                     width={rectWidth}
                     height={rectHeight}
                     fill={color(d)}
+                    // stroke="#000"
                   />
                 ))}
               </g>

@@ -1,11 +1,11 @@
-import React, { useState, useRef, useEffect, useCallback, Dispatch, useMemo } from 'react';
-import { shallowEqual, useDispatch, useSelector } from 'react-redux';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import * as d3 from 'd3';
 import ScatterplotProps from '../../types/scatter';
 import './Scatterplot.scss';
-import styles from '../../styles/axis.module.css';
-import tipStyles from '../../styles/tip.module.css';
 import Triangle from '../markers/Triangle';
+import { DataItem } from '../../types/data';
+import { transpose, mmultiply } from '../../utils/mm';
 
 function strokeType(type: string) {
   switch (type) {
@@ -28,11 +28,9 @@ function pointColor(label: boolean | number) {
 
 function Scatterplot({
   chartConfig: { width: widthP, height: heightP, yaxis, xaxis, margin },
-  data,
   render,
   oIndex,
   dimensions,
-  extents,
 }: ScatterplotProps) {
   const $chart: any = useRef(null);
   const $points: any = useRef(null);
@@ -43,6 +41,39 @@ function Scatterplot({
   const [widthMap, setWidthMap] = useState<number>(0);
   const [heightMap, setHeightMap] = useState<number>(0);
 
+  const samples = useSelector((state: any) => state.identify.samples);
+  const heteroLabels = useSelector((state: any) => state.identify.heteroLabels);
+  const pca = useSelector((state: any) => state.identify.pca);
+
+  const data: DataItem[] = useMemo(() => {
+    // 不一致的数据
+    const tmpData0: DataItem[] = [];
+    // 异构标签一致的数据
+    const tmpData1: DataItem[] = [];
+
+    const cpT: any = transpose([pca.pc1, pca.pc2]);
+    const pcaResults = mmultiply(samples, cpT);
+
+    heteroLabels.forEach((hLabel: boolean, i: number) => {
+      if (hLabel === false) {
+        tmpData1.push({
+          PC1: pcaResults[i][0],
+          PC2: pcaResults[i][1],
+          label: 1,
+        });
+      } else {
+        tmpData0.push({
+          PC1: pcaResults[i][0],
+          PC2: pcaResults[i][1],
+          label: 0,
+        });
+      }
+    });
+
+    // console.log(tmpData1.length)
+    return tmpData1.concat(tmpData0);
+  }, [pca.pc1, pca.pc2, samples, heteroLabels]);
+
   useEffect(() => {
     const { offsetWidth, offsetHeight } = $chart.current;
     const size = Math.min(offsetWidth, offsetHeight);
@@ -52,9 +83,6 @@ function Scatterplot({
     setWidthMap(offsetWidth - margin.l - margin.r);
     setHeightMap(offsetHeight - margin.t - margin.b);
   }, [$chart, margin.b, margin.l, margin.r, margin.t]);
-
-  const $xaxis: any = useRef(null);
-  const $yaxis: any = useRef(null);
 
   const [domains, setDomains] = useState<any>([]);
 
@@ -117,7 +145,6 @@ function Scatterplot({
         return {
           pos: [xScale(d[0]), yScale(d[1])],
           label: dat.label,
-          id: dat.id,
         };
       });
     }
@@ -211,24 +238,6 @@ function Scatterplot({
         // const yAxis = d3.axisLeft(yScale).ticks(5).tickFormat(d3.format('.2g'));
 
         if (type) {
-          // draw axis
-          d3.select($xaxis.current)
-            .call(xAxis.scale(xScale))
-            .call((g) => g.select('.domain').remove())
-            // .call(g => g.select('.domain').append('line').style('marker-end', "url(#hTriangle)"))
-            .call((g) =>
-              g.selectAll('.tick line').attr('stroke-opacity', 0.5).attr('stroke-dasharray', '0,25')
-            );
-
-          d3.select($yaxis.current)
-            .call(yAxis.scale(yScale))
-            .call((g) => g.select('.domain').remove())
-            .call((g) =>
-              g
-                .selectAll('.tick:not(:first-of-type) line')
-                .attr('stroke-opacity', 0.5)
-                .attr('stroke-dasharray', '0,25')
-            );
           // clear
           ctx.clearRect(0, 0, widthMap, heightMap);
         }
@@ -241,19 +250,7 @@ function Scatterplot({
         }
       }
     },
-    [
-      domains.length,
-      drawLines,
-      t.k,
-      render,
-      xAxis,
-      xScale,
-      yAxis,
-      yScale,
-      widthMap,
-      heightMap,
-      drawPoints,
-    ]
+    [domains.length, drawLines, t.k, render, xScale, yScale, widthMap, heightMap, drawPoints]
   );
 
   const chartctx = $chart.current && $chart.current.getContext('2d');
@@ -337,8 +334,6 @@ function Scatterplot({
     draw,
     heightMap,
     widthMap,
-    $xaxis,
-    $yaxis,
     chartctx,
     domains,
     data,
@@ -351,20 +346,7 @@ function Scatterplot({
     dimensions,
   ]);
 
-  const toSelect = () => {
-    setSelect(!select);
-  };
-
-  const hullExtents = useMemo(
-    () =>
-      extents.map((extentArr) => [
-        extentArr[0].map((d) => xScale(d)),
-        extentArr[1].map((d) => yScale(d)),
-      ]),
-    [extents, xScale, yScale]
-  );
-
-  const colorScale = d3.scaleLinear<string>().domain([0, 1]).range(['#fff', '#ffd3b5']);
+  // const colorScale = d3.scaleLinear<string>().domain([0, 1]).range(['#fff', '#ffd3b5']);
 
   return (
     <div className="scatter-box">
@@ -379,57 +361,12 @@ function Scatterplot({
           </clipPath>
 
           <g transform={`translate(${margin.l},${margin.t})`}>
-            <g transform={`translate(0, ${heightMap})`} className="axes x-axis" ref={$xaxis} />
-            <g className="axes y-axis" ref={$yaxis} />
-            <line
-              x1={0}
-              x2={widthMap + 5}
-              y1={heightMap}
-              y2={heightMap}
-              stroke="rgba(0,0,0,0.8)"
-              markerEnd="url(#arrow)"
-            />
-            <line
-              x1={0}
-              x2={0}
-              y1={heightMap}
-              y2={-10}
-              stroke="rgba(0,0,0,0.8)"
-              markerEnd="url(#arrow)"
-            />
-            <text className={styles.label} x={heightMap / 13} y={heightMap - 5}>
-              {xaxis.title}
-            </text>
-            <text
-              className={styles.label}
-              transform="rotate(-90)"
-              x={(-heightMap * 12) / 13}
-              dy="20"
-            >
-              {yaxis.title}
-            </text>
-            {/* {
-              grids.map((gridRow, i) => 
-                gridRow.map((grid, j) => <rect
-                  {...grid}
-                  key={`${grid.x},${grid.y}`}
-                  fill="#efefef"
-              />))
-            } */}
-            {/* {clusterPoints.map((cluster: any) => {
-              const { i, j, rate } = cluster;
-              const grid = grids[i][j];
-              return <rect {...grid} key={`${grid.x},${grid.y}`} fill={colorScale(rate)} />;
-            })} */}
+            <rect x="0" y="0" width={widthMap} height={heightMap} fill="none" stroke="#000" />
+
             <g clipPath="url(#myClip)">
-              {/* <g>
-                {hullExtents.map((e,i) => (
-                  <ExtentHull extent={e as any} key={`hull${i}`}/>
-                ))}
-              </g> */}
               {render ||
                 (domains.length > 0 &&
-                  data.map((dat, i) => (
+                  data.map((dat: any, i) => (
                     <circle
                       key={i}
                       cx={xScale(dat.dimensions[0])}
@@ -447,8 +384,7 @@ function Scatterplot({
           ref={$chart}
           className="linemap"
           style={{
-            width: '100%',
-            // height: '100%',
+            height: '100%',
             margin: `${margin.t}px ${margin.r}px ${margin.b}px ${margin.l}px`,
           }}
         />

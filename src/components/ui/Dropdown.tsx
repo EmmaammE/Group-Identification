@@ -9,15 +9,15 @@ interface DropdownProps {
 
 const Dropdown = ({ items, index, setIndex }: DropdownProps) => {
   const handleChange = (e: any) => {
-    console.log(e.target.value);
+    console.log(e.target.value, 'change dropdown');
     setIndex(e.target.value);
   };
   return (
     <div className="select-dropdown">
-      <select onChange={handleChange}>
+      <select onChange={handleChange} value={index}>
         <option style={{ display: 'none' }} />
         {items.map((item, i) => (
-          <option key={item} value={i} selected={index === i}>
+          <option key={item} value={i}>
             {item}
           </option>
         ))}

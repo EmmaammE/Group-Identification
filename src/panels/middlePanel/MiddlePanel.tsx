@@ -1,14 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import TSNE from 'tsne-js';
-import Overview, { OverviewProps } from '../../components/overview/Overview';
-// import data from '../../assets/data/test_data.json';
+import Overview from '../../components/overview/Overview';
 import LineChart from '../../components/lineChart/Linechart';
 import './MiddlePanel.scss';
 import Gradient from '../../components/ui/Gradient';
 import RangeSlider from '../../components/ui/RangeSlider';
 import Dropdown from '../../components/ui/Dropdown';
-import { DataType, getData } from '../../store/leftpanelAction';
+import { getData } from '../../store/leftpanelAction';
 
 const lineChartMargin = {
   r: 15,
@@ -49,20 +48,6 @@ const model = new TSNE({
   metric: 'euclidean',
 });
 
-interface dataType {
-  time: number[][];
-  federated: {
-    loss: [];
-    gradient: number[][];
-    weight: number[][];
-  };
-  others: Array<{
-    clientName: string;
-    loss: number[];
-    gradient: number[][];
-    weight: number[][];
-  }>;
-}
 // inputData is a nested array which can be converted into an ndarray
 // alternatively, it can be an array of coordinates (second argument should be specified as 'sparse')
 
