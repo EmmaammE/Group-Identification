@@ -25,5 +25,7 @@ yarn-error.log*
 .eslintcache
 
 src/assets/data/*
+src/assets/source/*
+src/assets/data_2/*
 
 .rest

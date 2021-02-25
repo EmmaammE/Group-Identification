@@ -15,11 +15,77 @@
       }
     }
 
-    .svg-wrapper {
+    .chart-container {
       flex: 1 1 80%;
+      display: grid;
+      grid-template-areas:
+        'b a a'
+        'b c c'
+        'b c c';
+      // overflow: auto;
+
+      .xLabels {
+        grid-area: a;
+        text-align: center;
+        // position: absolute;
+        // left: 10%;
+        // top: 0;
+        // right: 29%;
+        background: #fff;
+        margin-left: 40px;
+
+        div {
+          display: flex;
+          justify-content: space-around;
+        }
+      }
+
+      .yLabel-title {
+        grid-area: b;
+        writing-mode: vertical-rl;
+        text-align: center;
+        // position: absolute;
+        // top: 50%;
+      }
+
+      .yLabels {
+        // display: flex;
+        // margin-left: 20px;
+
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        // overflow: auto;
+        height: 100%;
+      }
+    }
+
+    .chart-wrapper {
+      grid-area: c;
+      overflow: auto;
+      display: flex;
+    }
+
+    .svg-wrapper {
+      position: relative;
+      // overflow: auto;
+
+      svg {
+        text {
+          font-size: 14px;
+        }
+      }
 
       .label {
         writing-mode: tb;
+      }
+
+      canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        // width: 100%;
+        // height: 100%;
       }
     }
 
@@ -57,6 +123,13 @@
     min-height: 44vh;
     display: flex;
     flex-direction: column;
+
+    .row {
+      h3 {
+        white-space: nowrap;
+        margin-right: 5px;
+      }
+    }
 
     .lines-container {
       overflow: auto;

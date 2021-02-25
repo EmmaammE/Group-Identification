@@ -7,7 +7,7 @@ import './leftPanel.scss';
 import inputStyles from '../../styles/input.module.css';
 import Lineplot from '../../components/line/Lineplot';
 import PairRect from '../../components/PairRect.tsx/PairRect';
-import GridRect from '../../components/PairRect.tsx/GridRect';
+import GridRect from '../../components/PairRect.tsx/GridMatrix';
 import { DataItem } from '../../types/data';
 import Gradient from '../../components/ui/Gradient';
 import Heatmap from '../../components/heatmap/Heatmap';
@@ -72,52 +72,49 @@ function LeftPanel({ setCp, setGridData }: LeftPanelProps) {
   };
 
   useEffect(() => {
-    fetch('/fl-hetero/identify/', {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        time: 20,
-        client: 'Client-Midwest',
-        step: 1,
-      }),
-    })
-      .then((res) => res.json())
-      .then((res) => {
-        setRawData(res.heteroList.sort((a: any, b: any) => b.heteroSize - a.heteroSize));
-
-        // 不一致的数据
-        const tmpData0: DataItem[] = [];
-        // 异构标签一致的数据
-        const tmpData1: DataItem[] = [];
-
-        const pcaResults = res.pca.projectedData;
-        const labels = res.heteroLabels;
-        res.heteroLabels.forEach((hLabel: boolean, i: number) => {
-          if (hLabel) {
-            tmpData1.push({
-              PC1: pcaResults[i][0],
-              PC2: pcaResults[i][1],
-              id: i,
-              label: labels[i],
-            });
-          } else {
-            tmpData0.push({
-              PC1: pcaResults[i][0],
-              PC2: pcaResults[i][1],
-              id: i,
-              label: labels[i],
-            });
-          }
-        });
-
-        setData(tmpData1.concat(tmpData0));
-      })
-      .catch((err) => {
-        console.error(err);
-      });
+    // fetch('/fl-hetero/identify/', {
+    //   method: 'POST',
+    //   headers: {
+    //     Accept: 'application/json',
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify({
+    //     round:20 //communication round
+    //     client: 'Client-Midwest',
+    //     nrOfClusters: 1, //聚类数量
+    //   }),
+    // })
+    //   .then((res) => res.json())
+    //   .then((res) => {
+    //     setRawData(res.heteroList.sort((a: any, b: any) => b.heteroSize - a.heteroSize));
+    //     // 不一致的数据
+    //     const tmpData0: DataItem[] = [];
+    //     // 异构标签一致的数据
+    //     const tmpData1: DataItem[] = [];
+    //     const pcaResults = res.pca.projectedData;
+    //     const labels = res.heteroLabels;
+    //     res.heteroLabels.forEach((hLabel: boolean, i: number) => {
+    //       if (hLabel) {
+    //         tmpData1.push({
+    //           PC1: pcaResults[i][0],
+    //           PC2: pcaResults[i][1],
+    //           id: i,
+    //           label: labels[i],
+    //         });
+    //       } else {
+    //         tmpData0.push({
+    //           PC1: pcaResults[i][0],
+    //           PC2: pcaResults[i][1],
+    //           id: i,
+    //           label: labels[i],
+    //         });
+    //       }
+    //     });
+    //     setData(tmpData1.concat(tmpData0));
+    //   })
+    //   .catch((err) => {
+    //     console.error(err);
+    //   });
   }, []);
 
   // useEffect(() => {
@@ -140,6 +137,9 @@ function LeftPanel({ setCp, setGridData }: LeftPanelProps) {
     }
   }, [index, rawData, setGridData]);
 
+  const onInputNumber = (e: any) => {
+    console.log(e);
+  };
   return (
     <div className="panel" id="first-panel">
       <h2>Model Comparison</h2>
@@ -151,7 +151,7 @@ function LeftPanel({ setCp, setGridData }: LeftPanelProps) {
           <div className="row">
             <div className="info-row">
               <p>Inputs: </p>
-              <Dropdown items={['Local data/Samples']} setIndex={setDataIndex} />
+              <Dropdown items={['Local data/Samples']} index={dataIndex} setIndex={setDataIndex} />
             </div>
             <div className="scatter-legends">
               <span>Consistency</span>
@@ -187,14 +187,16 @@ function LeftPanel({ setCp, setGridData }: LeftPanelProps) {
             <h3>Inconsistent Block Analysis</h3>
             <div className="row">
               <div className="input-wrapper">
-                <p className="label">Block division gap:</p>
+                <p className="label">Cluster number:</p>
                 <div className={inputStyles.wrapper}>
                   <input
                     className={inputStyles.input}
                     type="number"
-                    min="0.1"
+                    min="1"
                     max="15"
-                    defaultValue={0.1}
+                    step="1"
+                    defaultValue={1}
+                    onInput={onInputNumber}
                   />
                 </div>
               </div>

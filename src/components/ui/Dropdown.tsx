@@ -3,11 +3,11 @@ import React from 'react';
 
 interface DropdownProps {
   items: string[];
-  // index: number,
+  index: number;
   setIndex: Function;
 }
 
-const Dropdown = ({ items, setIndex }: DropdownProps) => {
+const Dropdown = ({ items, index, setIndex }: DropdownProps) => {
   const handleChange = (e: any) => {
     console.log(e.target.value);
     setIndex(e.target.value);
@@ -17,7 +17,7 @@ const Dropdown = ({ items, setIndex }: DropdownProps) => {
       <select onChange={handleChange}>
         <option style={{ display: 'none' }} />
         {items.map((item, i) => (
-          <option key={item} value={i}>
+          <option key={item} value={i} selected={index === i}>
             {item}
           </option>
         ))}

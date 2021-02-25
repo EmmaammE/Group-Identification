@@ -87,7 +87,7 @@ function MiddlePanel() {
   const initialize = useCallback(() => dispatch(getData()), [dispatch]);
 
   useEffect(() => {
-    initialize();
+    // initialize();
   }, []);
 
   useEffect(() => {
@@ -134,7 +134,7 @@ function MiddlePanel() {
               {index === -1 ? (
                 <>
                   <span>Dataset: </span>
-                  <Dropdown items={items} setIndex={setIndex} />
+                  <Dropdown items={items} setIndex={setIndex} index={index} />
                 </>
               ) : (
                 <p>Dataset: {name} Dataset</p>
