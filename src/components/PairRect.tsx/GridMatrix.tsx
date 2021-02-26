@@ -170,7 +170,7 @@ const GridMatrix = ({ data, xLabels, yLabels }: GridMatrixProps) => {
     // console.log('draw gridmatrix');
     // console.log('xLabelsArr', xLabelsArr, 'ylabels:', yLabelsArr)
     const ctx = ($chart.current as any).getContext('2d');
-    ctx.clearRect(1, 0, svgWidth, svgHeight);
+    ctx.clearRect(0, 0, svgWidth, svgHeight);
     ctx.fillStyle = 'rgba(149, 98, 53,.5)';
 
     xLabelsArr.forEach((xLabel, i) => {

@@ -5,7 +5,7 @@ export const setIndexAction = (index: number) => ({
     data: index
   })
 
-const blockIndexReducer = (state = 1, action: any) => {
+const blockIndexReducer = (state = 0, action: any) => {
   switch(action.type) {
     case SET_BLOCK_INDEX:
       return action.data;

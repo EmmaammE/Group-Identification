@@ -65,7 +65,8 @@ export const getDataAction = (param: IdentifyParam) => async (dispatch: any) => 
 
 const initState: any= {
   // 预先排序好
-  heteroList: heteroList.slice(0,5),
+  // heteroList: heteroList.slice(0,1),
+  heteroList,
   groundTruth,
   outputLabels,
   samples,

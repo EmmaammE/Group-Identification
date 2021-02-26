@@ -12,7 +12,7 @@ const margin = { t: 50, r: 60, b: 20, l: 50 };
 const size = 20;
 
 function RightPanel() {
-  const index = useSelector((state: any) => state.blockIndex);
+  const index: number = useSelector((state: any) => state.blockIndex);
   const heteroList = useSelector((state: any) => state.identify.heteroList);
   const samples = useSelector((state: any) => state.identify.samples);
   const heteroLabels = useSelector((state: any) => state.identify.heteroLabels);
@@ -25,7 +25,13 @@ function RightPanel() {
   const [heteData, setHeteData] = useState<any>(null);
   // const [lineDatum, setLineDatum] = useState<any>(null);
 
-  const cpT = transpose([heteroList[index].cpca.cpc1, heteroList[index].cpca.cpc2]);
+  const cpT = useMemo(
+    () =>
+      heteroList[index] !== undefined
+        ? transpose([heteroList[index].cpca.cpc1, heteroList[index].cpca.cpc2])
+        : [[], []],
+    [heteroList, index]
+  );
 
   const consistentData = useMemo(() => {
     // console.log('mm');
@@ -35,6 +41,10 @@ function RightPanel() {
   }, [samples, cpT, heteroLabels]);
 
   const datum = useMemo(() => {
+    if (heteroList[index] === undefined) {
+      return [[]];
+    }
+
     const temp = heteroList[index].heteroIndex.map((i: number) => samples[i]);
 
     return consistentData.concat(mmultiply(temp, cpT));
@@ -66,6 +76,7 @@ function RightPanel() {
     return temp;
   }, [groundTruth, heteroLabels, samples]);
 
+  // console.log(heteData, lineDatum)
   return (
     <div className="panel" id="RightPanel">
       <h2>Data Space Exploration</h2>
@@ -109,7 +120,7 @@ function RightPanel() {
 
           <div className="lines-container">
             <div className="lines">
-              {heteData !== null &&
+              {/* { heteData !== null &&
                 lineDatum.map((arr: number[][], i: number) => (
                   <CpLineChart
                     key={i}
@@ -119,7 +130,7 @@ function RightPanel() {
                     index={index}
                     hetData={heteData[i]}
                   />
-                ))}
+                ))} */}
             </div>
           </div>
         </div>
