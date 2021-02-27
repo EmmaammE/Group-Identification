@@ -1,15 +1,17 @@
 import React from 'react';
 import './App.scss';
+import RightPanel from './panels/rightPanel/Panel';
+import BottomPanel from './panels/BottomPanel/BottomPanel';
 import LeftPanel from './panels/leftPanel/LeftPanel';
 import MiddlePanel from './panels/middlePanel/MiddlePanel';
-import RightPanel from './panels/rightPanel/Panel';
 
 function App() {
   return (
     <div className="App">
-      <MiddlePanel />
       <LeftPanel />
+      <MiddlePanel />
       <RightPanel />
+      <BottomPanel />
     </div>
   );
 }

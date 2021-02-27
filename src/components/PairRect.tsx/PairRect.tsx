@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import './PairRect.scss';
 import { useSelector } from 'react-redux';
-import Heatmap from '../heatmap/Heatmap';
 
 export interface PairRectProps {
   data: number[][];
@@ -135,7 +134,6 @@ const PairRect = ({ data, names, size, index, handleClick, heteroIndex, rate }: 
         </div>
       </div>
       <div className="wrapper">
-        <Heatmap cpArray={data} data={samples} heteroIndex={heteroIndex} />
         <div className="names">
           {names.map((name) => (
             <p key={name}>{name}</p>

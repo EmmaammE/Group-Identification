@@ -299,58 +299,6 @@ const GridMatrix = ({ data, xLabels, yLabels }: GridMatrixProps) => {
 
         {/* end of chart-container */}
       </div>
-
-      <div className="grid-info">
-        {/* todo: store index */}
-        <p>Inconsistent block 1</p>
-
-        <div className="input-wrapper">
-          <p className="label">Grid Size: </p>
-          <div className={inputStyles.wrapper}>
-            <input
-              className={inputStyles.input}
-              type="number"
-              min="0.01"
-              max="1.0"
-              step="0.1"
-              value={gridSize}
-              onChange={handleGridSizeChange}
-            />
-          </div>
-        </div>
-
-        <p>Positive labels:</p>
-        <Gradient colors={['#e60d17', '#fff', '#0b69b6']} legends={['0%', '100%']} width="100%" />
-
-        <p>Outputs:</p>
-        <p>Positives</p>
-        <p>Negatives</p>
-
-        <p>Label: (The semantic</p>
-        <p>meaning of the label)</p>
-
-        <div className="op-container">
-          <p>Operation</p>
-          <div>
-            <div>
-              <input type="radio" />
-              <span>Remove this block</span>
-            </div>
-            <div>
-              <input type="radio" />
-              <span>Ignore</span>
-            </div>
-            <div>
-              <input type="radio" />
-              <span>
-                Quit federated
-                <br /> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;learning
-              </span>
-            </div>
-          </div>
-          <button type="button">Submit</button>
-        </div>
-      </div>
     </div>
   );
 };

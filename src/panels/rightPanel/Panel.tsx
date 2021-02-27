@@ -79,43 +79,44 @@ function RightPanel() {
   // console.log(heteData, lineDatum)
   return (
     <div className="panel" id="RightPanel">
-      <h2>Data Space Exploration</h2>
+      <h2>Heterogenity Examination and Management</h2>
       <div className="content">
-        <div className="grid-wrapper">
-          <h3>Ground Truth Comparison</h3>
-          <GridMatrix data={datum} xLabels={groundTruth} yLabels={outputLabels} />
+        <div className="weight-rects r-panel">
+          <div className="row">
+            <p>Overlap with previous: 5 times</p>
+          </div>
         </div>
 
-        <div className="attr-container">
-          <div className="divider" />
-
+        <div className="attr-container r-panel">
           <div className="row">
-            <h3>Attribute Distribution</h3>
-
-            <div className="legends">
-              <svg height="20px" viewBox="0 0 90 20">
-                <line x1="0" y1="10" x2="18" y2="10" stroke="#5082b3" />
-                <text x="20" y="15">
-                  Positive
-                </text>
-              </svg>
-
-              <svg height="20px" viewBox="0 0 90 20">
-                <line x1="0" y1="10" x2="18" y2="10" stroke="#c84649" />
-                <text x="20" y="15">
-                  Negative
-                </text>
-              </svg>
-
-              <svg height="20px" viewBox="0 0 120 20">
-                <line x1="0" y1="10" x2="18" y2="10" stroke="var(--primary-color)" />
-                <text x="20" y="15">
-                  Inconsistency
-                </text>
-              </svg>
-
+            <p>Dimension name</p>
+            <div className="info">
+              <span>y-scale:</span>
               <Dropdown items={['linear', 'log']} index={0} setIndex={setIndex} />
             </div>
+          </div>
+
+          <div className="row svg-legends">
+            <svg height="20px" viewBox="0 0 80 20">
+              <line x1="0" y1="10" x2="10" y2="10" stroke="#5082b3" />
+              <text x="12" y="15">
+                Positive
+              </text>
+            </svg>
+
+            <svg height="20px" viewBox="0 0 80 20">
+              <line x1="0" y1="10" x2="10" y2="10" stroke="#c84649" />
+              <text x="12" y="15">
+                Negative
+              </text>
+            </svg>
+
+            <svg height="20px" viewBox="0 0 95 20">
+              <line x1="0" y1="10" x2="10" y2="10" stroke="var(--primary-color)" />
+              <text x="12" y="15">
+                Inconsistency
+              </text>
+            </svg>
           </div>
 
           <div className="lines-container">
@@ -131,6 +132,26 @@ function RightPanel() {
                     hetData={heteData[i]}
                   />
                 ))} */}
+            </div>
+          </div>
+        </div>
+
+        <div className="grid-wrapper r-panel">
+          <GridMatrix data={datum} xLabels={groundTruth} yLabels={outputLabels} />
+        </div>
+
+        <div className="op-container r-panel">
+          <div id="anno-panel">
+            <p className="title">Annotation Panel</p>
+            <div className="lists">
+              <input type="textarea" />
+            </div>
+          </div>
+
+          <div id="control-panel">
+            <p className="title">Control Panel</p>
+            <div className="lists">
+              <p>Overlap lists:</p>
             </div>
           </div>
         </div>

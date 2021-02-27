@@ -28,7 +28,7 @@ export interface IdentifyData {
     }
     "heteroSize": number,// 不一致数据所占空间大小/最细粒度采样节点数
     "heteroIndex": [], // 分块内不一致数据点的下标
-    "heteroRate": [], // 不一致点在块中所占的比例
+    "heteroRate": number, // 不一致点在块中所占的比例
   }>,
   "pca": {
     "pc1": [],
@@ -65,8 +65,8 @@ export const getDataAction = (param: IdentifyParam) => async (dispatch: any) => 
 
 const initState: any= {
   // 预先排序好
-  // heteroList: heteroList.slice(0,1),
-  heteroList,
+  heteroList: heteroList.slice(0,20),
+  // heteroList,
   groundTruth,
   outputLabels,
   samples,

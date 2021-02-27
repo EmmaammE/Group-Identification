@@ -1,211 +1,189 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { shallowEqual, useDispatch, useSelector } from 'react-redux';
-import TSNE from 'tsne-js';
-import Overview from '../../components/overview/Overview';
-import LineChart from '../../components/lineChart/Linechart';
-import './MiddlePanel.scss';
+import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import Scatterplot from '../../components/scatterplots/Scatterplot';
+import { ChartProps } from '../../types/chart';
+import './style.scss';
+import inputStyles from '../../styles/input.module.css';
+import PairRect from '../../components/PairRect.tsx/PairRect';
 import Gradient from '../../components/ui/Gradient';
-import RangeSlider from '../../components/ui/RangeSlider';
 import Dropdown from '../../components/ui/Dropdown';
-import { getData } from '../../store/leftpanelAction';
+import HeatmapWrapper from '../../components/heatmap/HeatmapWrapper';
 
-const lineChartMargin = {
-  r: 15,
-  b: 50,
-  l: 30,
-  t: 36,
+const chartProps: ChartProps = {
+  width: 400,
+  height: 400,
+  // margin: { t: 25, r: 25, b: 25, l: 25 },
+  margin: { t: 10, r: 10, b: 10, l: 10 },
+  yaxis: {
+    title: 'PC2',
+    color: 'rgba(174, 174, 174, 1)',
+    grid: true,
+  },
+  xaxis: {
+    title: 'PC1',
+    color: 'rgba(174, 174, 174, 1)',
+    grid: true,
+  },
 };
-
-const fakeData = {
-  // 联邦模型矢量
-  fed: [
-    // [0.1, 0.1],
-    // [0.3, 0.2],
-    // [0.9, 1.2],
-  ],
-  local: [
-    // [0.1, 0.3],
-    // [-0.9, 0.1],
-    // [0.7, 1.2],
-  ],
-  // batchSize: [1, 2, 1],
-  batchSize: [],
-};
-
-interface OverviewData {
-  fed: number[][];
-  local: number[][];
-  batchSize: number[];
-}
-
-type LineChartData = [number[], number[]];
-const model = new TSNE({
-  dim: 2,
-  perplexity: 30.0,
-  earlyExaggeration: 4.0,
-  learningRate: 100.0,
-  nIter: 1000,
-  metric: 'euclidean',
-});
-
-// inputData is a nested array which can be converted into an ndarray
-// alternatively, it can be an array of coordinates (second argument should be specified as 'sparse')
-
-const GRADIENT = ['#fff', '#aa815d'];
-const items = ['Client-Northeast', 'Client-Midwest', 'Client-South', 'Client-West'];
 
 function MiddlePanel() {
-  // TODO 修改local数据集
-  const [index, setIndex] = useState(-1);
-  const [overviewData, setOverviewData] = useState<OverviewData>(fakeData);
-  // const [data, setData] = useState<dataType | null>(null);
-  const [lineChartData, setLineChartData] = useState<LineChartData>([[], []]);
-  const [name, setName] = useState<string>('');
-  const [time, setTime] = useState<Array<number>>([]);
+  const rawData = useSelector((state: any) => state.identify.heteroList);
 
-  const [range, setRange] = useState<number[]>([1, 10]);
-  const [extent, setExtent] = useState<number[]>([1, 10]);
-  const [rangeMap, setRangeMap] = useState<number[]>([0, 0]);
+  const [index, setIndex] = useState<number>(0);
 
-  const rawData = useSelector((state: any) => state.leftPanel, shallowEqual);
-  const dispatch = useDispatch();
-  const initialize = useCallback(() => dispatch(getData()), [dispatch]);
+  const [dataIndex, setDataIndex] = useState<number>(0);
+
+  // cluster number 输入时的映射
+  const [nOfCluster, setNOfCluster] = useState<number | ''>(2);
 
   useEffect(() => {
-    // initialize();
+    // fetch('/fl-hetero/identify/', {
+    //   method: 'POST',
+    //   headers: {
+    //     Accept: 'application/json',
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify({
+    //     round:20 //communication round
+    //     client: 'Client-Midwest',
+    //     nrOfClusters: 1, //聚类数量
+    //   }),
+    // })
+    //   .then((res) => res.json())
+    //   .then((res) => {
+    //     setRawData(res.heteroList.sort((a: any, b: any) => b.heteroSize - a.heteroSize));
+    //     // 不一致的数据
+    //     const tmpData0: DataItem[] = [];
+    //     // 异构标签一致的数据
+    //     const tmpData1: DataItem[] = [];
+    //     const pcaResults = res.pca.projectedData;
+    //     const labels = res.heteroLabels;
+    //     res.heteroLabels.forEach((hLabel: boolean, i: number) => {
+    //       if (hLabel) {
+    //         tmpData1.push({
+    //           PC1: pcaResults[i][0],
+    //           PC2: pcaResults[i][1],
+    //           id: i,
+    //           label: labels[i],
+    //         });
+    //       } else {
+    //         tmpData0.push({
+    //           PC1: pcaResults[i][0],
+    //           PC2: pcaResults[i][1],
+    //           id: i,
+    //           label: labels[i],
+    //         });
+    //       }
+    //     });
+    //     setData(tmpData1.concat(tmpData0));
+    //   })
+    //   .catch((err) => {
+    //     console.error(err);
+    //   });
   }, []);
 
-  useEffect(() => {
-    if (index === -1) {
-      return;
+  const onInputNumber = (e: any) => {
+    const reg = new RegExp('^[1-9]*$');
+    if (e.target.value.match(reg)) {
+      // console.log(e.target.value)
+      setNOfCluster(+e.target.value);
+    } else {
+      setNOfCluster('');
     }
-
-    model.init({
-      data: rawData.federated.weight,
-      type: 'dense',
-    });
-
-    const fed = model.getOutput();
-
-    model.init({
-      data: rawData.others[index].weight,
-      type: 'dense',
-    });
-    const local = model.getOutput();
-
-    const batchSize: number[] = rawData.time.map((d: number[]) => d.length);
-    const timeEnd: number[] = rawData.time.map((d: number[]) => d[1]);
-
-    setOverviewData({ fed, local, batchSize });
-    setLineChartData([rawData.federated.loss, rawData.others[index].loss]);
-    setName(rawData.others[index].clientName);
-    setTime(timeEnd);
-
-    const maxV = timeEnd.length;
-    setRange([1, maxV]);
-    setExtent([1, maxV]);
-    setRangeMap([0, maxV - 1]);
-  }, [index, rawData]);
+  };
 
   return (
     <div id="MiddlePanel" className="panel">
-      <h2>Federated Learning Overview</h2>
+      <h2>Model Output Comparison</h2>
 
       <div className="content">
-        <div>
-          <div className="info-container">
-            <h3>Information Panel</h3>
-            <div className="info-row">
-              {index === -1 ? (
-                <>
-                  <span>Dataset: </span>
-                  <Dropdown items={items} setIndex={setIndex} index={index} />
-                </>
-              ) : (
-                <p>Dataset: {name} Dataset</p>
-              )}
-            </div>
-            <p>Size: XXX in training set and 234 in test set</p>
+        <div className="scatter-container">
+          <h3>Output Comparison</h3>
 
-            <div className="divider" />
-
-            <p>Total number of clients: 123</p>
-            <p>Name of the client: xxx</p>
-            <p>Current communication round: No.123</p>
-
-            <div className="divider" />
+          <div className="info-row">
+            <p>Inputs: </p>
+            <Dropdown items={['Local data/Samples']} index={dataIndex} setIndex={setDataIndex} />
           </div>
-
-          <div className="loss-wrapper">
-            <h3>Federated Training Process</h3>
-            <LineChart data={lineChartData} margin={lineChartMargin} time={time} />
+          <div className="scatter-legends">
+            <span>Consistent records</span>
+            <span>Inconsistent records</span>
           </div>
+          <Scatterplot
+            chartConfig={chartProps}
+            // data={data}
+            render={1}
+            oIndex={0}
+            dimensions={['PC1', 'PC2']}
+            extents={[]}
+          />
         </div>
-        <div className="overview-wrapper">
+
+        <div>
           <div className="divider" />
 
-          <h3>Model Updates Projection</h3>
-          <div className="overview-content">
-            <div className="info">
-              <div className="row">
-                <p>Communication round range:</p>
-                {/* <div className="legend-wrapper">
-                  <p>{range[0]}</p>
-                  <p>{range[1]}</p>
-                </div> */}
-                <RangeSlider
-                  minValue={range[0]}
-                  maxValue={range[1]}
-                  setRange={setRange}
-                  extent={extent}
-                  invoke={setRangeMap}
-                />
-              </div>
-
-              <div className="row">
-                <svg height="20px" viewBox="0 0 180 20">
-                  <circle cx="4" cy="10" r="2" stroke="#000" fill="#fff" />
-                  <text x="9" y="15">
-                    Federated parameters
-                  </text>
-                </svg>
-                <svg height="20px" viewBox="0 0 160 20">
-                  <defs>
-                    <marker
-                      id="arrow-tip"
-                      refX="6 "
-                      refY="6"
-                      viewBox="0 0 16 16"
-                      markerWidth="8"
-                      markerHeight="8"
-                      markerUnits="userSpaceOnUse"
-                      orient="auto"
-                    >
-                      <path d="M 0 0 12 6 0 12 3 6 Z" fill="var(--primary-color)" />
-                    </marker>
-                  </defs>
-                  <line
-                    x1="0"
-                    y1="10"
-                    x2="10"
-                    y2="10"
-                    stroke="var(--primary-color)"
-                    markerEnd="url(#arrow-tip)"
+          <div className="info-container">
+            <h3>Inconsistent Block Analysis</h3>
+            <div className="row">
+              <div className="input-wrapper">
+                <p className="label">#Clusters:</p>
+                <div className={inputStyles.wrapper}>
+                  <input
+                    className={inputStyles.input}
+                    type="number"
+                    min="1"
+                    max="15"
+                    step="1"
+                    defaultValue={nOfCluster}
+                    onInput={onInputNumber}
                   />
-                  <text x="20" y="15">
-                    Local gradient
-                  </text>
-                </svg>
+                </div>
               </div>
 
-              <div className="row">
-                <p>Gradient similarity(Cosine)</p>
-                <Gradient colors={GRADIENT} legends={['1', '-1']} />
+              <div className="input-wrapper">
+                <span>Density:</span>
+                <div className="legend-wrapper">
+                  <p>0</p>
+                  <svg width="100" viewBox="0 0 80 15">
+                    <defs>
+                      <linearGradient id="#fff#000" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#fff" />
+                        <stop offset="20%" stopColor="#ccc" />
+                        <stop offset="100%" stopColor="#666" />
+                      </linearGradient>
+                    </defs>
+                    <rect x="0%" y="0" width="100%" height="100%" fill="url(##fff#000)" />
+                  </svg>
+                  <p>1</p>
+                </div>
               </div>
             </div>
 
-            <Overview data={overviewData} range={rangeMap} />
+            {/* <div className="row">
+              <p>Convex</p> */}
+
+            {/* <span>Weights:</span>
+              <Gradient width="100" colors={['#95c72c', '#fff', '#f8bb3e']} legends={['-1', '1']} /> */}
+            {/* </div> */}
           </div>
+
+          {/* <div className="pair-rect-wrapper">
+            {rawData !== null &&
+              rawData.map((d: any, i: number) => (
+                <div key={i}>
+                  <div className="dashed-divider" />
+                  <PairRect
+                    data={[d.cpca.cpc1, d.cpca.cpc2]}
+                    names={['cPC1', 'cPC2']}
+                    index={i}
+                    size={d.heteroSize}
+                    handleClick={() => setIndex(i)}
+                    heteroIndex={d.heteroIndex}
+                    rate={d.heteroRate}
+                  />
+                </div>
+              ))}
+          </div> */}
+          <HeatmapWrapper />
         </div>
       </div>
     </div>

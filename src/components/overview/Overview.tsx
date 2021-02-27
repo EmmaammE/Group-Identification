@@ -100,7 +100,7 @@ function Overview({ data, range }: OverviewProps) {
 
   return (
     <div id="Overview">
-      <svg width="74%" viewBox="0 0 400 400">
+      <svg width="95%" viewBox="0 0 400 400">
         <defs>
           {paths.local.map((pathPoint, i) => (
             <marker
