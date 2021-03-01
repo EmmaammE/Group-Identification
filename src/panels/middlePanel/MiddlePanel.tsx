@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import * as d3 from 'd3';
 import Scatterplot from '../../components/scatterplots/Scatterplot';
 import { ChartProps } from '../../types/chart';
 import './style.scss';
@@ -8,12 +9,16 @@ import PairRect from '../../components/PairRect.tsx/PairRect';
 import Gradient from '../../components/ui/Gradient';
 import Dropdown from '../../components/ui/Dropdown';
 import HeatmapWrapper from '../../components/heatmap/HeatmapWrapper';
+import { StateType } from '../../types/data';
+import { mmultiply, transpose } from '../../utils/mm';
+import { getPCAResults, getSamplesAction, getLabelsAction } from '../../store/reducers/identify';
 
 const chartProps: ChartProps = {
   width: 400,
   height: 400,
   // margin: { t: 25, r: 25, b: 25, l: 25 },
-  margin: { t: 10, r: 10, b: 10, l: 10 },
+  // margin: { t: 10, r: 10, b: 10, l: 10 },
+  margin: { t: 0, r: 0, b: 0, l: 0 },
   yaxis: {
     title: 'PC2',
     color: 'rgba(174, 174, 174, 1)',
@@ -26,61 +31,63 @@ const chartProps: ChartProps = {
   },
 };
 
+const items = ['local', 'stratified', 'systematic'];
+
 function MiddlePanel() {
   const rawData = useSelector((state: any) => state.identify.heteroList);
-
-  const [index, setIndex] = useState<number>(0);
 
   const [dataIndex, setDataIndex] = useState<number>(0);
 
   // cluster number 输入时的映射
-  const [nOfCluster, setNOfCluster] = useState<number | ''>(2);
+  const [nOfCluster, setNOfCluster] = useState<number | ''>(5);
+  const round = useSelector((state: StateType) => state.basic.round);
+
+  const cpArray = useSelector((state: StateType) => [
+    state.identify.pca.pc1,
+    state.identify.pca.pc2,
+  ]);
+  const samples = useSelector((state: StateType) => state.identify.samples);
+
+  const dispatch = useDispatch();
+  const getSamples = useCallback((type) => dispatch(getSamplesAction(type)), [dispatch]);
+  const getPCA = useCallback(() => dispatch(getPCAResults()), [dispatch]);
+  const getLabels = useCallback((roundParam) => dispatch(getLabelsAction(roundParam)), [dispatch]);
+  // const heteroList = useSelector((state: StateType) => state.identify.heteroList);
+
+  const nOfConsistent = useSelector(
+    (state: StateType) => state.identify.heteroLabels.filter((d) => d).length
+  );
+  const points = useMemo(() => {
+    try {
+      // console.log(cpArray)
+      if (samples.length === 0 || cpArray[0].length === 0) {
+        return [[]];
+      }
+      const cpT = transpose(cpArray); // 784*2
+
+      // console.log(samples, cpT)
+      return mmultiply(samples, cpT);
+    } catch (err) {
+      console.log(err);
+    }
+
+    return [[]];
+  }, [cpArray, samples]);
+
+  const x = d3.extent(points, (d) => d[0]) as any;
+  const y = d3.extent(points, (d) => d[1]) as any;
+
+  const loadData = useCallback(async () => {
+    if (dataIndex !== -1 && round !== 0) {
+      await getSamples(items[dataIndex]);
+      await getPCA();
+      await getLabels(round);
+    }
+  }, [dataIndex, getLabels, getPCA, getSamples, round]);
 
   useEffect(() => {
-    // fetch('/fl-hetero/identify/', {
-    //   method: 'POST',
-    //   headers: {
-    //     Accept: 'application/json',
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify({
-    //     round:20 //communication round
-    //     client: 'Client-Midwest',
-    //     nrOfClusters: 1, //聚类数量
-    //   }),
-    // })
-    //   .then((res) => res.json())
-    //   .then((res) => {
-    //     setRawData(res.heteroList.sort((a: any, b: any) => b.heteroSize - a.heteroSize));
-    //     // 不一致的数据
-    //     const tmpData0: DataItem[] = [];
-    //     // 异构标签一致的数据
-    //     const tmpData1: DataItem[] = [];
-    //     const pcaResults = res.pca.projectedData;
-    //     const labels = res.heteroLabels;
-    //     res.heteroLabels.forEach((hLabel: boolean, i: number) => {
-    //       if (hLabel) {
-    //         tmpData1.push({
-    //           PC1: pcaResults[i][0],
-    //           PC2: pcaResults[i][1],
-    //           id: i,
-    //           label: labels[i],
-    //         });
-    //       } else {
-    //         tmpData0.push({
-    //           PC1: pcaResults[i][0],
-    //           PC2: pcaResults[i][1],
-    //           id: i,
-    //           label: labels[i],
-    //         });
-    //       }
-    //     });
-    //     setData(tmpData1.concat(tmpData0));
-    //   })
-    //   .catch((err) => {
-    //     console.error(err);
-    //   });
-  }, []);
+    loadData();
+  }, [dataIndex, getLabels, getPCA, getSamples, loadData, round]);
 
   const onInputNumber = (e: any) => {
     const reg = new RegExp('^[1-9]*$');
@@ -102,20 +109,13 @@ function MiddlePanel() {
 
           <div className="info-row">
             <p>Inputs: </p>
-            <Dropdown items={['Local data/Samples']} index={dataIndex} setIndex={setDataIndex} />
+            <Dropdown items={items} index={dataIndex} setIndex={setDataIndex} />
           </div>
           <div className="scatter-legends">
-            <span>Consistent records</span>
-            <span>Inconsistent records</span>
+            <span>Consistent records {nOfConsistent}</span>
+            <span>Inconsistent records {samples.length - nOfConsistent}</span>
           </div>
-          <Scatterplot
-            chartConfig={chartProps}
-            // data={data}
-            render={1}
-            oIndex={0}
-            dimensions={['PC1', 'PC2']}
-            extents={[]}
-          />
+          <Scatterplot chartConfig={chartProps} points={points} x={x} y={y} />
         </div>
 
         <div>
@@ -165,25 +165,7 @@ function MiddlePanel() {
               <Gradient width="100" colors={['#95c72c', '#fff', '#f8bb3e']} legends={['-1', '1']} /> */}
             {/* </div> */}
           </div>
-
-          {/* <div className="pair-rect-wrapper">
-            {rawData !== null &&
-              rawData.map((d: any, i: number) => (
-                <div key={i}>
-                  <div className="dashed-divider" />
-                  <PairRect
-                    data={[d.cpca.cpc1, d.cpca.cpc2]}
-                    names={['cPC1', 'cPC2']}
-                    index={i}
-                    size={d.heteroSize}
-                    handleClick={() => setIndex(i)}
-                    heteroIndex={d.heteroIndex}
-                    rate={d.heteroRate}
-                  />
-                </div>
-              ))}
-          </div> */}
-          <HeatmapWrapper />
+          <HeatmapWrapper points={points} x={x} y={y} nOfCluster={+nOfCluster} />
         </div>
       </div>
     </div>

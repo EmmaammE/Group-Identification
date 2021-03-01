@@ -3,4 +3,30 @@
   grid-row: 2;
   grid-column: 1 / -1;
   background-color: var(--default-color);
+
+  .tip {
+    display: flex;
+
+    span {
+      margin-right: 5px;
+    }
+  }
+
+  .lines {
+    .domain {
+      opacity: 0;
+    }
+
+    .tick line {
+      stroke: #efefef;
+    }
+  }
+
+  .brush {
+    rect {
+      stroke: var(--primary-color);
+      fill: var(--primary-color);
+      fill-opacity: 1 !important;
+    }
+  }
 }

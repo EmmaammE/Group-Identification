@@ -1,6 +1,10 @@
 #LeftPanel {
   #info-two {
     margin-top: 10px;
+
+    .next-line {
+      text-indent: 2em;
+    }
   }
 
   .range-brush {
@@ -59,16 +63,6 @@
           white-space: nowrap;
         }
       }
-    }
-  }
-
-  .lines {
-    .domain {
-      opacity: 0;
-    }
-
-    .tick line {
-      stroke: #efefef;
     }
   }
 }

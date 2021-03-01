@@ -8,14 +8,8 @@ import Gradient from '../../components/ui/Gradient';
 import RangeSlider from '../../components/ui/RangeSlider';
 import Dropdown from '../../components/ui/Dropdown';
 import { getData } from '../../store/leftpanelAction';
-import { setRoundAction } from '../../store/reducers/basic';
-
-const lineChartMargin = {
-  r: 15,
-  b: 50,
-  l: 30,
-  t: 36,
-};
+import { setRoundAction, setNameAction } from '../../store/reducers/basic';
+import weightsData from '../../assets/data/test_weights.json';
 
 const fakeData = {
   // 联邦模型矢量
@@ -29,15 +23,33 @@ const fakeData = {
     // [-0.9, 0.1],
     // [0.7, 1.2],
   ],
-  // batchSize: [1, 2, 1],
-  batchSize: [],
+  point: [],
 };
 
 interface OverviewData {
   fed: number[][];
   local: number[][];
-  batchSize: number[];
+  point: number[];
 }
+
+interface Info {
+  // 拼接成字符串
+  labels: string;
+  dimensions: number | '';
+  numberOfClients: number | '';
+  communicationRounds: number | '';
+  testDataSize: number | '';
+  trainingDataSize: number | '';
+}
+
+const initInfo: Info = {
+  labels: '',
+  dimensions: '',
+  numberOfClients: '',
+  communicationRounds: '',
+  testDataSize: '',
+  trainingDataSize: '',
+};
 
 type LineChartData = [number[], number[]];
 const model = new TSNE({
@@ -53,7 +65,6 @@ const model = new TSNE({
 // alternatively, it can be an array of coordinates (second argument should be specified as 'sparse')
 
 const GRADIENT = ['#fff', '#aa815d'];
-const items = ['Client-Northeast', 'Client-Midwest', 'Client-South', 'Client-West'];
 
 function LeftPanel() {
   // TODO 修改local数据集
@@ -71,46 +82,102 @@ function LeftPanel() {
   const rawData = useSelector((state: any) => state.leftPanel, shallowEqual);
   const dispatch = useDispatch();
   const initialize = useCallback(() => dispatch(getData()), [dispatch]);
+  const updateName = useCallback((n) => dispatch(setNameAction(n)), [dispatch]);
+  // const [round, setRound] = useState<number>(121);
 
-  const [roundRrange, setRoundRange] = useState<string[]>(['1', '2']);
-  const round = useSelector((state: any) => state.basic.round);
-  const setRound = useCallback((i: number) => dispatch(setRoundAction(i)), [dispatch]);
-
+  // client Names
+  const [names, setClientNames] = useState<string[]>([]);
+  const [info, setInfo] = useState<Info>(initInfo);
   useEffect(() => {
     // initialize();
+    fetch('/fl-hetero/datasets/')
+      .then((res) => res.json())
+      .then((res) => {
+        // console.log(res);
+        // 当前只有一个数据集
+        const { datasetNames } = res;
+
+        fetch('/fl-hetero/datasets/', {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            datasetName: datasetNames,
+          }),
+        })
+          .then((res2) => res2.json())
+          .then((res2) => {
+            const {
+              clientNames,
+              communicationRounds,
+              dimensions,
+              labels,
+              numberOfClients,
+              testDataSize,
+              trainingDataSize,
+            } = res2;
+
+            setClientNames(clientNames);
+
+            setInfo({
+              labels: labels.join(','),
+              communicationRounds,
+              dimensions,
+              numberOfClients,
+              testDataSize,
+              trainingDataSize,
+            });
+
+            fetch('/fl-hetero/weights/')
+              .then((res3) => res3.json())
+              .then((res3) => {
+                const fed = res3.serverWeights;
+                fed.unshift(res3.weight0);
+
+                const local = res3.clientWeights;
+
+                const odata = {
+                  fed,
+                  local,
+                  point: res3.splitPoints,
+                };
+
+                setOverviewData(odata);
+                setRangeMap([1, local.length]);
+                setRange([1, local.length]);
+                setExtent([1, local.length]);
+              });
+          });
+      });
   }, []);
 
   useEffect(() => {
-    if (index === -1) {
-      return;
-    }
+    updateName(names[index]);
+  }, [index, names, updateName]);
 
-    model.init({
-      data: rawData.federated.weight,
-      type: 'dense',
-    });
-
-    const fed = model.getOutput();
-
-    model.init({
-      data: rawData.others[index].weight,
-      type: 'dense',
-    });
-    const local = model.getOutput();
-
-    const batchSize: number[] = rawData.time.map((d: number[]) => d.length);
-    const timeEnd: number[] = rawData.time.map((d: number[]) => d[1]);
-
-    setOverviewData({ fed, local, batchSize });
-    setLineChartData([rawData.federated.loss, rawData.others[index].loss]);
-    setName(rawData.others[index].clientName);
-    setTime(timeEnd);
-
-    const maxV = timeEnd.length;
-    setRange([1, maxV]);
-    setExtent([1, maxV]);
-    setRangeMap([0, maxV - 1]);
-  }, [index, rawData]);
+  useEffect(() => {
+    // if (index === -1) {
+    //   return;
+    // }
+    // model.init({
+    //   data: rawData.federated.weight,
+    //   type: 'dense',
+    // });
+    // const fed = weightsData.weightsServer;
+    // fed.unshift(weightsData.weight0);
+    // const local = weightsData.weightsClient;
+    // const timeEnd: number[] = rawData.time.map((d: number[]) => d[1]);
+    // setOverviewData({ fed, local });
+    // setLineChartData([rawData.federated.loss, rawData.others[index].loss]);
+    // setName(rawData.others[index].clientName);
+    // setTime(timeEnd);
+    // const maxV = timeEnd.length;
+    // setRange([1, maxV]);
+    // setExtent([1, maxV]);
+    // setRangeMap([0, maxV - 1]);
+  }, []);
 
   return (
     <div id="LeftPanel" className="panel">
@@ -121,30 +188,23 @@ function LeftPanel() {
           <h3>Information Panel</h3>
 
           <div>
-            <p>Label: xxx</p>
-            <p>#Dimensions: xxx</p>
-            <p>#Clients: xxx</p>
-            <div className="info-row">
-              <span>Current communication round: </span>
-              {/* {index === -1 ? ( */}
-              <Dropdown items={roundRrange} setIndex={setRoundRange} index={round} />
-              {/* ) : (
-                <span>round</span>
-              )} */}
-            </div>
+            <p>Label: {info.labels} </p>
+            <p>#Dimensions: {info.dimensions}</p>
+            <p>#Clients: {info.numberOfClients} </p>
+            <p>Current communication round: {info.communicationRounds}</p>
           </div>
 
           <div id="info-two">
             <div className="info-row">
               <span>Name of this client: </span>
-              {index === -1 ? (
-                <Dropdown items={items} setIndex={setIndex} index={index} />
-              ) : (
-                <span>{items[index]}</span>
-              )}
+              {/* {index === -1 ? ( */}
+              <Dropdown items={names} setIndex={setIndex} index={index} />
+              {/* ) : (
+                <span>{names[index]}</span>
+              )} */}
             </div>
-            <p>Size: 123 records in the training set</p>
-            <p>&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; 123 records in the test set</p>
+            <p>Size: {info.trainingDataSize} records in the training set</p>
+            <p className="next-line">{info.testDataSize} records in the test set</p>
           </div>
         </div>
 

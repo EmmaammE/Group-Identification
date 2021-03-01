@@ -5,9 +5,10 @@ export interface GradientProps {
   colors: string[];
   legends: string[];
   width?: string;
+  height?: number;
 }
 
-const Gradient = ({ colors, legends, width }: GradientProps) => {
+const Gradient = ({ colors, legends, width, height }: GradientProps) => {
   const scale = d3
     .scaleLinear<string>()
     .domain([0, colors.length - 1])
@@ -16,7 +17,7 @@ const Gradient = ({ colors, legends, width }: GradientProps) => {
   return (
     <div className="legend-wrapper">
       <p>{legends[0]}</p>
-      <svg width={width || '120px'} viewBox={width ? `0 0 80 15` : '0 0 120 15'}>
+      <svg width={width || '120px'} viewBox={`0 0 ${width ? 80 : 120} ${height || 15}`}>
         <defs>
           <linearGradient id={colors.join('')} x1="0%" y1="0%" x2="100%" y2="0%">
             {colors.map((color, i) => (

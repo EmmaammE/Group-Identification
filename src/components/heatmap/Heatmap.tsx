@@ -51,14 +51,14 @@ const Heatmap = ({ densityData, linear, heteroPoints }: HeatmapProps) => {
         )}
       </g>
 
-      <rect
+      {/* <rect
         x={MARGIN.left}
         y={MARGIN.top}
         width={width}
         height={height}
         fill="none"
         stroke="#000"
-      />
+      /> */}
     </svg>
   );
 };

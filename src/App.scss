@@ -11,14 +11,14 @@
 .App {
   display: grid;
   grid-template-columns: 25% 26% auto;
-  grid-template-rows: 80% auto;
+  grid-template-rows: 77% auto;
   // grid-gap: 10px;
   row-gap: 8px;
   column-gap: 10px;
   background: var(--background-color);
   height: 100vh;
 
-  $height: 80vh;
+  $height: 77vh;
   $line-height: 4.5vh;
 
   .panel {
@@ -155,4 +155,152 @@ div::-webkit-scrollbar {
 div::-webkit-scrollbar-thumb {
   background-color: var(--divider-color);
   border-radius: 2px;
+}
+
+// 按钮
+.c-btn {
+  background: var(--background-color);
+  color: #000;
+  font-weight: 400;
+  border-radius: 3px;
+  // box-shadow: 0 0 0 1px rgb(34, 36, 38) inset;
+  font-size: 0.85714286rem;
+  cursor: pointer;
+  display: inline-block;
+  min-height: 1em;
+  min-width: 70px;
+  outline: 0;
+  vertical-align: baseline;
+  margin: 0 0.25em 0 0;
+  padding: 5px 8px 5px;
+  text-transform: none;
+  text-shadow: none;
+  line-height: 1em;
+  font-style: normal;
+  text-align: center;
+  text-decoration: none;
+  user-select: none;
+  transition: background ease 0.1ms;
+  will-change: '';
+  -webkit-tap-highlight-color: transparent;
+  border: 1px solid var(--divider-color);
+
+  &:hover,
+  &:focus {
+    background: var(--default-color);
+    color: rgba(0, 0, 0, 0.8) !important;
+    box-shadow: 0 0 0 1px rgb(34, 36, 38) inset, 0 0 0 0 rgb(34, 36, 38) inset;
+  }
+}
+
+.checkbox {
+  $size: 14px;
+
+  display: flex;
+  align-items: center;
+
+  input[type='checkbox'],
+  input[type='radio'] {
+    cursor: pointer;
+    outline: 0;
+    width: $size;
+    height: $size;
+    box-sizing: border-box;
+    padding: 0;
+  }
+
+  input[type='checkbox'] {
+    margin-top: 5px;
+  }
+
+  span {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+}
+
+.radio {
+  $size: 13px;
+
+  display: flex;
+  align-items: center;
+  position: relative;
+  margin-left: 2px;
+
+  p {
+    white-space: nowrap;
+  }
+
+  input {
+    opacity: 0;
+    z-index: -1;
+    margin-left: -$size;
+    outline: 0;
+  }
+
+  input:focus:checked ~ span::after {
+    background-color: rgba(0, 0, 0, 0.95);
+  }
+
+  .out {
+    position: relative;
+    width: $size;
+    height: $size;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+    border-radius: 50%;
+    border: 1px solid #767676;
+    font-size: 1.2em;
+    box-sizing: border-box;
+    outline: 0;
+    cursor: pointer;
+  }
+
+  .out::before {
+    content: '';
+    display: inline-block;
+    width: $size - 6;
+    height: $size - 6;
+    background: #fff;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    // background-color: #000;
+    margin: 0;
+    padding: 0;
+    pointer-events: none;
+  }
+
+  &.checked .out::before {
+    background-color: #000;
+  }
+}
+
+textarea {
+  margin: 0;
+  -webkit-appearance: none;
+  padding: 0.78571429em 1em;
+  background: #fff;
+  border: 1px solid rgba(34, 36, 38, 0.15);
+  outline: 0;
+  color: rgba(0, 0, 0, 0.87);
+  border-radius: 0.28571429rem;
+  box-shadow: 0 0 0 0 transparent inset;
+  transition: color 0.1s ease, border-color 0.1s ease;
+  font-size: 1em;
+  line-height: 1.2857;
+  resize: vertical;
+  height: 6.5vh;
+
+  &:focus {
+    color: rgba(0, 0, 0, 0.95);
+    border-color: var(--primary-color);
+    border-radius: 0.28571429rem;
+    background: #fff;
+    box-shadow: 0 0 0 0 rgb(34, 36, 38) inset;
+    appearance: none;
+  }
 }

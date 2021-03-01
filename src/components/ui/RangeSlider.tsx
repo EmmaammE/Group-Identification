@@ -68,7 +68,7 @@ const RangeSlider = ({ minValue, maxValue, setRange, extent, invoke }: RangeSlid
       const brushSelect = d3.select($brush.current as any).call(brush);
       brushSelect.call(brush.move, extent.map(x));
     }
-  }, [extent]);
+  }, [brush, extent, x]);
 
   return (
     <div className="legend-wrapper">

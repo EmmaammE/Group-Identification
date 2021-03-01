@@ -1,16 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import './PairRect.scss';
-import { useSelector } from 'react-redux';
 
 export interface PairRectProps {
   data: number[][];
-  names: string[];
-  size: number;
-  index: number;
-  handleClick: any;
-  heteroIndex: number[];
-  rate: number;
 }
 
 function getPixelRatio(context: any) {
@@ -26,19 +19,21 @@ function getPixelRatio(context: any) {
   return dpr / bsr;
 }
 
-// const color = d3.scaleLinear<string>().domain([-1, 0, 1]).range(['#e60d17', '#eee', '#0b69b6']);
-const color = d3.scaleLinear<string>().domain([-0.3, 0, 0.3]).range(['#9ccb3c', '#fff', '#f7b326']);
-// const color = d3.scaleLinear<string>().domain([-0.01, 0, 0.01]).range(['#a7ff83', '#fff', '#ffaa64']);
+// const color = d3.scaleLinear<string>().domain([-1, 0, 1]).range(['#e60d17', '#eee', '#f7b326']);
+
+const color = d3.scaleLinear<string>().domain([-0.3, 0, 0.3]).range(['#0aa6e9', '#fff', '#ea4d40']);
 
 const rectWidth = 10;
 const rectHeight = 50;
 const rectPadding = 2;
 const rectWidthPad = 0;
-const PairRect = ({ data, names, size, index, handleClick, heteroIndex, rate }: PairRectProps) => {
+
+const names = ['cPC1', 'cPC2'];
+
+const PairRect = ({ data }: PairRectProps) => {
   const WIDTH = rectWidth * data[0].length + rectWidthPad * (data[0].length - 1);
   const HEIGHT = rectHeight * data.length + rectPadding * (data.length - 1);
   // const xScale = d3.scaleLinear().domain([0, data[0].length-1]).range([0, WIDTH]);
-  const samples = useSelector((state: any) => state.identify.samples);
 
   const $svg = useRef(null);
   const $chart = useRef(null);
@@ -119,27 +114,15 @@ const PairRect = ({ data, names, size, index, handleClick, heteroIndex, rate }: 
   }, [HEIGHT, WIDTH, bound.height, bound.width, data, indexScale]);
 
   return (
-    <div
-      className="pair-rect-container"
-      onClick={handleClick}
-      onKeyDown={handleClick}
-      role="menuitem"
-      tabIndex={0}
-    >
-      <div className="title">
-        <span>Inconsistent block {index + 1}</span>
-        <div>
-          <span>Size: {size}</span>
-          <span>Purity: {d3.format('.0%')(rate)}</span>
-        </div>
-      </div>
+    <div className="pair-rect-container">
       <div className="wrapper">
         <div className="names">
           {names.map((name) => (
-            <p key={name}>{name}</p>
+            <p key={name}>{name}:</p>
           ))}
         </div>
         <div className="svg-wrapper" ref={$svg}>
+          <svg />
           <canvas
             className="pair-canvas"
             // width="100%"

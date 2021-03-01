@@ -17,23 +17,3 @@
   justify-content: center;
   align-items: center;
 }
-
-.container {
-  position: relative;
-  // min-height: 38vh;
-  // width: 38vh;
-  // margin: 5px 0 0 0;
-
-  svg,
-  .linemap {
-    position: absolute;
-    top: 0;
-    left: 0;
-    background-color: transparent;
-  }
-
-  .linemap {
-    z-index: 100;
-    cursor: grab;
-  }
-}

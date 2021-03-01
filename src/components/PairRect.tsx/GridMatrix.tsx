@@ -17,13 +17,15 @@ interface GridMatrixProps {
 // const margin = { t: 50, r: 0, b: 0, l: 60 };
 const margin = { t: 0, r: 0, b: 0, l: 0 };
 // 格子之间的缝隙
-const padding = 5;
+const padding = 10;
 
 const colorScale = d3
   .scaleLinear<string>()
-  .domain([0, 0.5, 1])
-  // 红白蓝
-  .range(['#e60d17', '#fff', '#0b69b6']);
+  // .domain([0, 0.5, 1])
+  .domain([0, 1])
+  .range(['#fff', '#9ccb3c']);
+// 红白蓝
+// .range(['#e60d17', '#fff', '#0b69b6']);
 
 const GridMatrix = ({ data, xLabels, yLabels }: GridMatrixProps) => {
   const $chart = useRef(null);
@@ -40,13 +42,17 @@ const GridMatrix = ({ data, xLabels, yLabels }: GridMatrixProps) => {
   useEffect(() => {
     const { offsetWidth, offsetHeight } = ($chart as any).current;
     const size = Math.min(offsetWidth, offsetHeight);
+    if (xLabelsArr.length === 0) {
+      setWidth(size);
+      setHeight(size);
+    } else {
+      const w = (size - padding * (xLabelsArr.length - 1)) / xLabelsArr.length;
+      const h = w * yLabelsArr.length + padding * (yLabelsArr.length - 1);
+
+      setWidth(size);
+      setHeight(h);
+    }
     // console.log(size)
-
-    const w = size / xLabelsArr.length;
-    const h = w * yLabelsArr.length;
-
-    setWidth(size);
-    setHeight(h);
   }, [$chart, xLabelsArr.length, yLabelsArr.length]);
 
   const indexXScale = d3
@@ -63,7 +69,7 @@ const GridMatrix = ({ data, xLabels, yLabels }: GridMatrixProps) => {
   const width = useMemo(() => indexXScale(2) - indexXScale(0), [indexXScale]);
   const height = useMemo(() => indexYScale(2) - indexYScale(0), [indexYScale]);
 
-  // console.log(width, height)
+  // console.log('size', width, height)
   // 格子的size映射为坐标上相差多少
   const normScale = d3.scaleLinear().range([0, width]).domain([0, 1]);
 
@@ -148,7 +154,7 @@ const GridMatrix = ({ data, xLabels, yLabels }: GridMatrixProps) => {
             x1,
             y0,
             y1,
-            ratio: searched.length ? positive.length / searched.length : Number(0.5),
+            ratio: searched.length ? positive.length / searched.length : 0,
           });
         }
 
@@ -170,6 +176,7 @@ const GridMatrix = ({ data, xLabels, yLabels }: GridMatrixProps) => {
     // console.log('draw gridmatrix');
     // console.log('xLabelsArr', xLabelsArr, 'ylabels:', yLabelsArr)
     const ctx = ($chart.current as any).getContext('2d');
+
     ctx.clearRect(0, 0, svgWidth, svgHeight);
     ctx.fillStyle = 'rgba(149, 98, 53,.5)';
 
@@ -232,6 +239,33 @@ const GridMatrix = ({ data, xLabels, yLabels }: GridMatrixProps) => {
 
   return (
     <div className="grid-container">
+      <div className="row">
+        <div className="input-wrapper">
+          <p className="label">Grid size: </p>
+          <div className={inputStyles.wrapper}>
+            <input
+              className={inputStyles.input}
+              type="number"
+              min="0.01"
+              max="1.0"
+              step="0.1"
+              value={gridSize}
+              onChange={handleGridSizeChange}
+            />
+          </div>
+        </div>
+
+        <div className="input-wrapper">
+          <span>Ground-truth labels:</span>
+          <Gradient
+            colors={['#fff', '#9ccb3c']}
+            legends={['0%', '100%']}
+            width="50px"
+            height={25}
+          />
+        </div>
+      </div>
+
       <div className="chart-container">
         <p className="yLabel-title">Output label</p>
 
@@ -252,48 +286,49 @@ const GridMatrix = ({ data, xLabels, yLabels }: GridMatrixProps) => {
           </div>
           <div className="svg-wrapper">
             <svg
-              viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-              width={`${svgWidth}px`}
+              viewBox={`-1 0 ${svgWidth + 2} ${svgHeight}`}
+              width={`${svgWidth + 2}px`}
               height={`${svgHeight}px`}
             >
               <g transform={`translate(${margin.l},${margin.t})`}>
-                {/* <rect x={0} y={0} width={width} height={height} fill="none" stroke="#efefef" /> */}
-
                 {xLabelsArr.map((x, i) =>
                   yLabelsArr.map((y, j) => {
                     const left = margin.l + indexXScale(i * 2) + padding * i;
                     const top = margin.t + indexYScale(j * 2) + padding * j;
 
-                    return clusterPoints[i].map((cluster: any) =>
-                      cluster.map((rect: any) => {
-                        const { x0, x1, y0, y1, ratio } = rect;
-                        return (
-                          <rect
-                            key={`${x0},${y0},${i}`}
-                            fill={colorScale(ratio)}
-                            x={x0 + left}
-                            y={y0 + top}
-                            width={x1 - x0}
-                            height={y1 - y0}
-                            fillOpacity="0.5"
-                          />
-                        );
-                      })
-                    );
+                    return clusterPoints[i].map((cluster: any) => (
+                      <g>
+                        <rect
+                          x={left}
+                          y={top}
+                          width={width}
+                          height={height}
+                          fill="none"
+                          stroke="#777"
+                          strokeDasharray="2 2"
+                        />
+                        {cluster.map((rect: any) => {
+                          const { x0, x1, y0, y1, ratio } = rect;
+                          return (
+                            <rect
+                              key={`${x0},${y0},${i}`}
+                              fill={colorScale(ratio)}
+                              x={x0 + left}
+                              y={y0 + top}
+                              width={x1 - x0}
+                              height={y1 - y0}
+                              fillOpacity="0.5"
+                            />
+                          );
+                        })}
+                      </g>
+                    ));
                   })
                 )}
               </g>
             </svg>
 
-            <canvas
-              ref={$chart}
-              width={`${svgWidth}px`}
-              height={`${svgHeight}px`}
-              // style={{
-              // margin: `${margin.t}px ${margin.r}px ${margin.b}px ${margin.l}px`,
-              // margin: `${margin.t/WIDTH}% ${margin.r/HEIGHT}% ${margin.b/HEIGHT}% ${margin.l/WIDTH}%`,
-              // }}
-            />
+            <canvas ref={$chart} width={`${svgWidth}px`} height={`${svgHeight}px`} />
           </div>
         </div>
 

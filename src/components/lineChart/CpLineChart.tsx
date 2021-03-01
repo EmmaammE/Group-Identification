@@ -15,8 +15,8 @@ export interface CpLineChartProps {
   hetData: number[];
 }
 
-const WIDTH = 350;
-const HEIGHT = 180;
+const WIDTH = 380;
+const HEIGHT = 160;
 
 type Hash = { [key: number]: number };
 
@@ -46,8 +46,8 @@ const getMax = (...arr: number[][]) => {
 
   return maxValue;
 };
-// 红色 蓝色
-const lineColor = ['#c04548', '#5783b4'];
+// 灰色（一致））棕色（不一致）
+const lineColor = ['#b5b6b6', '#aa815d'];
 
 const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineChartProps) => {
   const widthMap: number = WIDTH - margin.l - margin.r;
@@ -117,22 +117,24 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
             }
             countBin[value] += data[i][v];
           }
-
-          if (hetHash[v]) {
-            // 如果Bin中含有的值，是不一致的点具有的值
-            if (!hetBin[value]) {
-              // 如果还未记录次数
-              hetBin[value] = 0;
-            }
-            // 记在value上
-            hetBin[value] += hetHash[v];
-          }
         });
+
+        if (hetHash[v]) {
+          // 如果Bin中含有的值，是不一致的点具有的值
+          if (!hetBin[value]) {
+            // 如果还未记录次数
+            hetBin[value] = 0;
+          }
+          // 记在value上
+          hetBin[value] += hetHash[v];
+        }
       });
     });
 
+    console.log(hetBin, hetHash);
+
     // 转换为百分比
-    const size = rawData[0].length + rawData[1].length;
+    const size = hetData.length;
     countBins.forEach((hash) => {
       Object.keys(hash).forEach((key) => {
         hash[+key] /= size;
@@ -142,6 +144,8 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
     Object.keys(hetBin).forEach((key) => {
       hetBin[key] /= size;
     });
+
+    console.log(hetBin);
     setBinsCount(countBins);
     setHetBinCount(hetBin);
     // console.log(bins)
@@ -152,9 +156,11 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
 
   useEffect(() => {
     if (binsCount[0]) {
-      setMax(getMax(Object.values(binsCount[0]), Object.values(binsCount[1])));
+      setMax(
+        getMax(Object.values(binsCount[0]), Object.values(binsCount[1]), Object.values(hetBinCount))
+      );
     }
-  }, [binsCount]);
+  }, [binsCount, hetBinCount]);
 
   const yScales = [
     d3.scaleLinear().range([heightMap, 0]).domain([0, maxValue]).nice(),
@@ -199,7 +205,7 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
 
   return (
     <div className="line-wrapper">
-      <p style={{ textAlign: 'center' }}>Attribute {title}</p>
+      {/* <p style={{ textAlign: 'center' }}>Attribute {title}</p> */}
       <svg width="100%" viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
         <g transform={`translate(${margin.l}, ${margin.t})`}>
           <g transform={`translate(0, ${heightMap})`} className="axes x-axis" ref={$xaxis} />
@@ -245,7 +251,7 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
                     key={`c-${i}-${j}`}
                     cx={xScale(+key)}
                     cy={yScale(datum[key as any])}
-                    r={1}
+                    r={2}
                     stroke={lineColor[i]}
                     fill="#fff"
                     // opacity="0.7"
@@ -257,7 +263,7 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
           <g>
             <path
               d={line(hetBinCount)(Object.keys(hetBinCount) as any) || ''}
-              stroke="var(--primary-color)"
+              stroke="#c04548"
               fill="none"
             />
             {Object.keys(hetBinCount).map((key, j) => (
@@ -265,8 +271,8 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
                 key={`h-${j}`}
                 cx={xScale(+key)}
                 cy={yScale(hetBinCount[key])}
-                r={1}
-                stroke="var(--primary-color)"
+                r={2}
+                stroke="#c04548"
                 fill="#fff"
               />
             ))}

@@ -40,14 +40,14 @@
     }
 
     .svg-wrapper {
-      flex: 85% 0 0;
+      flex: 88% 0 0;
       position: relative;
 
       .pair-canvas {
         position: absolute;
         top: 0;
         left: 0;
-        border: 1px solid #000;
+        // border: 1px solid #000;
       }
     }
   }

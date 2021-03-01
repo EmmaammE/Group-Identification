@@ -41,6 +41,24 @@
 
     .scatter-box {
       flex: 1;
+      position: relative;
+      display: flex;
+      justify-content: center;
+
+      // min-height: 38vh;
+      // width: 38vh;
+      // margin: 5px 0 0 0;
+
+      svg,
+      .linemap {
+        position: absolute;
+        background-color: transparent;
+      }
+
+      .linemap {
+        z-index: 100;
+        cursor: grab;
+      }
     }
 
     .btns {
@@ -93,6 +111,13 @@
         font-size: 12px;
       }
 
+      svg {
+        border: 1px solid #000;
+      }
+
+      .selected svg {
+        border: 2px solid var(--primary-color);
+      }
       // div {
       //   display: flex;
       //   justify-content: center;

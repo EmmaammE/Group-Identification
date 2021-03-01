@@ -7,9 +7,7 @@ interface LineProps {
   chartConfig: ChartProps;
 }
 
-function Lineplot({
-  chartConfig: { width, height, yaxis, xaxis, margin },
-}: LineProps) {
+function Lineplot({ chartConfig: { width, height, yaxis, xaxis, margin } }: LineProps) {
   const widthMap: number = width - margin.l - margin.r;
   const heightMap: number = height - margin.t - margin.b;
 
@@ -30,20 +28,14 @@ function Lineplot({
       .call((g) => g.select('.domain').remove())
       // .call(g => g.select('.domain').append('line').style('marker-end', "url(#hTriangle)"))
       .call((g) =>
-        g
-          .selectAll('.tick line')
-          .attr('stroke-opacity', 0.5)
-          .attr('stroke-dasharray', '0,25')
+        g.selectAll('.tick line').attr('stroke-opacity', 0.5).attr('stroke-dasharray', '0,25')
       );
 
     d3.select($yaxis.current)
       .call(yAxis.scale(yScale))
       .call((g) => g.select('.domain').remove())
       .call((g) =>
-        g
-          .selectAll('.tick line')
-          .attr('stroke-opacity', 0.5)
-          .attr('stroke-dasharray', '0,25')
+        g.selectAll('.tick line').attr('stroke-opacity', 0.5).attr('stroke-dasharray', '0,25')
       );
   }, [xScale, yScale]);
 
@@ -95,21 +87,12 @@ function Lineplot({
   }, [$brush, brush, xScale]);
 
   return (
-    <svg
-      width={width}
-      height={height}
-      viewBox={`0 0 ${width} ${height}`}
-      style={{ width: '100%' }}
-    >
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ width: '100%' }}>
       <defs>
         <Triangle />
       </defs>
       <g transform={`translate(${margin.l},${margin.t})`}>
-        <g
-          transform={`translate(0, ${heightMap})`}
-          className="axes x-axis"
-          ref={$xaxis}
-        />
+        <g transform={`translate(0, ${heightMap})`} className="axes x-axis" ref={$xaxis} />
         <g className="axes y-axis" ref={$yaxis} />
         <line
           x1={0}
