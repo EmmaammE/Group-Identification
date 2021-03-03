@@ -1,9 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import './PairRect.scss';
+import { useDispatch, useSelector } from 'react-redux';
+import { parse } from 'path';
+import { StateType } from '../../types/data';
+import { setPosAction, setPropertyAction } from '../../store/reducers/basic';
 
 export interface PairRectProps {
-  data: number[][];
+  data: number[];
+  title: number;
 }
 
 function getPixelRatio(context: any) {
@@ -20,124 +25,153 @@ function getPixelRatio(context: any) {
 }
 
 // const color = d3.scaleLinear<string>().domain([-1, 0, 1]).range(['#e60d17', '#eee', '#f7b326']);
-
 const color = d3.scaleLinear<string>().domain([-0.3, 0, 0.3]).range(['#0aa6e9', '#fff', '#ea4d40']);
 
-const rectWidth = 10;
-const rectHeight = 50;
-const rectPadding = 2;
-const rectWidthPad = 0;
+const rectWidth = 20;
+const rectHeight = 20;
 
-const names = ['cPC1', 'cPC2'];
-
-const PairRect = ({ data }: PairRectProps) => {
-  const WIDTH = rectWidth * data[0].length + rectWidthPad * (data[0].length - 1);
-  const HEIGHT = rectHeight * data.length + rectPadding * (data.length - 1);
-  // const xScale = d3.scaleLinear().domain([0, data[0].length-1]).range([0, WIDTH]);
+const rowCount = 28;
+interface Pro {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+const PairRect = ({ data, title }: PairRectProps) => {
+  const columnCount = data.length / rowCount;
+  const WIDTH = rectWidth * columnCount;
+  const HEIGHT = rectHeight * rowCount;
 
   const $svg = useRef(null);
   const $chart = useRef(null);
+  const $rect = useRef(null);
 
   const [bound, setBound] = useState<any>({ width: 0, height: 0 });
   const [scale, setScale] = useState<number>(1);
+  const dispatch = useDispatch();
+
+  const propertyIndex = useSelector((state: StateType) => state.basic.propertyIndex);
+
+  // const [chosePro, setPro] = useState<Pro>({
+  //   x:0,
+  //   y:0,
+  //   width:0,
+  //   height: 0
+  // })
+
+  const xScale = d3.scaleLinear().domain([0, WIDTH]).range([0, bound.width]);
+
+  const yScale = d3.scaleLinear().domain([0, HEIGHT]).range([0, bound.height]);
+
+  // const dataScale = d3.scaleLinear().domain(d3.extent(data) as any).range([-0.5,0.5]);
+
+  const rectHeightMap = yScale(rectHeight);
+  const rectWidthMap = xScale(rectWidth);
+
+  const chosePro = useMemo(
+    () => ({
+      x: rectWidthMap * (propertyIndex % columnCount),
+      y: rectHeightMap * parseInt(`${propertyIndex / rowCount}`, 10),
+      width: rectWidthMap,
+      height: rectHeightMap,
+    }),
+    [columnCount, propertyIndex, rectHeightMap, rectWidthMap]
+  );
+
+  const updatePropertyIndex = useCallback((i) => dispatch(setPropertyAction(i)), [dispatch]);
+  const updatePos = useCallback((x: number, y: number) => dispatch(setPosAction(x, y)), [dispatch]);
 
   useEffect(() => {
     const { offsetWidth, offsetHeight } = ($svg as any).current;
+    const size = Math.min(offsetHeight - 10, offsetWidth);
     setBound({
-      width: offsetWidth,
-      height: offsetHeight,
+      width: size,
+      height: size,
     });
   }, [$svg]);
-
-  const indexScale = d3.scaleLinear().domain([0, data[0].length]).range([0, WIDTH]);
 
   useEffect(() => {
     if (!$chart.current) {
       return;
     }
-    // 绘制矩形
+
     const ctx = ($chart.current as any).getContext('2d');
-
-    let pixelRatio = getPixelRatio(ctx);
-    let scaleRatio = 1;
-
-    if (data[0].length > bound.width) {
-      // 如果每个矩形的宽度会小于1，放大canvas
-      scaleRatio = 1 / (bound.width / data[0].length);
-    }
-
-    pixelRatio *= scaleRatio;
-    setScale(pixelRatio);
-
-    // console.log(d3.extent(data[0]), d3.extent(data[1]))
-
-    ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-
-    const xScale = d3
-      .scaleLinear()
-      .domain([0, WIDTH])
-      .range([0, bound.width * scaleRatio]);
-
-    const yScale = d3.scaleLinear().domain([0, HEIGHT]).range([0, bound.height]);
 
     ctx.clearRect(0, 0, bound.width, bound.height);
 
-    const rectHeightMap = yScale(rectHeight);
-    const rectPaddingMap = yScale(rectPadding);
+    data.forEach((d, j) => {
+      const x = j % columnCount;
+      const y = parseInt(`${j / columnCount}`, 10);
 
-    // const rectWidthMap = xScale(rectWidth) < 1?1:xScale(rectWidth);
-    const rectWidthMap = xScale(rectWidth);
-
-    data.forEach((datum, i) => {
-      datum.forEach((d, j) => {
-        // console.log(color(d))
-        // ctx.fillStyle='#F00';
-        // if(j % 10 === 0) {
-        //   ctx.fillStyle=color(d);
-        //   ctx.fillRect(rectWidthMap*j, i * (rectHeightMap + rectPaddingMap), rectWidthMap, rectHeightMap);
-        //   // ctx.rect(j, 0, 5, 50);
-        // }
-        // ctx.save();
-
-        // if(j%2===0) {
-        ctx.beginPath();
-        ctx.moveTo(rectWidthMap * j, i * (rectHeightMap + rectPaddingMap));
-
-        ctx.lineTo(rectWidthMap * j, i * (rectHeightMap + rectPaddingMap) + rectHeightMap);
-        ctx.strokeStyle = color(d);
-        ctx.lineWidth = rectWidthMap;
-        ctx.stroke();
-        // }
-      });
+      // ctx.fillStyle=color(dataScale(d));
+      ctx.fillStyle = color(d);
+      ctx.fillRect(rectWidthMap * x, rectHeightMap * y, rectWidthMap, rectHeightMap);
     });
-    // console.log('draw')
-  }, [HEIGHT, WIDTH, bound.height, bound.width, data, indexScale]);
+    console.log('draw');
+  }, [
+    HEIGHT,
+    WIDTH,
+    bound.height,
+    bound.width,
+    columnCount,
+    data,
+    propertyIndex,
+    xScale,
+    yScale,
+    scale,
+    rectWidthMap,
+    rectHeightMap,
+  ]);
+
+  useEffect(() => {
+    d3.select($rect.current).on('click', (event) => {
+      const { offsetX, offsetY } = event;
+      const indexY = parseInt(`${offsetY / rectHeightMap}`, 10);
+      const indexX = parseInt(`${offsetX / rectWidthMap}`, 10);
+      const index = indexY * rowCount + indexX;
+      updatePropertyIndex(index);
+      updatePos(indexX, indexY);
+    });
+  }, [columnCount, rectHeightMap, rectWidthMap, updatePos, updatePropertyIndex, yScale]);
 
   return (
-    <div className="pair-rect-container">
-      <div className="wrapper">
-        <div className="names">
+    // <div className="pair-rect-container">
+    <div className="wrapper">
+      {/* <div className="names">
           {names.map((name) => (
             <p key={name}>{name}:</p>
           ))}
-        </div>
-        <div className="svg-wrapper" ref={$svg}>
-          <svg />
-          <canvas
-            className="pair-canvas"
-            // width="100%"
-            // height="100%"
-            width={`${bound.width * scale}px`}
-            height={`${bound.height * scale}px`}
-            ref={$chart}
-            style={{
-              width: `${bound.width}px`,
-              height: `${bound.height}px`,
-            }}
+        </div> */}
+      <p>ccPC{title + 1}</p>
+      <div className="svg-wrapper" ref={$svg}>
+        <svg width="100%" height="90%" />
+        <canvas
+          className="pair-canvas"
+          ref={$chart}
+          width={`${bound.width}px`}
+          height={`${bound.height}px`}
+          style={{
+            // width: 130,
+            // height: 130,
+            border: '1px dashed #777',
+          }}
+        />
+
+        <svg width={`${bound.width}px`} height={`${bound.height}px`} className="overlay">
+          <rect
+            x="0"
+            y="0"
+            width="100%"
+            height="100%"
+            ref={$rect}
+            cursor="pointer"
+            fill="transparent"
           />
-        </div>
+          <rect {...chosePro} stroke="#000" fill="#fff" fillOpacity="0" />
+        </svg>
       </div>
     </div>
+    // </div>
   );
 };
 

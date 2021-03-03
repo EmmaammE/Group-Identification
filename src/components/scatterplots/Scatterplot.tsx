@@ -86,30 +86,28 @@ function Scatterplot({ chartConfig: { yaxis, xaxis, margin }, points, x, y }: Sc
   const drawLines = useCallback(
     (ctx: CanvasRenderingContext2D) => {
       const ticks = Array(10).fill(null);
-      if (yaxis.grid) {
-        const yticks = d3.scaleLinear().range([0, width]).domain([0, 9]);
-        ctx.restore();
-        ctx.strokeStyle = 'rgba(10,10,10,0.15)';
-        ctx.lineWidth = 1;
+      const yticks = d3.scaleLinear().range([0, width]).domain([0, 9]);
+      ctx.restore();
+      ctx.strokeStyle = 'rgba(10,10,10,0.15)';
+      ctx.lineWidth = 1;
 
-        ticks.forEach((v, yy) => {
-          ctx.beginPath();
-          ctx.setLineDash(strokeType('solid'));
-          ctx.moveTo(0, yticks(yy)); // X=min,Y=tick
-          ctx.lineTo(width, yticks(yy));
-          ctx.stroke();
+      ticks.forEach((v, yy) => {
+        ctx.beginPath();
+        ctx.setLineDash(strokeType('solid'));
+        ctx.moveTo(0, yticks(yy)); // X=min,Y=tick
+        ctx.lineTo(width, yticks(yy));
+        ctx.stroke();
 
-          ctx.beginPath();
-          ctx.setLineDash(strokeType('solid'));
-          ctx.moveTo(yticks(yy), 0); // X=min,Y=tick
-          ctx.lineTo(yticks(yy), height);
-          ctx.stroke();
-        });
+        ctx.beginPath();
+        ctx.setLineDash(strokeType('solid'));
+        ctx.moveTo(yticks(yy), 0); // X=min,Y=tick
+        ctx.lineTo(yticks(yy), height);
+        ctx.stroke();
+      });
 
-        ctx.save();
-      }
+      ctx.save();
     },
-    [yaxis.grid, width, height]
+    [width, height]
   );
 
   const chartctx = $chart.current && $chart.current.getContext('2d');
@@ -118,7 +116,7 @@ function Scatterplot({ chartConfig: { yaxis, xaxis, margin }, points, x, y }: Sc
     if (chartctx) {
       // clear
       chartctx.clearRect(0, 0, width, height);
-      chartctx.translate(0.5, 0.5);
+      // chartctx.translate(0.5, 0.5);
       // lines
       drawLines(chartctx);
 
@@ -131,7 +129,15 @@ function Scatterplot({ chartConfig: { yaxis, xaxis, margin }, points, x, y }: Sc
     <div className="scatter-box" ref={$wrapper}>
       <svg width={`${width}px`} height={`${height}px`}>
         <g transform={`translate(${margin.l},${margin.t})`}>
-          <rect x="0" y="0" width={width} height={height} fill="none" stroke="#000" />
+          <rect
+            x="0"
+            y="0"
+            width={width}
+            height={height}
+            fill="none"
+            stroke="#000"
+            strokeDasharray="2 2"
+          />
         </g>
       </svg>
       <canvas width={`${width}px`} height={`${height}px`} ref={$chart} className="linemap" />

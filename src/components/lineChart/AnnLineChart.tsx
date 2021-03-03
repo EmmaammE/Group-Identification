@@ -144,7 +144,10 @@ const AnnoLineChart = ({ margin, data, list }: LineChartProps) => {
     if (list) {
       Object.keys(list).forEach((r) => {
         const x = xScale(+r);
-        const indexScale = d3.scaleLinear().range([0, heightMap]).domain([0, list[r].length]);
+        const indexScale = d3
+          .scaleLinear()
+          .range([10, heightMap - 10])
+          .domain([0, list[r].length]);
 
         list[r].forEach((anno: any, j: number) => {
           arr.push({
@@ -208,6 +211,9 @@ const AnnoLineChart = ({ margin, data, list }: LineChartProps) => {
         </g>
 
         <g ref={$brush} className="brush" />
+        <text x={xScale(round) + 5} y="22">
+          {round}
+        </text>
       </g>
     </svg>
   );

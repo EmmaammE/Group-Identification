@@ -15,7 +15,7 @@ export interface CpLineChartProps {
   hetData: number[];
 }
 
-const WIDTH = 380;
+const WIDTH = 370;
 const HEIGHT = 160;
 
 type Hash = { [key: number]: number };
@@ -131,8 +131,6 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
       });
     });
 
-    console.log(hetBin, hetHash);
-
     // 转换为百分比
     const size = hetData.length;
     countBins.forEach((hash) => {
@@ -145,7 +143,6 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
       hetBin[key] /= size;
     });
 
-    console.log(hetBin);
     setBinsCount(countBins);
     setHetBinCount(hetBin);
     // console.log(bins)
@@ -230,7 +227,7 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
           <text dy={-25} textAnchor="middle">
             Percentage
           </text>
-          <text transform={`translate(${widthMap + 20},${heightMap + 5})`}>Value</text>
+          <text transform={`translate(${widthMap - 30},${heightMap + margin.b})`}>Value</text>
           {binsCount.map(
             (datum: any, i: number) =>
               datum && (

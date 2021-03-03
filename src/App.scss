@@ -10,13 +10,14 @@
 
 .App {
   display: grid;
-  grid-template-columns: 25% 26% auto;
+  grid-template-columns: 25% 22% auto;
   grid-template-rows: 77% auto;
   // grid-gap: 10px;
   row-gap: 8px;
   column-gap: 10px;
   background: var(--background-color);
   height: 100vh;
+  overflow: hidden;
 
   $height: 77vh;
   $line-height: 4.5vh;
@@ -221,7 +222,7 @@ div::-webkit-scrollbar-thumb {
 }
 
 .radio {
-  $size: 13px;
+  $size: 12px;
 
   display: flex;
   align-items: center;
@@ -247,7 +248,6 @@ div::-webkit-scrollbar-thumb {
     position: relative;
     width: $size;
     height: $size;
-    margin: 0;
     padding: 0;
     background: #fff;
     border-radius: 50%;
@@ -256,18 +256,19 @@ div::-webkit-scrollbar-thumb {
     box-sizing: border-box;
     outline: 0;
     cursor: pointer;
+    margin: 3px 0 0 0;
   }
 
   .out::before {
     content: '';
     display: inline-block;
-    width: $size - 6;
-    height: $size - 6;
+    width: $size - 5;
+    height: $size - 5;
     background: #fff;
     border-radius: 50%;
     position: absolute;
-    top: 2px;
-    left: 2px;
+    top: 1.5px;
+    left: 1.5px;
     // background-color: #000;
     margin: 0;
     padding: 0;
@@ -275,7 +276,7 @@ div::-webkit-scrollbar-thumb {
   }
 
   &.checked .out::before {
-    background-color: #000;
+    background-color: #333;
   }
 }
 

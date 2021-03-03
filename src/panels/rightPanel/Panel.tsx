@@ -10,11 +10,9 @@ import PairRect from '../../components/PairRect.tsx/PairRect';
 import { StateType } from '../../types/data';
 import Gradient from '../../components/ui/Gradient';
 import inputStyles from '../../styles/input.module.css';
-import { setUpdateAction } from '../../store/reducers/basic';
+import { fetchLists, setUpdateAction } from '../../store/reducers/basic';
 
-const margin = { t: 50, r: 60, b: 20, l: 50 };
-
-const size = 20;
+const margin = { t: 50, r: 20, b: 20, l: 50 };
 
 function RightPanel() {
   const index: number = useSelector((state: any) => state.blockIndex);
@@ -31,22 +29,31 @@ function RightPanel() {
   const dispatch = useDispatch();
   const setIndex = useCallback((i) => dispatch(setIndexAction(i)), [dispatch]);
 
-  const toggleUpdate = useCallback(() => dispatch(setUpdateAction()), [dispatch]);
+  const getList = useCallback(() => dispatch(fetchLists()), [dispatch]);
 
   const [heteData, setHeteData] = useState<any>(null);
 
   const [pcArr, setcPCA] = useState([[], []]);
+  // const pcArr = useSelector((state: StateType) => [
+  //   state.identify.cpca.cpc1,
+  //   state.identify.cpca.cpc2,
+  // ])
 
   const [annoText, setAnnoText] = useState<string>('');
 
   // const pcArr = useMemo(() => heteroList[index] && heteroList[index].cpca ? [heteroList[index].cpca.cpc1, heteroList[index].cpca.cpc2] : [], [heteroList, index])
 
-  const [remove, setRemove] = useState<boolean>(false);
-  const [quit, setQuit] = useState<boolean>(false);
-
   const round = useSelector((state: StateType) => state.basic.round);
 
-  const cpT = useMemo(() => (pcArr.length > 0 ? transpose(pcArr) : [[], []]), [pcArr]);
+  const cpT = useMemo(() => (pcArr[0].length > 0 ? transpose(pcArr) : [[], []]), [pcArr]);
+
+  const pos = useSelector((state: StateType) => state.basic.pos);
+
+  // TODO 去掉
+  const size = useSelector((state: StateType) => state.basic.size);
+
+  const annoList = useSelector((state: StateType) => state.basic.annoLists);
+  const [chosedAnnList, setChoseAnnList] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     if (round !== 0) {
@@ -87,7 +94,8 @@ function RightPanel() {
       }),
     }).then((res) => {
       console.log(res);
-      toggleUpdate();
+      getList();
+      setAnnoText('');
     });
   };
 
@@ -109,8 +117,6 @@ function RightPanel() {
     if (heteroList[index] === undefined || samples.length === 0 || cpT.length === 0) {
       return [[]];
     }
-
-    // console.log(samples)
 
     const temp = heteroList[index].heteroIndex.map((i: number) => samples[i]);
 
@@ -137,18 +143,21 @@ function RightPanel() {
     return temp;
   }, [heteroLabels, propertyIndex, samples]);
 
-  const handleRemoveChange = () => {
-    setRemove(!remove);
-  };
-
-  const handleQuitChange = () => {
-    setQuit(!quit);
+  const handleChange = (e: any) => {
+    const { id } = e.target.dataset;
+    const { checked } = e.target;
+    if (checked) {
+      setChoseAnnList(new Set([...Array.from(chosedAnnList), ...annoList[id].dataIndex]));
+    } else {
+      const toDelete = new Set(annoList[id].dataIndex);
+      setChoseAnnList(new Set([...Array.from(chosedAnnList)].filter((d) => !toDelete.has(d))));
+    }
   };
 
   // console.log(heteData, lineDatum)
   return (
     <div className="panel" id="RightPanel">
-      <h2>Heterogenity Examination and Management</h2>
+      <h2>Heterogenity Examination</h2>
       <div className="content">
         <div className="weight-rects r-panel">
           <div className="row">
@@ -171,12 +180,14 @@ function RightPanel() {
               <Gradient colors={['#0aa6e9', '#fff', '#ea4d40']} legends={['-1', '1']} width="80" />
             </div>
           </div>
-          {pcArr.length > 0 && <PairRect data={pcArr} />}
+          <div className="pair-rects">
+            {pcArr[0].length > 0 && pcArr.map((pc, i) => <PairRect key={i} data={pc} title={i} />)}
+          </div>
         </div>
 
         <div className="attr-container r-panel">
           <div className="row">
-            <p>Dimension name</p>
+            <p>Dimension: {pos.join(',')} </p>
             <div className="info">
               <span>y-scale:</span>
               <Dropdown items={['linear', 'log']} index={0} setIndex={setIndex} />
@@ -222,56 +233,73 @@ function RightPanel() {
         </div>
 
         <div className="grid-wrapper r-panel">
-          <GridMatrix data={datum} xLabels={groundTruth} yLabels={outputLabels} />
+          <GridMatrix
+            data={datum}
+            xLabels={groundTruth}
+            yLabels={outputLabels}
+            highlight={chosedAnnList}
+            inconsistentSize={heteroList[index] ? heteroList[index].heteroIndex.length : 0}
+          />
         </div>
 
         <div className="op-container r-panel">
           <div id="anno-panel">
-            <p className="title">Annotation Panel</p>
-            <div className="lists">
-              {/* <input type="textarea" /> */}
-              <textarea placeholder="Input" value={annoText} onInput={handleInput} />
+            <p className="title">Instance Verification</p>
+            <div className="lists instance-panel">
+              <div id="data-wrapper">
+                <p>Data:</p>
+              </div>
+              <div>
+                <p>Ground-truth label:</p>
+                {/* <p>Ground-truth label:</p> */}
+                <p>Output label:</p>
+                {/* <p>Output label:</p> */}
+                <p>Confidence:</p>
+              </div>
+              {/* <textarea placeholder="Input" value={annoText} onInput={handleInput} />
               <div className="btn-area">
                 <button type="button" className="c-btn" onClick={addAnn}>
                   Record
                 </button>
-              </div>
+              </div> */}
             </div>
           </div>
 
           <div id="control-panel">
             <p className="title">Control Panel</p>
             <div className="lists">
-              <p>Overlap lists:</p>
-              <div className="checkbox">
-                <input type="checkbox" />
-                <span>In round 123(size:xxx)</span>
+              <div className="list-content">
+                <p>Overlap lists:</p>
+                <div className="list-area" onChange={handleChange}>
+                  {annoList.map(({ round: r, text, dataIndex }, i) => (
+                    <>
+                      <div className="checkbox" key={i}>
+                        <input type="checkbox" data-id={i} />
+                        <span>
+                          In round {r} (size:{dataIndex.length}){' '}
+                        </span>
+                      </div>
+                      <p className="anno">{text}</p>
+                    </>
+                  ))}
+                </div>
+                <div className="btn-area">
+                  <button type="button" className="c-btn">
+                    Intersect
+                  </button>
+                  <button type="button" className="c-btn">
+                    Join
+                  </button>
+                </div>
               </div>
-              <p className="anno">Annotation</p>
-              <div className="btn-area">
-                <button type="button" className="c-btn">
-                  Intersect
-                </button>
-                <button type="button" className="c-btn">
-                  Join
-                </button>
-              </div>
-              <p>#Selected records: xxx</p>
-              <div className={`radio ${remove ? 'checked' : ''}`}>
-                <span className="out" role="button" tabIndex={0} onMouseDown={handleRemoveChange} />
-                <input type="checkbox" />
-                <p>Remove the selected records</p>
-              </div>
-              <div className={`radio ${quit ? 'checked' : ''}`}>
-                <span className="out" role="button" tabIndex={0} onMouseDown={handleQuitChange} />
-                <input type="checkbox" />
-                <p>Quit federated learning</p>
-              </div>
+              <div id="input-wrapper">
+                <textarea placeholder="Input" value={annoText} onInput={handleInput} />
 
-              <div className="btn-area">
-                <button type="button" className="c-btn">
-                  Submit
-                </button>
+                <div className="btn-area">
+                  <button type="button" className="c-btn" onClick={addAnn}>
+                    Record
+                  </button>
+                </div>
               </div>
             </div>
           </div>

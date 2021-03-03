@@ -25,6 +25,7 @@ const Heatmap = ({ densityData, linear, heteroPoints }: HeatmapProps) => {
 
   const hull = d3.polygonHull(heteroPoints as any);
 
+  // console.log(hull);
   return (
     <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} width="80%">
       <defs>
@@ -40,14 +41,18 @@ const Heatmap = ({ densityData, linear, heteroPoints }: HeatmapProps) => {
           ))}
         </g>
 
-        {hull && (
+        {hull ? (
           <path
             d={`M${hull.join('L')}Z`}
             // fill="var(--primary-color)"
             fill="none"
-            strokeWidth={4}
+            strokeWidth={2}
             stroke="var(--primary-color)"
           />
+        ) : (
+          heteroPoints.map((point: any, i: number) => (
+            <circle key={i} cx={point[0]} cy={point[1]} r={2} fill="var(--primary-color)" />
+          ))
         )}
       </g>
 

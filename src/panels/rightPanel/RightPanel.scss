@@ -2,7 +2,7 @@
   .content {
     padding: 0;
     display: grid;
-    grid-template-columns: 62% auto;
+    grid-template-columns: auto 44%;
     grid-template-rows: 30% auto;
   }
 
@@ -38,7 +38,7 @@
         'b a a'
         'b c c'
         'b c c';
-      height: 90%;
+      height: 93%;
 
       .xLabels {
         grid-area: a;
@@ -105,6 +105,36 @@
   // flex-basis: 50%;
   // }
 
+  .pair-rects {
+    display: grid;
+    grid-template-columns: 50% 50%;
+    padding: 0 20px;
+
+    .wrapper {
+      flex: 1 1 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      // position: relative;
+      p {
+        writing-mode: tb;
+      }
+
+      .svg-wrapper {
+        position: relative;
+        margin: 4px;
+      }
+
+      .overlay,
+      .pair-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        // border: 1px solid #000;
+      }
+    }
+  }
+
   .attr-container {
     display: flex;
     flex-direction: column;
@@ -154,21 +184,20 @@
   .op-container {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: space-around;
     $color: #dfd0c2;
 
-    #anno-panel {
-      flex: 0 0 33%;
-    }
-
-    #control-panel {
-      flex: 0 0 55%;
-    }
+    height: 100%;
+    padding: 0;
 
     #anno-panel,
     #control-panel {
-      border: 1px dashed $color;
-      margin: 10px;
+      border: 1px dashed var(--primary-color);
+      margin: 10px 20px 5px 10px;
+      display: flex;
+      flex-direction: column;
+      width: 95%;
+      box-sizing: border-box;
 
       p.title {
         background: $color;
@@ -177,9 +206,15 @@
       }
 
       .lists {
-        padding: 5px;
         display: flex;
-        flex-direction: column;
+        flex: 1;
+        padding: 5px;
+
+        .list-content {
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+        }
 
         .anno {
           text-indent: 22px;
@@ -189,7 +224,45 @@
       .btn-area {
         display: flex;
         justify-content: flex-end;
-        margin: 5px 0;
+      }
+    }
+
+    #anno-panel {
+      flex: 0 0 40%;
+
+      .instance-panel {
+        flex-direction: row;
+
+        #data-wrapper {
+          flex: 0 0 45%;
+          margin: 0 5px;
+          border-right: 1px dashed var(--divider-color);
+        }
+      }
+    }
+
+    #control-panel {
+      flex: 1 1 50%;
+      margin-bottom: 15px;
+
+      .list-area {
+        overflow: auto;
+        height: 15vh;
+        font-size: 12px;
+      }
+
+      #input-wrapper {
+        display: flex;
+        flex-direction: column;
+
+        textarea {
+          display: flex;
+          flex: 1;
+          margin: 5px;
+          padding: 5px;
+          background: #f8f3ed;
+          border: 1px solid #fff;
+        }
       }
     }
   }

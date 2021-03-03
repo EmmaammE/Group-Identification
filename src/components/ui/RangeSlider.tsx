@@ -1,15 +1,13 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as d3 from 'd3';
 
 interface RangeSliderProps {
-  minValue: number;
-  maxValue: number;
+  range: number[];
   setRange: Function;
-  extent: number[];
-  invoke: Function;
+  extent: number;
 }
 
-const WIDTH = 120;
+const WIDTH = 100;
 const HEIGHT = 20;
 const MARGIN = {
   bottom: 5,
@@ -21,11 +19,14 @@ const MARGIN = {
 // brush两侧的宽度
 const HANDLE_WIDTH = 10;
 
-const RangeSlider = ({ minValue, maxValue, setRange, extent, invoke }: RangeSliderProps) => {
+const RangeSlider = ({ range, setRange, extent }: RangeSliderProps) => {
   const heightMap = HEIGHT - MARGIN.top - MARGIN.bottom;
   const widthMap = WIDTH - MARGIN.left - MARGIN.right;
 
-  const x = d3.scaleLinear().domain(extent).range([0, widthMap]);
+  const x = d3
+    .scaleLinear()
+    .domain([0, extent - 1])
+    .range([0, widthMap]);
 
   const $brush = useRef(null);
 
@@ -44,75 +45,74 @@ const RangeSlider = ({ minValue, maxValue, setRange, extent, invoke }: RangeSlid
             sx[0] = Math.floor(sx[0]);
             sx[1] = Math.ceil(sx[1]);
 
-            if (sx[0] < extent[0]) {
+            if (sx[0] < 0) {
               // eslint-disable-next-line prefer-destructuring
-              sx[0] = extent[0];
+              sx[0] = 0;
             }
 
-            if (sx[0] !== minValue || sx[1] !== maxValue) {
+            if (sx[0] !== range[0] || sx[1] !== range[1]) {
               d3.select($brush.current as any).call(brush.move, sx.map(x));
               // console.log(sx)
               setRange(sx);
-
-              if (type === 'end') {
-                invoke([sx[0] - 1, sx[1] - 1]);
-              }
             }
           }
         }),
-    [extent, heightMap, invoke, maxValue, minValue, setRange, widthMap, x]
+    [heightMap, range, setRange, widthMap, x]
   );
 
   useEffect(() => {
     if ($brush.current) {
       const brushSelect = d3.select($brush.current as any).call(brush);
-      brushSelect.call(brush.move, extent.map(x));
+      brushSelect.call(brush.move, [range[0], range[1]].map(x));
     }
-  }, [brush, extent, x]);
+  }, [brush, extent, range, x]);
 
   return (
     <div className="legend-wrapper">
-      <p>{minValue < 10 ? `${minValue} ` : minValue}</p>
-      <svg width="120px" viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
-        <defs>
-          <linearGradient id="range" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#fff" />
-            <stop offset="100%" stopColor="#000" />
-          </linearGradient>
-        </defs>
+      <p>{range[0] + 1}</p>
+      <div>
+        <svg width="90px" viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
+          <defs>
+            <linearGradient id="range" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fff" />
+              <stop offset="100%" stopColor="#000" />
+            </linearGradient>
+          </defs>
 
-        <rect
-          x={MARGIN.left}
-          width={widthMap}
-          y={MARGIN.top - 1}
-          height={heightMap + 2}
-          fill="#fff"
-          stroke="#000"
-        />
+          <rect
+            x={MARGIN.left}
+            width={widthMap}
+            y={MARGIN.top - 1}
+            height={heightMap + 2}
+            fill="#fff"
+            stroke="#000"
+          />
 
-        <g transform={`translate(${MARGIN.left}, ${MARGIN.top})`}>
-          <g ref={$brush} className="range-brush" />
-          <rect
-            className="my-handle"
-            x={x(minValue)}
-            y={-MARGIN.top}
-            width={HANDLE_WIDTH}
-            height={HEIGHT}
-            rx={HANDLE_WIDTH / 2}
-            ry={HANDLE_WIDTH / 2}
-          />
-          <rect
-            className="my-handle"
-            x={x(maxValue) - HANDLE_WIDTH / 2}
-            y={-MARGIN.top}
-            width={HANDLE_WIDTH}
-            height={HEIGHT}
-            rx={HANDLE_WIDTH / 2}
-            ry={HANDLE_WIDTH / 2}
-          />
-        </g>
-      </svg>
-      <p>{maxValue}</p>
+          <g transform={`translate(${MARGIN.left}, ${MARGIN.top})`}>
+            <g ref={$brush} className="range-brush" />
+            <rect
+              className="my-handle"
+              x={x(range[0])}
+              y={-MARGIN.top}
+              width={HANDLE_WIDTH}
+              height={HEIGHT}
+              rx={HANDLE_WIDTH / 2}
+              ry={HANDLE_WIDTH / 2}
+            />
+            <rect
+              className="my-handle"
+              x={x(range[1]) - HANDLE_WIDTH / 2}
+              y={-MARGIN.top}
+              width={HANDLE_WIDTH}
+              height={HEIGHT}
+              rx={HANDLE_WIDTH / 2}
+              ry={HANDLE_WIDTH / 2}
+            />
+          </g>
+        </svg>
+      </div>
+
+      <p>{range[1] + 1}</p>
     </div>
   );
 };

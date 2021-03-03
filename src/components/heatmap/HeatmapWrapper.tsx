@@ -6,6 +6,8 @@ import { transpose, mmultiply } from '../../utils/mm';
 import Heatmap from './Heatmap';
 import { StateType } from '../../types/data';
 import { getHeteList } from '../../store/reducers/identify';
+import { setSizeAction } from '../../store/reducers/basic';
+import { setIndexAction } from '../../store/reducers/blockIndex';
 
 export const WIDTH = 60;
 export const HEIGHT = 60;
@@ -36,6 +38,8 @@ const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
   const getLists = useCallback((count: number) => dispatch(getHeteList(count)), [dispatch]);
 
   const blockIndex = useSelector((state: StateType) => state.blockIndex);
+  const setClusterSize = useCallback((s) => dispatch(setSizeAction(s)), [dispatch]);
+  const updateBlock = useCallback((i) => dispatch(setIndexAction(i)), [dispatch]);
 
   useEffect(() => {
     if (round !== 0) {
@@ -78,12 +82,30 @@ const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
     [heteroList, points, xScale, yScale]
   );
 
-  // console.log(heteroPointsArr)
+  useEffect(() => {
+    if (heteroList[blockIndex]) {
+      setClusterSize(heteroList[blockIndex].heteroSize);
+    }
+  }, [blockIndex, heteroList, setClusterSize]);
 
+  // console.log(heteroPointsArr)
+  const n = nOfCluster < 4 ? nOfCluster : 4;
   return (
-    <div className="pair-rect-wrapper">
+    <div
+      className="pair-rect-wrapper"
+      style={{
+        gridTemplateColumns: `repeat(${n}, ${`${100 / n}%`})`,
+      }}
+    >
       {heteroList.map((heteroItem, i) => (
-        <div className="pair-rect" key={i}>
+        <div
+          className="pair-rect"
+          key={i}
+          role="menuitem"
+          tabIndex={0}
+          onClick={() => updateBlock(i)}
+          onKeyDown={() => updateBlock(i)}
+        >
           <div className={blockIndex === i ? 'selected' : ''}>
             <Heatmap densityData={densityData} linear={linear} heteroPoints={heteroPointsArr[i]} />
           </div>

@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import TSNE from 'tsne-js';
-import Overview from '../../components/overview/Overview';
+import Overview, { OverviewData } from '../../components/overview/Overview';
 import LineChart from '../../components/lineChart/Linechart';
 import './style.scss';
 import Gradient from '../../components/ui/Gradient';
@@ -10,10 +10,11 @@ import Dropdown from '../../components/ui/Dropdown';
 import { getData } from '../../store/leftpanelAction';
 import { setRoundAction, setNameAction } from '../../store/reducers/basic';
 import weightsData from '../../assets/data/test_weights.json';
+import { StateType } from '../../types/data';
 
 const fakeData = {
   // 联邦模型矢量
-  fed: [
+  server: [
     // [0.1, 0.1],
     // [0.3, 0.2],
     // [0.9, 1.2],
@@ -23,14 +24,9 @@ const fakeData = {
     // [-0.9, 0.1],
     // [0.7, 1.2],
   ],
-  point: [],
+  cosines: [],
+  weight0: [],
 };
-
-interface OverviewData {
-  fed: number[][];
-  local: number[][];
-  point: number[];
-}
 
 interface Info {
   // 拼接成字符串
@@ -52,14 +48,6 @@ const initInfo: Info = {
 };
 
 type LineChartData = [number[], number[]];
-const model = new TSNE({
-  dim: 2,
-  perplexity: 30.0,
-  earlyExaggeration: 4.0,
-  learningRate: 100.0,
-  nIter: 1000,
-  metric: 'euclidean',
-});
 
 // inputData is a nested array which can be converted into an ndarray
 // alternatively, it can be an array of coordinates (second argument should be specified as 'sparse')
@@ -69,27 +57,21 @@ const GRADIENT = ['#fff', '#aa815d'];
 function LeftPanel() {
   // TODO 修改local数据集
   const [index, setIndex] = useState(-1);
-  const [overviewData, setOverviewData] = useState<OverviewData>(fakeData);
-  // const [data, setData] = useState<dataType | null>(null);
-  const [lineChartData, setLineChartData] = useState<LineChartData>([[], []]);
-  const [name, setName] = useState<string>('');
-  const [time, setTime] = useState<Array<number>>([]);
 
-  const [range, setRange] = useState<number[]>([1, 10]);
-  const [extent, setExtent] = useState<number[]>([1, 10]);
-  const [rangeMap, setRangeMap] = useState<number[]>([0, 0]);
+  // overview显示的范围（数组下标)
+  const [range, setRange] = useState<number[]>([0, 10]);
 
-  const rawData = useSelector((state: any) => state.leftPanel, shallowEqual);
   const dispatch = useDispatch();
-  const initialize = useCallback(() => dispatch(getData()), [dispatch]);
   const updateName = useCallback((n) => dispatch(setNameAction(n)), [dispatch]);
   // const [round, setRound] = useState<number>(121);
+  // weights接口的数据
+  const [rawWeights, setRawWeights] = useState<any>(null);
+  const round = useSelector((state: StateType) => state.basic.round);
 
   // client Names
   const [names, setClientNames] = useState<string[]>([]);
   const [info, setInfo] = useState<Info>(initInfo);
   useEffect(() => {
-    // initialize();
     fetch('/fl-hetero/datasets/')
       .then((res) => res.json())
       .then((res) => {
@@ -122,7 +104,7 @@ function LeftPanel() {
             setClientNames(clientNames);
 
             setInfo({
-              labels: labels.join(','),
+              labels,
               communicationRounds,
               dimensions,
               numberOfClients,
@@ -133,21 +115,22 @@ function LeftPanel() {
             fetch('/fl-hetero/weights/')
               .then((res3) => res3.json())
               .then((res3) => {
-                const fed = res3.serverWeights;
-                fed.unshift(res3.weight0);
+                // const server = res3.serverWeights;
+                // const local = res3.clientWeights;
 
-                const local = res3.clientWeights;
+                // const odata = {
+                //   server,
+                //   local,
+                //   cosines: res3.cosines,
+                //   weight0: res3.weight0,
+                // };
 
-                const odata = {
-                  fed,
-                  local,
-                  point: res3.splitPoints,
-                };
-
-                setOverviewData(odata);
-                setRangeMap([1, local.length]);
-                setRange([1, local.length]);
-                setExtent([1, local.length]);
+                // setOverviewData(odata);
+                // setRangeMap([1, local.length]);
+                // setRange([1, local.length]);
+                // setExtent([1, local.length]);
+                setRawWeights(res3);
+                setRange([0, res3.serverWeights.length - 1]);
               });
           });
       });
@@ -157,27 +140,18 @@ function LeftPanel() {
     updateName(names[index]);
   }, [index, names, updateName]);
 
-  useEffect(() => {
-    // if (index === -1) {
-    //   return;
-    // }
-    // model.init({
-    //   data: rawData.federated.weight,
-    //   type: 'dense',
-    // });
-    // const fed = weightsData.weightsServer;
-    // fed.unshift(weightsData.weight0);
-    // const local = weightsData.weightsClient;
-    // const timeEnd: number[] = rawData.time.map((d: number[]) => d[1]);
-    // setOverviewData({ fed, local });
-    // setLineChartData([rawData.federated.loss, rawData.others[index].loss]);
-    // setName(rawData.others[index].clientName);
-    // setTime(timeEnd);
-    // const maxV = timeEnd.length;
-    // setRange([1, maxV]);
-    // setExtent([1, maxV]);
-    // setRangeMap([0, maxV - 1]);
-  }, []);
+  const overviewData: OverviewData = useMemo(() => {
+    if (rawWeights === null) {
+      return fakeData;
+    }
+    const { serverWeights, clientWeights, cosines, weight0 } = rawWeights;
+    return {
+      server: serverWeights.filter((d: any, i: number) => i >= range[0] && i <= range[1]),
+      local: clientWeights.filter((d: any, i: number) => i >= range[0] && i <= range[1]),
+      cosines: cosines.filter((d: any, i: number) => i >= range[0] && i <= range[1]),
+      weight0: range[0] === 0 ? weight0 : serverWeights[range[0] - 1],
+    };
+  }, [range, rawWeights]);
 
   return (
     <div id="LeftPanel" className="panel">
@@ -209,23 +183,17 @@ function LeftPanel() {
         </div>
 
         <div className="overview-wrapper">
-          <div className="divider" />
+          <div className="dashed-divider" />
 
-          <h3>Model Updates Projection</h3>
+          <h3>Parameter Projection</h3>
           <div className="overview-content">
             <div className="info">
               <div className="row">
                 <p>Communication round range:</p>
-                {/* <div className="legend-wrapper">
-                  <p>{range[0]}</p>
-                  <p>{range[1]}</p>
-                </div> */}
                 <RangeSlider
-                  minValue={range[0]}
-                  maxValue={range[1]}
+                  range={range}
                   setRange={setRange}
-                  extent={extent}
-                  invoke={setRangeMap}
+                  extent={rawWeights !== null ? rawWeights.serverWeights.length : 10}
                 />
               </div>
 
@@ -260,18 +228,18 @@ function LeftPanel() {
                     markerEnd="url(#arrow-tip)"
                   />
                   <text x="20" y="15">
-                    Local gradient
+                    Local parameter
                   </text>
                 </svg>
               </div>
 
               <div className="row">
-                <p>Gradient similarity(Cosine)</p>
-                <Gradient colors={GRADIENT} legends={['1', '-1']} />
+                <p>Disagreement (Cosine) </p>
+                <Gradient colors={GRADIENT} legends={['1', '-1']} width="90px" />
               </div>
             </div>
 
-            <Overview data={overviewData} range={rangeMap} />
+            <Overview data={overviewData} flag={range[0] === 0} round={round - range[0]} />
           </div>
         </div>
       </div>

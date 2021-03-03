@@ -49,15 +49,18 @@ const initState: any= {
   heteroList: [],
   groundTruth: [],
   outputLabels: [],
-  samples: [],
+  // samples: [],
+  samples,
   heteroLabels: [],
   pca: {
     "pc1": [],
     "pc2": [],
   },
   cpca: {
-    "cpc1": [],
-    "cpc2": [],
+    // "cpc1": [],
+    // "cpc2": [],
+    "cpc1": heteroList[0].cpca.cpc1,
+    "cpc2": heteroList[0].cpca.cpc2,
   }
 };
 export interface IdentifyParam {
@@ -182,24 +185,24 @@ const identifyReducer = (state = initState, action: any) => {
   switch(action.type) {
     case SET_SAMPLES:
       // console.log(action.data);
-      return {...state, ...{samples: action.data}}
+      return {...state, samples: action.data}
     case SET_LABELS:
       // eslint-disable-next-line no-case-declarations
       const {consistencyLabel, groundTruthLabel, outputLabel} = action.data;
-      return {...state, ... {
+      return {...state, 
         groundTruth: groundTruthLabel,
         outputLabels: outputLabel,
         heteroLabels: consistencyLabel
-      }}
+      }
     case SET_HETELIST:
       // TODO cluster numbers
-      return {...state, ... {
+      return {...state, 
         heteroList: action.data
-      }}
+      }
     case SET_PCA: 
-      return {...state, ...{
+      return {...state,
         pca: action.data
-      }}
+      }
     default:
       return state;
   }

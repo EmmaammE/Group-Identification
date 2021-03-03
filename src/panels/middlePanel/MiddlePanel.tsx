@@ -39,7 +39,7 @@ function MiddlePanel() {
   const [dataIndex, setDataIndex] = useState<number>(0);
 
   // cluster number 输入时的映射
-  const [nOfCluster, setNOfCluster] = useState<number | ''>(5);
+  const [nOfCluster, setNOfCluster] = useState<number | ''>(2);
   const round = useSelector((state: StateType) => state.basic.round);
 
   const cpArray = useSelector((state: StateType) => [
@@ -112,17 +112,17 @@ function MiddlePanel() {
             <Dropdown items={items} index={dataIndex} setIndex={setDataIndex} />
           </div>
           <div className="scatter-legends">
-            <span>Consistent records {nOfConsistent}</span>
-            <span>Inconsistent records {samples.length - nOfConsistent}</span>
+            <span>Consistent records: {nOfConsistent}</span>
+            <span>Inconsistent records: {samples.length - nOfConsistent}</span>
           </div>
           <Scatterplot chartConfig={chartProps} points={points} x={x} y={y} />
         </div>
 
         <div>
-          <div className="divider" />
+          <div className="dashed-divider" />
 
           <div className="info-container">
-            <h3>Inconsistent Block Analysis</h3>
+            <h3>Inconsistent Cluster Analysis</h3>
             <div className="row">
               <div className="input-wrapper">
                 <p className="label">#Clusters:</p>

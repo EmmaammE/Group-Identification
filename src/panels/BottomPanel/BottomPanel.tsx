@@ -1,8 +1,8 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import AnnoLineChart from '../../components/lineChart/AnnLineChart';
 import Dropdown from '../../components/ui/Dropdown';
-import { setUpdateAction } from '../../store/reducers/basic';
+import { fetchLists, setUpdateAction } from '../../store/reducers/basic';
 import { StateType } from '../../types/data';
 import './BottomPanel.scss';
 
@@ -23,11 +23,25 @@ const BottomPanel = () => {
   const [lineData, setLineData] = useState<number[]>([]);
   const [datum, setDatum] = useState<any>(null);
 
-  const [annoList, setList] = useState<any>(null);
-
-  const update = useSelector((state: StateType) => state.basic.update);
+  // const update = useSelector((state: StateType) => state.basic.update);
   const dispatch = useDispatch();
-  const toggleUpdate = useCallback(() => dispatch(setUpdateAction()), [dispatch]);
+  // const toggleUpdate = useCallback(() => dispatch(setUpdateAction()), [dispatch]);
+
+  const rawList = useSelector((state: StateType) => state.basic.annoLists);
+  const annoList = useMemo(() => {
+    const data: { [key: number]: any } = {};
+    rawList.forEach((item: any) => {
+      const { round } = item;
+      if (data[round] === undefined) {
+        data[round] = [];
+      }
+      data[round].push(item);
+    });
+
+    return data;
+  }, [rawList]);
+
+  const getList = useCallback(() => dispatch(fetchLists()), [dispatch]);
 
   useEffect(() => {
     if (clientName) {
@@ -60,47 +74,8 @@ const BottomPanel = () => {
   }, [datum, index]);
 
   useEffect(() => {
-    fetch('/fl-hetero/annotationList/')
-      .then((res) => res.json())
-      .then((res) => {
-        console.log(res);
-        const { annotationList } = res;
-
-        const data: { [key: number]: any } = {};
-        annotationList.forEach((item: any) => {
-          const { round } = item;
-          if (data[round] === undefined) {
-            data[round] = [];
-          }
-          data[round].push(item);
-        });
-
-        setList(data);
-      });
+    getList();
   }, []);
-
-  useEffect(() => {
-    if (update) {
-      fetch('/fl-hetero/annotationList/')
-        .then((res) => res.json())
-        .then((res) => {
-          console.log(res);
-          const { annotationList } = res;
-
-          const data: { [key: number]: any } = {};
-          annotationList.forEach((item: any) => {
-            const { round } = item;
-            if (data[round] === undefined) {
-              data[round] = [];
-            }
-            data[round].push(item);
-          });
-
-          setList(data);
-          toggleUpdate();
-        });
-    }
-  }, [update]);
 
   return (
     <div id="BottomPanel">
