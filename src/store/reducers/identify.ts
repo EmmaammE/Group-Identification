@@ -1,10 +1,3 @@
-import groundTruth from '../../assets/data_2/groundTruth.json';
-import heteroLabels from '../../assets/data_2/heteroLabels.json';
-import heteroList from '../../assets/data_2/heteroList.json';
-import outputLabels from '../../assets/data_2/outputLabels.json';
-import samples from '../../assets/data_2/samples.json';
-import pca from '../../assets/data_2/pca.json';
-
 // identify接口
 const SET_DATA = 'SET_DATA';
 const SET_LABELS = 'SET_LABELS';
@@ -49,18 +42,15 @@ const initState: any= {
   heteroList: [],
   groundTruth: [],
   outputLabels: [],
-  // samples: [],
-  samples,
+  samples: [],
   heteroLabels: [],
   pca: {
     "pc1": [],
     "pc2": [],
   },
   cpca: {
-    // "cpc1": [],
-    // "cpc2": [],
-    "cpc1": heteroList[0].cpca.cpc1,
-    "cpc2": heteroList[0].cpca.cpc2,
+    "cpc1": [],
+    "cpc2": [],
   }
 };
 export interface IdentifyParam {

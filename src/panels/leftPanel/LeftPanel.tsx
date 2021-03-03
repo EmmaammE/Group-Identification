@@ -1,15 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { shallowEqual, useDispatch, useSelector } from 'react-redux';
-import TSNE from 'tsne-js';
+import { useDispatch, useSelector } from 'react-redux';
 import Overview, { OverviewData } from '../../components/overview/Overview';
-import LineChart from '../../components/lineChart/Linechart';
 import './style.scss';
 import Gradient from '../../components/ui/Gradient';
 import RangeSlider from '../../components/ui/RangeSlider';
 import Dropdown from '../../components/ui/Dropdown';
-import { getData } from '../../store/leftpanelAction';
-import { setRoundAction, setNameAction } from '../../store/reducers/basic';
-import weightsData from '../../assets/data/test_weights.json';
+import { setNameAction } from '../../store/reducers/basic';
 import { StateType } from '../../types/data';
 
 const fakeData = {
