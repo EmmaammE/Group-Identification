@@ -77,7 +77,7 @@ function MiddlePanel() {
 
   const handleParamChange = useCallback(
     (e: any) => {
-      setParam(e.target.value);
+      setParam(+e.target.value);
     },
     [setParam]
   );

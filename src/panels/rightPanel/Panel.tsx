@@ -1,3 +1,4 @@
+/* eslint-disable no-case-declarations */
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -12,7 +13,7 @@ import PairRect from '../../components/PairRect.tsx/PairRect';
 import { StateType } from '../../types/data';
 import Gradient from '../../components/ui/Gradient';
 import inputStyles from '../../styles/input.module.css';
-import { fetchLists, setUpdateAction } from '../../store/reducers/basic';
+import { fetchLists, setPropertyAction, setUpdateAction } from '../../store/reducers/basic';
 import Icon from '../../components/ui/JoinIcon';
 import { setLevelAction } from '../../store/reducers/identify';
 import HTTP_LEVEL from '../../utils/level';
@@ -60,6 +61,33 @@ function RightPanel() {
 
   const setLevel = useCallback((level: number) => dispatch(setLevelAction(level)), [dispatch]);
   const level = useSelector((state: StateType) => state.identify.level);
+
+  const [strokeStatus, setStrokeStatus] = useState(0);
+  const [strokeId, setStrokeId] = useState(-1);
+
+  const updatePropertyIndex = useCallback((i) => dispatch(setPropertyAction(i)), [dispatch]);
+
+  // useEffect(() => {
+  //   if(heteroList[index]) {
+  //     setStrokePoints(new Set(heteroList[index].heteroIndex));
+  //   }
+  // }, [heteroList, index])
+
+  useEffect(() => {
+    let defaultIndex = 0;
+    let maxV = Number.MIN_VALUE;
+
+    pcArr[0].forEach((cpc1, i) => {
+      const v = cpc1 + pcArr[1][i];
+
+      if (maxV < cpc1 + pcArr[1][i]) {
+        maxV = v;
+        defaultIndex = i;
+      }
+    });
+
+    updatePropertyIndex(defaultIndex);
+  }, [pcArr, updatePropertyIndex]);
 
   useEffect(() => {
     // 每次标注列表更新，更新状态
@@ -167,28 +195,46 @@ function RightPanel() {
     return temp;
   }, [heteroLabels, propertyIndex, samples]);
 
+  const handleHover = useCallback(
+    (e: any) => {
+      const { id } = e.target.dataset;
+
+      if (annoList[id]) {
+        setChoseAnnList(new Set(annoList[id].dataIndex));
+      }
+    },
+    [annoList]
+  );
+
+  const handleOut = useCallback((e: any) => {
+    setChoseAnnList(new Set());
+  }, []);
+
   const handleChange = (e: any) => {
     const { id } = e.target.dataset;
-    const { checked } = e.target;
-
-    console.log(id, e);
-    // if (checked) {
-    //   setChoseAnnList(new Set([...Array.from(chosedAnnList), ...annoList[id].dataIndex]));
-    // } else {
-    //   const toDelete = new Set(annoList[id].dataIndex);
-    //   setChoseAnnList(new Set([...Array.from(chosedAnnList)].filter((d) => !toDelete.has(d))));
-    // }
     const tmp = [...annoListStatus];
-    tmp[id] = (annoListStatus[id] + 1) % 3;
+    const updateStatus = (annoListStatus[id] + 1) % 3;
+    tmp[id] = updateStatus;
+
     setAnnoListStatus(tmp);
+    setStrokeStatus(updateStatus);
+    setStrokeId(id);
   };
+
+  const strokeSet: Set<number> = useMemo(() => {
+    if (annoList[strokeId]) {
+      return new Set(annoList[strokeId].dataIndex);
+    }
+    return new Set<number>();
+  }, [annoList, strokeId]);
 
   const handleParamChange = useCallback(
     (e: any) => {
-      setParam(e.target.value);
+      setParam(+e.target.value);
     },
     [setParam]
   );
+
   // console.log(heteData, lineDatum)
   return (
     <div className="panel" id="RightPanel">
@@ -274,6 +320,9 @@ function RightPanel() {
             yLabels={outputLabels}
             highlight={chosedAnnList}
             heteroIndex={heteroList[index] ? new Set(heteroList[index].heteroIndex) : new Set()}
+            heteroLabels={heteroLabels}
+            strokeSet={strokeSet}
+            strokeStatus={strokeStatus}
           />
         </div>
 
@@ -298,15 +347,25 @@ function RightPanel() {
             <div className="lists">
               <div className="list-content">
                 <p>Overlap lists:</p>
-                <div className="list-area" onClick={handleChange}>
+                <div
+                  className="list-area"
+                  onClick={handleChange}
+                  onMouseOver={handleHover}
+                  onFocus={handleHover}
+                  onMouseOut={handleOut}
+                  onBlur={handleOut}
+                >
                   {annoList.map(({ round: r, text, dataIndex }, i) => (
-                    <div className="list-item" key={i}>
-                      <span className="img-wrapper" data-id={i}>
+                    <div className="list-item" key={i} data-id={i}>
+                      <span
+                        className="img-wrapper"
+                        style={{ pointerEvents: 'none', cursor: 'pointer' }}
+                      >
                         {/* <img src={JOIN as any} alt="join" /> */}
                         <Icon status={annoListStatus[i]} id={i} />
                       </span>
 
-                      <div>
+                      <div style={{ pointerEvents: 'none' }}>
                         <p>
                           In round {r} (size:{dataIndex.length}){' '}
                         </p>

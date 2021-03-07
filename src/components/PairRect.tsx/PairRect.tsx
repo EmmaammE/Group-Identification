@@ -58,13 +58,7 @@ const PairRect = ({ data, title }: PairRectProps) => {
   const dispatch = useDispatch();
 
   const propertyIndex = useSelector((state: StateType) => state.basic.propertyIndex);
-
-  // const [chosePro, setPro] = useState<Pro>({
-  //   x:0,
-  //   y:0,
-  //   width:0,
-  //   height: 0
-  // })
+  const pos = useSelector((state: StateType) => state.basic.pos);
 
   const xScale = d3.scaleLinear().domain([0, WIDTH]).range([0, bound.width]);
 
@@ -81,6 +75,7 @@ const PairRect = ({ data, title }: PairRectProps) => {
       y: rectHeightMap * parseInt(`${propertyIndex / rowCount}`, 10),
       width: rectWidthMap,
       height: rectHeightMap,
+      id: `${propertyIndex % columnCount},${parseInt(`${propertyIndex / rowCount}`, 10)}`,
     }),
     [columnCount, propertyIndex, rectHeightMap, rectWidthMap]
   );
@@ -89,6 +84,15 @@ const PairRect = ({ data, title }: PairRectProps) => {
 
   const updatePropertyIndex = useCallback((i) => dispatch(setPropertyAction(i)), [dispatch]);
   const updatePos = useCallback((x: number, y: number) => dispatch(setPosAction(x, y)), [dispatch]);
+
+  useEffect(() => {
+    const { id } = chosePro;
+
+    const posArr = id.split(',').map((d) => +d);
+    if (pos[0] !== posArr[0] || pos[1] !== posArr[1]) {
+      updatePos(posArr[0], posArr[1]);
+    }
+  }, [chosePro, columnCount, pos, rectHeightMap, rectWidthMap, updatePos]);
 
   useEffect(() => {
     const { offsetWidth, offsetHeight } = ($svg as any).current;

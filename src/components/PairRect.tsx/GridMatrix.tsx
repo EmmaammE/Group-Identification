@@ -13,6 +13,9 @@ interface GridMatrixProps {
   highlight: Set<number>;
   // 不一致点的下标
   heteroIndex: Set<number>;
+  heteroLabels: boolean[];
+  strokeSet: Set<number>;
+  strokeStatus: number;
 }
 
 // const margin = { t: 50, r: 0, b: 0, l: 60 };
@@ -28,7 +31,16 @@ const colorScale = d3
 // 红白蓝
 // .range(['#e60d17', '#fff', '#0b69b6']);
 
-const GridMatrix = ({ data, xLabels, yLabels, highlight, heteroIndex }: GridMatrixProps) => {
+const GridMatrix = ({
+  data,
+  xLabels,
+  yLabels,
+  highlight,
+  heteroIndex,
+  heteroLabels,
+  strokeSet,
+  strokeStatus,
+}: GridMatrixProps) => {
   const $chart = useRef(null);
   const $wrapper = useRef(null);
 
@@ -81,7 +93,8 @@ const GridMatrix = ({ data, xLabels, yLabels, highlight, heteroIndex }: GridMatr
       d3
         .scaleLinear()
         .range([0, width])
-        .domain(d3.extent(data, (d) => d[0]) as [number, number]),
+        .domain(d3.extent(data, (d) => d[0]) as [number, number])
+        .nice(),
     [data, width]
   );
 
@@ -90,7 +103,8 @@ const GridMatrix = ({ data, xLabels, yLabels, highlight, heteroIndex }: GridMatr
       d3
         .scaleLinear()
         .range([0, height])
-        .domain(d3.extent(data, (d) => d[1]) as [number, number]),
+        .domain(d3.extent(data, (d) => d[1]) as [number, number])
+        .nice(),
     [data, height]
   );
 
@@ -173,6 +187,14 @@ const GridMatrix = ({ data, xLabels, yLabels, highlight, heteroIndex }: GridMatr
     return arr;
   }, [gridSize, normScale, search, xLabelsArr]);
 
+  const hull = useMemo(() => {
+    const pointsArr: any[] = points
+      .filter((d, k) => heteroIndex.has(k))
+      .map((point) => [point[0], point[1]]);
+
+    return d3.polygonHull(pointsArr);
+  }, [heteroIndex, points]);
+
   const gridPoints = useMemo(
     () =>
       xLabelsArr.map((xLabel, i) =>
@@ -194,18 +216,58 @@ const GridMatrix = ({ data, xLabels, yLabels, highlight, heteroIndex }: GridMatr
             const pointY = yLabels[k];
 
             if (pointX === xLabel && pointY === yLabel) {
-              if (heteroIndex.has(k)) {
-                pointsArr1.push([posX, posY, 1]);
+              let isStroke = 0;
+
+              const isInHull = hull && d3.polygonContains(hull, point as any);
+
+              switch (strokeStatus) {
+                case 0:
+                  if (isInHull) {
+                    isStroke = 1;
+                  }
+                  break;
+                case 1:
+                  // 求交集
+                  if (isInHull && strokeSet.has(k)) {
+                    isStroke = 1;
+                  }
+                  break;
+                case 2:
+                  // 求并集
+                  if (isInHull || strokeSet.has(k)) {
+                    isStroke = 1;
+                  }
+                  break;
+                default:
+                  break;
+              }
+
+              if (heteroLabels[k] === false) {
+                // 不一致
+                pointsArr1.push([posX, posY, 1, isStroke, k]);
               } else {
-                pointsArr0.push([posX, posY, 0]);
+                pointsArr0.push([posX, posY, 0, isStroke, k]);
               }
             }
+            // pointsArr0.push([posX, posY, heteroLabels[k] === false ? 1:0, 0, k]);
           });
 
           return pointsArr0.concat(pointsArr1);
         })
       ),
-    [heteroIndex, indexXScale, indexYScale, points, xLabels, xLabelsArr, yLabels, yLabelsArr]
+    [
+      heteroLabels,
+      hull,
+      indexXScale,
+      indexYScale,
+      points,
+      strokeSet,
+      strokeStatus,
+      xLabels,
+      xLabelsArr,
+      yLabels,
+      yLabelsArr,
+    ]
   );
 
   useEffect(() => {
@@ -218,16 +280,25 @@ const GridMatrix = ({ data, xLabels, yLabels, highlight, heteroIndex }: GridMatr
     ctx.clearRect(0, 0, svgWidth, svgHeight);
     ctx.lineWidth = 1;
 
-    // console.log(gridPoints)
-    gridPoints.forEach((gridPointRow) => {
+    ctx.strokeStyle = 'rgba(120,120,120,0.3)';
+
+    // console.log(pointsInHullArr);
+    gridPoints.forEach((gridPointRow, i) => {
       // 每一行
-      gridPointRow.forEach((gridPoint) => {
-        // 每一格
-        gridPoint.forEach((point, k) => {
+      gridPointRow.forEach((gridPoint, j) => {
+        // 每一格，point的序号已经变了，必须使用point数组中的k
+        gridPoint.forEach((point) => {
+          let alpha = 0.5;
+
+          if (highlight.has(point[3])) {
+            alpha = 1;
+          }
           if (point[2] === 0) {
-            ctx.fillStyle = 'rgba(128,128,128,.5)';
+            // 0 一致
+            ctx.fillStyle = `rgba(128,128,128,${alpha})`;
           } else {
-            ctx.fillStyle = 'rgba(149, 98, 53,.5)';
+            // ctx.fillStyle = `rgba(149, 98, 53,${alpha})`;
+            ctx.fillStyle = `rgba(197,92,0,${alpha})`;
           }
 
           ctx.moveTo(point[0], point[1]);
@@ -236,7 +307,8 @@ const GridMatrix = ({ data, xLabels, yLabels, highlight, heteroIndex }: GridMatr
           ctx.arc(point[0], point[1], 2, 0, Math.PI * 2);
           ctx.closePath();
           ctx.fill();
-          if (highlight.has(k)) {
+
+          if (point[3]) {
             ctx.stroke();
           }
         });
@@ -245,7 +317,6 @@ const GridMatrix = ({ data, xLabels, yLabels, highlight, heteroIndex }: GridMatr
   }, [
     $chart,
     data,
-    data.length,
     gridPoints,
     height,
     highlight,
@@ -270,19 +341,7 @@ const GridMatrix = ({ data, xLabels, yLabels, highlight, heteroIndex }: GridMatr
     toggelDisplat(!display);
   };
 
-  const hullArr = useMemo(
-    () =>
-      gridPoints.map((gridRow: any) =>
-        gridRow.map((pointsArr: any) =>
-          d3.polygonHull(
-            pointsArr
-              .filter((d: number[]) => d[2] === 1)
-              .map((point: number[]) => [point[0], point[1]])
-          )
-        )
-      ),
-    [gridPoints]
-  );
+  // console.log(pointsInHull, hullArr)
 
   return (
     <div className="grid-container">
@@ -357,7 +416,7 @@ const GridMatrix = ({ data, xLabels, yLabels, highlight, heteroIndex }: GridMatr
                     yLabelsArr.map((y, j) => {
                       const left = margin.l + indexXScale(i * 2) + padding * i;
                       const top = margin.t + indexYScale(j * 2) + padding * j;
-                      const hull = hullArr[i][j];
+                      // const hull = hullArr[i][j];
 
                       return clusterPoints[i].map((cluster: any, k: number) => (
                         <g key={`${i}-${j}-${k}`}>
@@ -385,12 +444,13 @@ const GridMatrix = ({ data, xLabels, yLabels, highlight, heteroIndex }: GridMatr
                             );
                           })}
 
-                          {hull && (
+                          {hull !== null && (
                             <path
                               d={`M${hull.join(' L')} Z`}
                               fill="none"
                               strokeWidth={2}
                               stroke="var(--primary-color)"
+                              transform={`translate(${left}, ${top})`}
                             />
                           )}
                         </g>

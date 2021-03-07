@@ -163,8 +163,12 @@ function LeftPanel() {
       const extent: any = d3.extent(rawWeights.cosines);
 
       if (extent) {
-        return [Math.floor(extent[0]), Math.ceil(extent[1])];
+        return [
+          (Math.floor(extent[0] * 100) / 100).toFixed(2),
+          (Math.ceil(extent[1] * 100) / 100).toFixed(2),
+        ];
       }
+      // return extent
     }
     return [-1, 1];
   }, [rawWeights]);
@@ -252,7 +256,8 @@ function LeftPanel() {
               </div>
 
               <div className="row">
-                <p>Update disagreement (Cosine) :</p>
+                {/* <p>Update disagreement (Cosine) :</p> */}
+                <p>Disagreement (Cosine) :</p>
                 <div className="cosine-legend">
                   <Gradient
                     colors={GRADIENT}

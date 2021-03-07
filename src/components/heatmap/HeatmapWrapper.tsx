@@ -59,8 +59,8 @@ const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
         .x((d) => xScale(d[0]))
         .y((d) => yScale(d[1]))
         .size([width, height])
-        .bandwidth(10)
-        .thresholds(1000)(points as any),
+        .bandwidth(4)
+        .thresholds(800)(points as any),
     [xScale, width, height, points, yScale]
   );
 
