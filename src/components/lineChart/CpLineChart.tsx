@@ -15,8 +15,8 @@ export interface CpLineChartProps {
   hetData: number[];
 }
 
-const WIDTH = 370;
-const HEIGHT = 160;
+const WIDTH = 420;
+const HEIGHT = 180;
 
 type Hash = { [key: number]: number };
 
@@ -57,7 +57,7 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
   const [maxValue, setMax] = useState<number>(0);
 
   const [binsCount, setBinsCount] = useState<any>([null, null]);
-  const [hetBinCount, setHetBinCount] = useState<any>({});
+  const [hetBinCount, setHetBinCount] = useState<any>(null);
 
   useEffect(() => {
     if (rawData) {
@@ -93,9 +93,10 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
   );
 
   useEffect(() => {
-    if (data === null) {
+    if (data === null || Object.keys(data[0]).length === 0) {
       return;
     }
+    console.log(data);
     const bins = d3
       .bin()
       // .thresholds(step)
@@ -128,7 +129,21 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
           // 记在value上
           hetBin[value] += hetHash[v];
         }
+
+        // else {
+        //   hetBin[value] = 0;
+        // }
       });
+
+      countBins.forEach((countBin) => {
+        if (countBin[value] === undefined) {
+          countBin[value] = 0;
+        }
+      });
+
+      if (hetBin[value] === undefined) {
+        hetBin[value] = 0;
+      }
     });
 
     // 转换为百分比
@@ -145,7 +160,7 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
 
     setBinsCount(countBins);
     setHetBinCount(hetBin);
-    // console.log(bins)
+    console.log(bins, hetBin, countBins);
     // console.log(title, countBins)
 
     // console.log(hetBin)
@@ -169,10 +184,11 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
       .range([heightMap, 0]),
   ];
 
-  const yScale = yScales[index];
+  const yScale = yScales[index] ? yScales[index] : yScales[0];
 
   const $xaxis: any = useRef(null);
   const $yaxis: any = useRef(null);
+  const $lines = useRef(null);
 
   const line = useCallback(
     (datum) =>
@@ -189,6 +205,23 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
     // .tickValues(xScale.domain().filter((d, i) => i % 2));
     const yAxis = d3.axisLeft(yScale).ticks(5);
 
+    const d3lines = d3.select($lines.current);
+
+    d3lines.select('g.yline').call(
+      d3
+        .axisLeft(yScale)
+        .ticks(5)
+        .tickSize(-widthMap)
+        .tickFormat('' as any) as any
+    );
+    d3lines.select('g.xline').call(
+      d3
+        .axisBottom(xScale)
+        .ticks(5)
+        .tickSize(heightMap)
+        .tickFormat('' as any) as any
+    );
+
     d3.select($xaxis.current).call(
       xAxis.scale(xScale).tickFormat((x) => {
         if (+title < 8) {
@@ -197,53 +230,56 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
         return Number(x).toFixed(2);
       })
     );
-    d3.select($yaxis.current).call(yAxis.scale(yScale).tickFormat(d3.format('.2%')));
-  }, [xScale, yScale, title]);
+    d3.select($yaxis.current).call(yAxis.scale(yScale).tickFormat(d3.format('.3p')));
+  }, [xScale, yScale, title, widthMap, heightMap]);
 
   return (
-    <div className="line-wrapper">
-      {/* <p style={{ textAlign: 'center' }}>Attribute {title}</p> */}
-      <svg width="100%" viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
-        <g transform={`translate(${margin.l}, ${margin.t})`}>
-          <g transform={`translate(0, ${heightMap})`} className="axes x-axis" ref={$xaxis} />
-          <g className="axes y-axis" ref={$yaxis} />
+    <svg width="100%" viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
+      <g transform={`translate(${margin.l}, ${margin.t})`}>
+        <g transform={`translate(0, ${heightMap})`} className="axes x-axis" ref={$xaxis} />
+        <g className="axes y-axis" ref={$yaxis} />
 
-          <line
-            x1={0}
-            x2={widthMap + 5}
-            y1={heightMap}
-            y2={heightMap}
-            stroke="rgba(0,0,0,0.8)"
-            markerEnd="url(#arrow)"
-          />
-          <line
-            x1={0}
-            x2={0}
-            y1={heightMap}
-            y2={-10}
-            stroke="rgba(0,0,0,0.8)"
-            markerEnd="url(#arrow)"
-          />
-          <text dy={-25} textAnchor="middle">
-            Percentage
-          </text>
-          <text transform={`translate(${widthMap - 30},${heightMap + margin.b})`}>Value</text>
-          {binsCount.map(
-            (datum: any, i: number) =>
-              datum && (
-                <path
-                  key={i}
-                  d={line(datum)(Object.keys(datum) as any) || ''}
-                  stroke={lineColor[i]}
-                  fill="none"
-                  // opacity="0.7"
-                />
-              )
-          )}
-          {binsCount.map((datum: any, i: number) => (
-            <g key={`c-${i}`}>
-              {datum !== null &&
-                Object.keys(datum).map((key, j) => (
+        <g ref={$lines} className="axis-lines">
+          <g className="yline" />
+          <g className="xline" />
+        </g>
+        <line
+          x1={0}
+          x2={widthMap + 5}
+          y1={heightMap}
+          y2={heightMap}
+          stroke="rgba(0,0,0,0.8)"
+          markerEnd="url(#arrow)"
+        />
+        <line
+          x1={0}
+          x2={0}
+          y1={heightMap}
+          y2={-10}
+          stroke="rgba(0,0,0,0.8)"
+          markerEnd="url(#arrow)"
+        />
+        <text dy={-25} textAnchor="middle">
+          Percentage
+        </text>
+        <text transform={`translate(${widthMap - 30},${heightMap + margin.b})`}>Value</text>
+        {binsCount.map(
+          (datum: any, i: number) =>
+            datum && (
+              <path
+                key={i}
+                d={line(datum)((Object.keys(datum) as any).sort((a: any, b: any) => +a - +b)) || ''}
+                stroke={lineColor[i]}
+                fill="none"
+                // opacity="0.7"
+              />
+            )
+        )}
+        {binsCount.map((datum: any, i: number) => (
+          <g key={`c-${i}`}>
+            {datum !== null &&
+              Object.keys(datum).map((key, j) =>
+                datum[key] > 0 ? (
                   <circle
                     key={`c-${i}-${j}`}
                     cx={xScale(+key)}
@@ -251,32 +287,41 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
                     r={2}
                     stroke={lineColor[i]}
                     fill="#fff"
+                    id={datum[key]}
                     // opacity="0.7"
                   />
-                ))}
-            </g>
-          ))}
+                ) : null
+              )}
+          </g>
+        ))}
 
+        {hetBinCount && (
           <g>
             <path
-              d={line(hetBinCount)(Object.keys(hetBinCount) as any) || ''}
+              d={
+                line(hetBinCount)(
+                  (Object.keys(hetBinCount) as any).sort((a: any, b: any) => +a - +b)
+                ) || ''
+              }
               stroke="#c04548"
               fill="none"
             />
-            {Object.keys(hetBinCount).map((key, j) => (
-              <circle
-                key={`h-${j}`}
-                cx={xScale(+key)}
-                cy={yScale(hetBinCount[key])}
-                r={2}
-                stroke="#c04548"
-                fill="#fff"
-              />
-            ))}
+            {Object.keys(hetBinCount).map((key, j) =>
+              hetBinCount[key] > 0 ? (
+                <circle
+                  key={`h-${j}`}
+                  cx={xScale(+key)}
+                  cy={yScale(hetBinCount[key])}
+                  r={2}
+                  stroke="#c04548"
+                  fill="#fff"
+                />
+              ) : null
+            )}
           </g>
-        </g>
-      </svg>
-    </div>
+        )}
+      </g>
+    </svg>
   );
 };
 

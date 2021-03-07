@@ -1,3 +1,5 @@
+/* eslint-disable jsx-a11y/no-static-element-interactions */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import * as d3 from 'd3';
@@ -5,13 +7,13 @@ import Scatterplot from '../../components/scatterplots/Scatterplot';
 import { ChartProps } from '../../types/chart';
 import './style.scss';
 import inputStyles from '../../styles/input.module.css';
-import PairRect from '../../components/PairRect.tsx/PairRect';
-import Gradient from '../../components/ui/Gradient';
 import Dropdown from '../../components/ui/Dropdown';
 import HeatmapWrapper from '../../components/heatmap/HeatmapWrapper';
 import { StateType } from '../../types/data';
 import { mmultiply, transpose } from '../../utils/mm';
 import { getPCAResults, getSamplesAction, getLabelsAction } from '../../store/reducers/identify';
+import useFetch from '../../utils/useFetch';
+import HTTP_LEVEL from '../../utils/level';
 
 const chartProps: ChartProps = {
   width: 400,
@@ -34,68 +36,111 @@ const chartProps: ChartProps = {
 const items = ['local', 'stratified', 'systematic'];
 
 function MiddlePanel() {
-  const rawData = useSelector((state: any) => state.identify.heteroList);
-
   const [dataIndex, setDataIndex] = useState<number>(0);
+  const [param, setParam] = useState<number | null>(null);
 
   // cluster number 输入时的映射
-  const [nOfCluster, setNOfCluster] = useState<number | ''>(2);
+  const [nOfCluster, setNOfCluster] = useState<number | null>(null);
   const round = useSelector((state: StateType) => state.basic.round);
 
   const cpArray = useSelector((state: StateType) => [
-    state.identify.pca.pc1,
-    state.identify.pca.pc2,
+    state.identify.pca.cpc1,
+    state.identify.pca.cpc2,
   ]);
   const samples = useSelector((state: StateType) => state.identify.samples);
 
   const dispatch = useDispatch();
   const getSamples = useCallback((type) => dispatch(getSamplesAction(type)), [dispatch]);
-  const getPCA = useCallback(() => dispatch(getPCAResults()), [dispatch]);
+  const getPCA = useCallback((alpha) => dispatch(getPCAResults(alpha)), [dispatch]);
   const getLabels = useCallback((roundParam) => dispatch(getLabelsAction(roundParam)), [dispatch]);
   // const heteroList = useSelector((state: StateType) => state.identify.heteroList);
+  // const loading = useSelector((state: StateType) => state.identify.loading);
+  const paramFromRes = useSelector((state: StateType) => state.identify.pca.alpha);
+  const clusterFromRes = useSelector((state: StateType) => state.identify.heteroList.nOfClusters);
+
+  useEffect(() => {
+    setNOfCluster(clusterFromRes);
+  }, [clusterFromRes]);
 
   const nOfConsistent = useSelector(
     (state: StateType) => state.identify.heteroLabels.filter((d) => d).length
   );
+  const level = useSelector((state: StateType) => state.identify.level);
+
+  // 当选择local时，从store的local加载数据。否则从samplesData加载数据
+  const [data, setRequest]: any = useFetch('');
+
+  const [topStatus, setTopStatus] = useState<number>(0);
+
+  const handleParamChange = useCallback(
+    (e: any) => {
+      setParam(e.target.value);
+    },
+    [setParam]
+  );
+
+  useEffect(() => {
+    if (param === null) {
+      setParam(paramFromRes);
+    }
+  }, [param, paramFromRes]);
+
   const points = useMemo(() => {
     try {
       // console.log(cpArray)
-      if (samples.length === 0 || cpArray[0].length === 0) {
-        return [[]];
+      if (cpArray[0].length !== 0) {
+        const cpT = transpose(cpArray); // 784*2
+        if (dataIndex === 0 && samples.length !== 0) {
+          return mmultiply(samples, cpT);
+        }
+        if (data.length !== 0) {
+          // console.log(data)
+          return mmultiply(data, cpT);
+        }
       }
-      const cpT = transpose(cpArray); // 784*2
-
+      return [[]];
       // console.log(samples, cpT)
-      return mmultiply(samples, cpT);
     } catch (err) {
       console.log(err);
     }
 
     return [[]];
-  }, [cpArray, samples]);
+  }, [cpArray, dataIndex, samples, data]);
 
   const x = d3.extent(points, (d) => d[0]) as any;
   const y = d3.extent(points, (d) => d[1]) as any;
 
   const loadData = useCallback(async () => {
     if (dataIndex !== -1 && round !== 0) {
-      await getSamples(items[dataIndex]);
-      await getPCA();
-      await getLabels(round);
+      // 如果是初次请求，加载samples。
+      if (level === HTTP_LEVEL.sampling) {
+        if (dataIndex === 0) {
+          if (samples.length === 0) {
+            // console.log('load samples')
+            await getSamples(items[dataIndex]);
+          }
+        } else {
+          setRequest(items[dataIndex]);
+        }
+      }
+      if (level === HTTP_LEVEL.pca) {
+        await getLabels(round);
+        await getPCA(param);
+      }
     }
-  }, [dataIndex, getLabels, getPCA, getSamples, round]);
+  }, [dataIndex, getLabels, getPCA, getSamples, level, param, round, samples.length, setRequest]);
 
   useEffect(() => {
     loadData();
-  }, [dataIndex, getLabels, getPCA, getSamples, loadData, round]);
+  }, [loadData]);
 
   const onInputNumber = (e: any) => {
-    const reg = new RegExp('^[1-9]*$');
+    const reg = new RegExp('^[0-9]*$');
+
     if (e.target.value.match(reg)) {
-      // console.log(e.target.value)
       setNOfCluster(+e.target.value);
     } else {
-      setNOfCluster('');
+      setNOfCluster(null);
     }
   };
 
@@ -107,20 +152,41 @@ function MiddlePanel() {
         <div className="scatter-container">
           <h3>Output Comparison</h3>
 
-          <div className="info-row">
-            <p>Inputs: </p>
-            <Dropdown items={items} index={dataIndex} setIndex={setDataIndex} />
+          <div className="row">
+            <div className="info-row">
+              <p>Inputs: </p>
+              <Dropdown items={items} index={dataIndex} setIndex={setDataIndex} />
+            </div>
+
+            <div className="row">
+              <p className="label">Contrastive parameter: </p>
+              <div className={inputStyles.wrapper}>
+                <input
+                  className={inputStyles.input}
+                  type="number"
+                  min="0.01"
+                  max="100"
+                  step="1"
+                  value={param || ''}
+                  onChange={handleParamChange}
+                />
+              </div>
+            </div>
           </div>
           <div className="scatter-legends">
-            <span>Consistent records: {nOfConsistent}</span>
-            <span>Inconsistent records: {samples.length - nOfConsistent}</span>
+            <div>
+              <span className="legend" onClick={() => setTopStatus(1)} />
+              <span>Consistent records: {nOfConsistent}</span>
+            </div>
+            <div>
+              <span className="legend" onClick={() => setTopStatus(0)} />
+              <span>Inconsistent records: {samples.length - nOfConsistent}</span>
+            </div>
           </div>
-          <Scatterplot chartConfig={chartProps} points={points} x={x} y={y} />
+          <Scatterplot chartConfig={chartProps} points={points} x={x} y={y} onTop={topStatus} />
         </div>
 
         <div>
-          <div className="dashed-divider" />
-
           <div className="info-container">
             <h3>Inconsistent Cluster Analysis</h3>
             <div className="row">
@@ -131,9 +197,8 @@ function MiddlePanel() {
                     className={inputStyles.input}
                     type="number"
                     min="1"
-                    max="15"
                     step="1"
-                    defaultValue={nOfCluster}
+                    defaultValue={nOfCluster || ''}
                     onInput={onInputNumber}
                   />
                 </div>
@@ -165,7 +230,7 @@ function MiddlePanel() {
               <Gradient width="100" colors={['#95c72c', '#fff', '#f8bb3e']} legends={['-1', '1']} /> */}
             {/* </div> */}
           </div>
-          <HeatmapWrapper points={points} x={x} y={y} nOfCluster={+nOfCluster} />
+          <HeatmapWrapper points={points} x={x} y={y} nOfCluster={nOfCluster} />
         </div>
       </div>
     </div>

@@ -17,19 +17,20 @@ interface OverviewProps {
   flag: boolean;
   // 当前分析的round在range范围内的下标
   round: number;
+  colorExtent: any;
 }
 
 const SIZE = 400;
 const PADDING = 10;
-
-const color = d3.scaleLinear<string>().domain([-1, 1]).range(['#aa815d', '#fff']);
 
 const mergeDomain = (...datum: number[][]) => [
   Math.min(Math.min(...datum.map((d) => d[0]))),
   Math.max(Math.max(...datum.map((d) => d[1]))),
 ];
 
-function Overview({ data, flag, round }: OverviewProps) {
+function Overview({ data, flag, round, colorExtent }: OverviewProps) {
+  const color = d3.scaleLinear<string>().domain(colorExtent).range(['#fff', '#aa815d']);
+
   const xScale = useMemo(
     () =>
       d3
@@ -78,7 +79,7 @@ function Overview({ data, flag, round }: OverviewProps) {
 
   return (
     <div id="Overview">
-      <svg width="90%" viewBox="0 0 400 400">
+      <svg viewBox="0 0 400 400">
         <defs>
           {data.cosines.map((v, i) => (
             <marker

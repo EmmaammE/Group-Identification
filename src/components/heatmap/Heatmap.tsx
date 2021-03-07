@@ -27,7 +27,7 @@ const Heatmap = ({ densityData, linear, heteroPoints }: HeatmapProps) => {
 
   // console.log(hull);
   return (
-    <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} width="80%">
+    <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} width="100%">
       <defs>
         <clipPath id="cut-off">
           <rect x={0} y={0} width={width} height={height} />

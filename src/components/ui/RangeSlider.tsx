@@ -7,13 +7,13 @@ interface RangeSliderProps {
   extent: number;
 }
 
-const WIDTH = 100;
+const WIDTH = 120;
 const HEIGHT = 20;
 const MARGIN = {
   bottom: 5,
   top: 5,
-  left: 5,
-  right: 5,
+  left: 6,
+  right: 6,
 };
 
 // brush两侧的宽度
@@ -42,13 +42,8 @@ const RangeSlider = ({ range, setRange, extent }: RangeSliderProps) => {
           if (!sourceEvent) return;
           if (selection) {
             const sx = selection.map(x.invert);
-            sx[0] = Math.floor(sx[0]);
             sx[1] = Math.ceil(sx[1]);
-
-            if (sx[0] < 0) {
-              // eslint-disable-next-line prefer-destructuring
-              sx[0] = 0;
-            }
+            sx[0] = Math.max(Math.floor(sx[0]), 0);
 
             if (sx[0] !== range[0] || sx[1] !== range[1]) {
               d3.select($brush.current as any).call(brush.move, sx.map(x));
@@ -68,7 +63,7 @@ const RangeSlider = ({ range, setRange, extent }: RangeSliderProps) => {
   }, [brush, extent, range, x]);
 
   return (
-    <div className="legend-wrapper">
+    <div className="legend-wrapper tip">
       <p>{range[0] + 1}</p>
       <div>
         <svg width="90px" viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
@@ -83,7 +78,7 @@ const RangeSlider = ({ range, setRange, extent }: RangeSliderProps) => {
             x={MARGIN.left}
             width={widthMap}
             y={MARGIN.top - 1}
-            height={heightMap + 2}
+            height={heightMap}
             fill="#fff"
             stroke="#000"
           />
@@ -93,18 +88,18 @@ const RangeSlider = ({ range, setRange, extent }: RangeSliderProps) => {
             <rect
               className="my-handle"
               x={x(range[0])}
-              y={-MARGIN.top}
+              y={-MARGIN.top + 1}
               width={HANDLE_WIDTH}
-              height={HEIGHT}
+              height={HEIGHT - 2}
               rx={HANDLE_WIDTH / 2}
               ry={HANDLE_WIDTH / 2}
             />
             <rect
               className="my-handle"
               x={x(range[1]) - HANDLE_WIDTH / 2}
-              y={-MARGIN.top}
+              y={-MARGIN.top + 1}
               width={HANDLE_WIDTH}
-              height={HEIGHT}
+              height={HEIGHT - 2}
               rx={HANDLE_WIDTH / 2}
               ry={HANDLE_WIDTH / 2}
             />

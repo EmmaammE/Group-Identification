@@ -6,13 +6,22 @@
   --background-color: #efefef;
   --disabled-color: rgba(0, 0, 0, 0.26);
   --shadow-color: rgba(34, 36, 38, 0.15);
+  --lines-color: #eee;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+
+  p {
+    white-space: nowrap;
+  }
 }
 
 .App {
   display: grid;
-  grid-template-columns: 25% 22% auto;
+  grid-template-columns: 22% 24% auto;
   grid-template-rows: 77% auto;
-  // grid-gap: 10px;
   row-gap: 8px;
   column-gap: 10px;
   background: var(--background-color);
@@ -77,6 +86,10 @@ svg {
   p {
     margin: 0 4px;
   }
+
+  &.tip p {
+    width: 20px;
+  }
 }
 
 // dropdown
@@ -93,6 +106,7 @@ svg {
   background-color: var(--background-color);
   border: 1px solid var(--divider-color);
   border-radius: 4px;
+  margin-left: 5px;
 }
 
 .select-dropdown select {
@@ -122,15 +136,6 @@ svg {
   border-top: 5px solid #aaa;
   border-right: 5px solid transparent;
   border-left: 5px solid transparent;
-}
-
-.row {
-  display: flex;
-  justify-content: space-between;
-
-  p {
-    white-space: nowrap;
-  }
 }
 
 .info-row {
@@ -218,65 +223,6 @@ div::-webkit-scrollbar-thumb {
     cursor: pointer;
     user-select: none;
     white-space: nowrap;
-  }
-}
-
-.radio {
-  $size: 12px;
-
-  display: flex;
-  align-items: center;
-  position: relative;
-  margin-left: 2px;
-
-  p {
-    white-space: nowrap;
-  }
-
-  input {
-    opacity: 0;
-    z-index: -1;
-    margin-left: -$size;
-    outline: 0;
-  }
-
-  input:focus:checked ~ span::after {
-    background-color: rgba(0, 0, 0, 0.95);
-  }
-
-  .out {
-    position: relative;
-    width: $size;
-    height: $size;
-    padding: 0;
-    background: #fff;
-    border-radius: 50%;
-    border: 1px solid #767676;
-    font-size: 1.2em;
-    box-sizing: border-box;
-    outline: 0;
-    cursor: pointer;
-    margin: 3px 0 0 0;
-  }
-
-  .out::before {
-    content: '';
-    display: inline-block;
-    width: $size - 5;
-    height: $size - 5;
-    background: #fff;
-    border-radius: 50%;
-    position: absolute;
-    top: 1.5px;
-    left: 1.5px;
-    // background-color: #000;
-    margin: 0;
-    padding: 0;
-    pointer-events: none;
-  }
-
-  &.checked .out::before {
-    background-color: #333;
   }
 }
 

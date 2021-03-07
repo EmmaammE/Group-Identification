@@ -2,13 +2,19 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as d3 from 'd3';
 import './PairRect.scss';
 import { useDispatch, useSelector } from 'react-redux';
-import { parse } from 'path';
 import { StateType } from '../../types/data';
 import { setPosAction, setPropertyAction } from '../../store/reducers/basic';
 
 export interface PairRectProps {
   data: number[];
   title: number;
+}
+
+interface RectData {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 function getPixelRatio(context: any) {
@@ -37,6 +43,7 @@ interface Pro {
   width: number;
   height: number;
 }
+
 const PairRect = ({ data, title }: PairRectProps) => {
   const columnCount = data.length / rowCount;
   const WIDTH = rectWidth * columnCount;
@@ -78,6 +85,8 @@ const PairRect = ({ data, title }: PairRectProps) => {
     [columnCount, propertyIndex, rectHeightMap, rectWidthMap]
   );
 
+  const [hoverPro, setHoverPro] = useState<RectData | null>(null);
+
   const updatePropertyIndex = useCallback((i) => dispatch(setPropertyAction(i)), [dispatch]);
   const updatePos = useCallback((x: number, y: number) => dispatch(setPosAction(x, y)), [dispatch]);
 
@@ -107,7 +116,6 @@ const PairRect = ({ data, title }: PairRectProps) => {
       ctx.fillStyle = color(d);
       ctx.fillRect(rectWidthMap * x, rectHeightMap * y, rectWidthMap, rectHeightMap);
     });
-    console.log('draw');
   }, [
     HEIGHT,
     WIDTH,
@@ -124,35 +132,42 @@ const PairRect = ({ data, title }: PairRectProps) => {
   ]);
 
   useEffect(() => {
-    d3.select($rect.current).on('click', (event) => {
-      const { offsetX, offsetY } = event;
-      const indexY = parseInt(`${offsetY / rectHeightMap}`, 10);
-      const indexX = parseInt(`${offsetX / rectWidthMap}`, 10);
-      const index = indexY * rowCount + indexX;
-      updatePropertyIndex(index);
-      updatePos(indexX, indexY);
-    });
+    d3.select($rect.current)
+      .on('click', (event) => {
+        const { offsetX, offsetY } = event;
+        const indexY = parseInt(`${offsetY / rectHeightMap}`, 10);
+        const indexX = parseInt(`${offsetX / rectWidthMap}`, 10);
+        const index = indexY * rowCount + indexX;
+        updatePropertyIndex(index);
+        updatePos(indexX, indexY);
+        setHoverPro(null);
+      })
+      .on('mousemove', (event) => {
+        const { offsetX, offsetY } = event;
+        const indexY = parseInt(`${offsetY / rectHeightMap}`, 10);
+        const indexX = parseInt(`${offsetX / rectWidthMap}`, 10);
+        setHoverPro({
+          x: indexX * rectWidthMap,
+          y: indexY * rectHeightMap,
+          width: rectWidthMap,
+          height: rectHeightMap,
+        });
+      })
+      .on('mouseout', () => {
+        setHoverPro(null);
+      });
   }, [columnCount, rectHeightMap, rectWidthMap, updatePos, updatePropertyIndex, yScale]);
 
   return (
-    // <div className="pair-rect-container">
     <div className="wrapper">
-      {/* <div className="names">
-          {names.map((name) => (
-            <p key={name}>{name}:</p>
-          ))}
-        </div> */}
       <p>ccPC{title + 1}</p>
-      <div className="svg-wrapper" ref={$svg}>
-        <svg width="100%" height="90%" />
+      <div className="chart-wrapper" ref={$svg}>
         <canvas
           className="pair-canvas"
           ref={$chart}
           width={`${bound.width}px`}
           height={`${bound.height}px`}
           style={{
-            // width: 130,
-            // height: 130,
             border: '1px dashed #777',
           }}
         />
@@ -168,10 +183,13 @@ const PairRect = ({ data, title }: PairRectProps) => {
             fill="transparent"
           />
           <rect {...chosePro} stroke="#000" fill="#fff" fillOpacity="0" />
+
+          {hoverPro && (
+            <rect {...hoverPro} stroke="#777" fill="#fff" fillOpacity="0" pointerEvents="none" />
+          )}
         </svg>
       </div>
     </div>
-    // </div>
   );
 };
 

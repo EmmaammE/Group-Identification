@@ -1,3 +1,5 @@
+/* eslint-disable jsx-a11y/no-static-element-interactions */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setIndexAction } from '../../store/reducers/blockIndex';
@@ -11,12 +13,15 @@ import { StateType } from '../../types/data';
 import Gradient from '../../components/ui/Gradient';
 import inputStyles from '../../styles/input.module.css';
 import { fetchLists, setUpdateAction } from '../../store/reducers/basic';
+import Icon from '../../components/ui/JoinIcon';
+import { setLevelAction } from '../../store/reducers/identify';
+import HTTP_LEVEL from '../../utils/level';
 
-const margin = { t: 50, r: 20, b: 20, l: 50 };
+const margin = { t: 50, r: 20, b: 35, l: 50 };
 
 function RightPanel() {
   const index: number = useSelector((state: any) => state.blockIndex);
-  const heteroList = useSelector((state: StateType) => state.identify.heteroList);
+  const heteroList = useSelector((state: StateType) => state.identify.heteroList.clusterList);
   const samples = useSelector((state: any) => state.identify.samples);
   const heteroLabels = useSelector((state: any) => state.identify.heteroLabels);
   const outputLabels = useSelector((state: any) => state.identify.outputLabels);
@@ -34,14 +39,8 @@ function RightPanel() {
   const [heteData, setHeteData] = useState<any>(null);
 
   const [pcArr, setcPCA] = useState([[], []]);
-  // const pcArr = useSelector((state: StateType) => [
-  //   state.identify.cpca.cpc1,
-  //   state.identify.cpca.cpc2,
-  // ])
 
   const [annoText, setAnnoText] = useState<string>('');
-
-  // const pcArr = useMemo(() => heteroList[index] && heteroList[index].cpca ? [heteroList[index].cpca.cpc1, heteroList[index].cpca.cpc2] : [], [heteroList, index])
 
   const round = useSelector((state: StateType) => state.basic.round);
 
@@ -55,28 +54,47 @@ function RightPanel() {
   const annoList = useSelector((state: StateType) => state.basic.annoLists);
   const [chosedAnnList, setChoseAnnList] = useState<Set<number>>(new Set());
 
+  const [param, setParam] = useState<number | null>(null);
+
+  const [annoListStatus, setAnnoListStatus] = useState<number[]>([]);
+
+  const setLevel = useCallback((level: number) => dispatch(setLevelAction(level)), [dispatch]);
+  const level = useSelector((state: StateType) => state.identify.level);
+
   useEffect(() => {
-    if (round !== 0) {
-      fetch('/fl-hetero/cpca/', {
+    // 每次标注列表更新，更新状态
+    setAnnoListStatus(Array.from({ length: annoList.length }, () => 0));
+  }, [annoList]);
+
+  useEffect(() => {
+    if (round !== 0 && level === HTTP_LEVEL.cpca) {
+      // console.log('cpca', level)
+
+      fetch('/fl-hetero/cpca/cluster/', {
         method: 'POST',
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          clusterID: blockIndex,
-          alpha: 30, // 默认30
-        }),
+        body: param
+          ? JSON.stringify({
+              clusterID: blockIndex,
+              alpha: param, // 默认30
+            })
+          : JSON.stringify({
+              clusterID: blockIndex,
+            }),
       })
         .then((res) => res.json())
         .then((res) => {
+          setParam(res.alpha.toFixed(2));
           setcPCA([res.cpc1, res.cpc2]);
         })
         .catch((err) => {
           console.log(err);
         });
     }
-  }, [blockIndex, round]);
+  }, [blockIndex, level, param, round]);
 
   // console.log(pcArr)
 
@@ -146,14 +164,25 @@ function RightPanel() {
   const handleChange = (e: any) => {
     const { id } = e.target.dataset;
     const { checked } = e.target;
-    if (checked) {
-      setChoseAnnList(new Set([...Array.from(chosedAnnList), ...annoList[id].dataIndex]));
-    } else {
-      const toDelete = new Set(annoList[id].dataIndex);
-      setChoseAnnList(new Set([...Array.from(chosedAnnList)].filter((d) => !toDelete.has(d))));
-    }
+
+    console.log(id, e);
+    // if (checked) {
+    //   setChoseAnnList(new Set([...Array.from(chosedAnnList), ...annoList[id].dataIndex]));
+    // } else {
+    //   const toDelete = new Set(annoList[id].dataIndex);
+    //   setChoseAnnList(new Set([...Array.from(chosedAnnList)].filter((d) => !toDelete.has(d))));
+    // }
+    const tmp = [...annoListStatus];
+    tmp[id] = (annoListStatus[id] + 1) % 3;
+    setAnnoListStatus(tmp);
   };
 
+  const handleParamChange = useCallback(
+    (e: any) => {
+      setParam(e.target.value);
+    },
+    [setParam]
+  );
   // console.log(heteData, lineDatum)
   return (
     <div className="panel" id="RightPanel">
@@ -169,9 +198,9 @@ function RightPanel() {
                   type="number"
                   min="0.01"
                   max="100"
-                  step="0.1"
-                  value={30}
-                  // onChange={handleGridSizeChange}
+                  step="1"
+                  value={param || ''}
+                  onChange={handleParamChange}
                 />
               </div>
             </div>
@@ -187,7 +216,7 @@ function RightPanel() {
 
         <div className="attr-container r-panel">
           <div className="row">
-            <p>Dimension: {pos.join(',')} </p>
+            <p>Dimension: pixel ({pos.join(', ')}) </p>
             <div className="info">
               <span>y-scale:</span>
               <Dropdown items={['linear', 'log']} index={0} setIndex={setIndex} />
@@ -210,7 +239,7 @@ function RightPanel() {
             </svg>
 
             <svg height="20px" viewBox="0 0 30 20">
-              <line x1="0" y1="10" x2="10" y2="10" stroke="#5082b3" />
+              <line x1="0" y1="10" x2="10" y2="10" stroke="#ea4d40" />
               <text x="12" y="15">
                 All
               </text>
@@ -238,7 +267,7 @@ function RightPanel() {
             xLabels={groundTruth}
             yLabels={outputLabels}
             highlight={chosedAnnList}
-            inconsistentSize={heteroList[index] ? heteroList[index].heteroIndex.length : 0}
+            heteroIndex={heteroList[index] ? new Set(heteroList[index].heteroIndex) : new Set()}
           />
         </div>
 
@@ -251,17 +280,10 @@ function RightPanel() {
               </div>
               <div>
                 <p>Ground-truth label:</p>
-                {/* <p>Ground-truth label:</p> */}
-                <p>Output label:</p>
-                {/* <p>Output label:</p> */}
-                <p>Confidence:</p>
+                <p>Output:</p>
+                <p>Federated learning model: </p>
+                <p>Stand-alone training model: </p>
               </div>
-              {/* <textarea placeholder="Input" value={annoText} onInput={handleInput} />
-              <div className="btn-area">
-                <button type="button" className="c-btn" onClick={addAnn}>
-                  Record
-                </button>
-              </div> */}
             </div>
           </div>
 
@@ -270,31 +292,27 @@ function RightPanel() {
             <div className="lists">
               <div className="list-content">
                 <p>Overlap lists:</p>
-                <div className="list-area" onChange={handleChange}>
+                <div className="list-area" onClick={handleChange}>
                   {annoList.map(({ round: r, text, dataIndex }, i) => (
-                    <>
-                      <div className="checkbox" key={i}>
-                        <input type="checkbox" data-id={i} />
-                        <span>
+                    <div className="list-item" key={i}>
+                      <span className="img-wrapper" data-id={i}>
+                        {/* <img src={JOIN as any} alt="join" /> */}
+                        <Icon status={annoListStatus[i]} id={i} />
+                      </span>
+
+                      <div>
+                        <p>
                           In round {r} (size:{dataIndex.length}){' '}
-                        </span>
+                        </p>
+                        <p className="anno">{text}</p>
                       </div>
-                      <p className="anno">{text}</p>
-                    </>
+                    </div>
                   ))}
                 </div>
-                <div className="btn-area">
-                  <button type="button" className="c-btn">
-                    Intersect
-                  </button>
-                  <button type="button" className="c-btn">
-                    Join
-                  </button>
-                </div>
               </div>
+
               <div id="input-wrapper">
                 <textarea placeholder="Input" value={annoText} onInput={handleInput} />
-
                 <div className="btn-area">
                   <button type="button" className="c-btn" onClick={addAnn}>
                     Record

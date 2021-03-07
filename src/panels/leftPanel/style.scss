@@ -1,6 +1,11 @@
 #LeftPanel {
+  .content {
+    display: flex;
+    flex-direction: column;
+  }
+
   #info-two {
-    margin-top: 10px;
+    margin: 15px 0;
 
     .next-line {
       text-indent: 2.3em;
@@ -35,9 +40,18 @@
   }
 
   .overview-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+
+    // .dashed-divider {
+    //   margin: 15px 0;
+    // }
+
     .overview-content {
       display: flex;
       flex-direction: column;
+      flex: 1;
 
       // Ovewview.tsx
       #Overview {
@@ -46,22 +60,37 @@
         display: flex;
         justify-content: center;
         align-items: center;
+        flex: 1;
 
-        svg {
-          margin: 5px;
-        }
+        // svg {
+        // margin: 20px 5px;
+        // }
       }
 
       .info {
         // padding: 10px 5px;
-        flex-grow: 1;
         display: flex;
         flex-direction: column;
         justify-content: space-around;
 
-        p {
+        .legend-wrapper p {
           white-space: nowrap;
+          margin-top: -2px;
         }
+
+        .tip {
+          p:first-child {
+            text-align: right;
+          }
+        }
+
+        .cosine-legend {
+          margin-left: 8px;
+        }
+
+        // p:first-child {
+        //   text-align: right;
+        // }
       }
     }
   }

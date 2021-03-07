@@ -16,4 +16,5 @@ h3 {
 
 p {
   margin: 0;
+  user-select: none;
 }

@@ -17,8 +17,8 @@ export interface LineChartProps {
   list: { [key: string]: any };
 }
 
-const WIDTH = 1600;
-const HEIGHT = 160;
+const WIDTH = 1920;
+const HEIGHT = 200;
 
 const xTicks = 20;
 const yTicks = 5;
@@ -53,7 +53,7 @@ const AnnoLineChart = ({ margin, data, list }: LineChartProps) => {
 
   const $lines = useRef(null);
 
-  const xScale = d3.scaleLinear().range([0, widthMap]).domain([1, data.length]).nice();
+  const xScale = d3.scaleLinear().range([0, widthMap]).domain([0, data.length]).nice();
 
   // const yScale = d3
   //   .scaleSymlog()
@@ -121,13 +121,21 @@ const AnnoLineChart = ({ margin, data, list }: LineChartProps) => {
           const d = selection.map(xScale.invert);
           const value = (d[0] + d[1]) / 2;
           const fixedValue = Math.ceil(value);
-          setRound(fixedValue);
+
+          if (round !== fixedValue) {
+            setRound(fixedValue);
+          }
         }),
-    [heightMap, onBrush, setRound, widthMap, xScale.invert]
+    [heightMap, onBrush, round, setRound, widthMap, xScale.invert]
   );
 
   useEffect(() => {
+    if (data.length === 0) {
+      return;
+    }
     const brushSelection = d3.select($brush.current);
+
+    console.log('brushSelection');
 
     const s = [xScale(round - GAP), xScale(round + GAP)];
 
@@ -136,7 +144,7 @@ const AnnoLineChart = ({ margin, data, list }: LineChartProps) => {
     brushSelection.selectAll('.handle').remove();
     brushSelection.select('.overlay').remove();
     brushSelection.call(brushHandle, s);
-  }, [$brush, brush, round, xScale]);
+  }, [$brush, brush, data.length, round, xScale]);
 
   const chatPos = useMemo(() => {
     const arr: any = [];
@@ -211,9 +219,6 @@ const AnnoLineChart = ({ margin, data, list }: LineChartProps) => {
         </g>
 
         <g ref={$brush} className="brush" />
-        <text x={xScale(round) + 5} y="22">
-          {round}
-        </text>
       </g>
     </svg>
   );

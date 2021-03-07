@@ -3,7 +3,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import AnnoLineChart from '../../components/lineChart/AnnLineChart';
 import Dropdown from '../../components/ui/Dropdown';
 import { fetchLists, setUpdateAction } from '../../store/reducers/basic';
+import { setLevelAction } from '../../store/reducers/identify';
 import { StateType } from '../../types/data';
+import HTTP_LEVEL from '../../utils/level';
 import './BottomPanel.scss';
 
 const lineChartMargin = {
@@ -41,7 +43,10 @@ const BottomPanel = () => {
     return data;
   }, [rawList]);
 
+  const round = useSelector((state: StateType) => state.basic.round);
+
   const getList = useCallback(() => dispatch(fetchLists()), [dispatch]);
+  const setLevel = useCallback((level: number) => dispatch(setLevelAction(level)), [dispatch]);
 
   useEffect(() => {
     if (clientName) {
@@ -58,14 +63,15 @@ const BottomPanel = () => {
       })
         .then((res) => res.json())
         .then((res) => {
-          console.log(res);
+          console.log(HTTP_LEVEL.client);
           setDatum({
             Loss: res.loss,
             Accuracy: res.valAcc,
           });
+          setLevel(HTTP_LEVEL.client + 1);
         });
     }
-  }, [clientName]);
+  }, [clientName, setLevel]);
 
   useEffect(() => {
     if (datum) {
@@ -80,9 +86,13 @@ const BottomPanel = () => {
   return (
     <div id="BottomPanel">
       {/* <h3>Federated Training Process</h3> */}
-      <div className="tip">
-        <span>Performance: </span>
-        <Dropdown items={items} setIndex={setIndex} index={index} />
+      <div className="row">
+        <div className="tip">
+          <span>Performance: </span>
+          <Dropdown items={items} setIndex={setIndex} index={index} />
+        </div>
+
+        <p>Round: {round}</p>
       </div>
       <AnnoLineChart data={lineData} margin={lineChartMargin} list={annoList} />
     </div>

@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/label-has-associated-control */
 import * as d3 from 'd3';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import inputStyles from '../../styles/input.module.css';
@@ -6,15 +7,12 @@ import Gradient from '../ui/Gradient';
 interface GridMatrixProps {
   // 一个二维数组，表示点的投影坐标
   data: number[][];
-  // 点的位置和label的id
-  // dataId: number[];
-  // 不一致的点的投影坐标
-  // inconsistentData: number[][],
   xLabels: number[];
   yLabels: number[];
   // 高亮的点的下标
   highlight: Set<number>;
-  inconsistentSize: number;
+  // 不一致点的下标
+  heteroIndex: Set<number>;
 }
 
 // const margin = { t: 50, r: 0, b: 0, l: 60 };
@@ -30,8 +28,9 @@ const colorScale = d3
 // 红白蓝
 // .range(['#e60d17', '#fff', '#0b69b6']);
 
-const GridMatrix = ({ data, xLabels, yLabels, highlight, inconsistentSize }: GridMatrixProps) => {
+const GridMatrix = ({ data, xLabels, yLabels, highlight, heteroIndex }: GridMatrixProps) => {
   const $chart = useRef(null);
+  const $wrapper = useRef(null);
 
   const [svgWidth, setWidth] = useState(350);
   const [svgHeight, setHeight] = useState(350);
@@ -40,11 +39,12 @@ const GridMatrix = ({ data, xLabels, yLabels, highlight, inconsistentSize }: Gri
   const yLabelsArr = useMemo(() => Array.from(new Set(yLabels)).sort(), [yLabels]);
 
   // 格子的大小
-  const [gridSize, setGridSize] = useState<number>(0.05);
-  const [display, toggelDisplat] = useState<boolean>(true);
+  const [gridSize, setGridSize] = useState<number>(0.1);
+  // false是checked
+  const [display, toggelDisplat] = useState<boolean>(false);
 
   useEffect(() => {
-    const { offsetWidth, offsetHeight } = ($chart as any).current;
+    const { offsetWidth, offsetHeight } = ($wrapper as any).current;
     const size = Math.min(offsetWidth, offsetHeight);
     if (xLabelsArr.length === 0) {
       setWidth(size);
@@ -56,8 +56,7 @@ const GridMatrix = ({ data, xLabels, yLabels, highlight, inconsistentSize }: Gri
       setWidth(size);
       setHeight(h);
     }
-    // console.log(size)
-  }, [$chart, xLabelsArr.length, yLabelsArr.length]);
+  }, [$wrapper, xLabelsArr.length, yLabelsArr.length]);
 
   const indexXScale = d3
     .scaleLinear()
@@ -181,7 +180,9 @@ const GridMatrix = ({ data, xLabels, yLabels, highlight, inconsistentSize }: Gri
           const left = margin.l + indexXScale(i * 2) + padding * i;
           const top = margin.t + indexYScale(j * 2) + padding * j;
 
-          const pointsArr: number[][] = [];
+          const pointsArr0: number[][] = [];
+          const pointsArr1: number[][] = [];
+
           points.forEach((point, k) => {
             // 绘制点
             const posX = point[0] + left;
@@ -193,28 +194,18 @@ const GridMatrix = ({ data, xLabels, yLabels, highlight, inconsistentSize }: Gri
             const pointY = yLabels[k];
 
             if (pointX === xLabel && pointY === yLabel) {
-              if (k < data.length - inconsistentSize) {
-                pointsArr.push([posX, posY, 0]);
+              if (heteroIndex.has(k)) {
+                pointsArr1.push([posX, posY, 1]);
               } else {
-                pointsArr.push([posX, posY, 1]);
+                pointsArr0.push([posX, posY, 0]);
               }
             }
           });
 
-          return pointsArr;
+          return pointsArr0.concat(pointsArr1);
         })
       ),
-    [
-      data.length,
-      inconsistentSize,
-      indexXScale,
-      indexYScale,
-      points,
-      xLabels,
-      xLabelsArr,
-      yLabels,
-      yLabelsArr,
-    ]
+    [heteroIndex, indexXScale, indexYScale, points, xLabels, xLabelsArr, yLabels, yLabelsArr]
   );
 
   useEffect(() => {
@@ -234,16 +225,13 @@ const GridMatrix = ({ data, xLabels, yLabels, highlight, inconsistentSize }: Gri
         // 每一格
         gridPoint.forEach((point, k) => {
           if (point[2] === 0) {
-            ctx.fillStyle = 'rgba(221,221,221, .9)';
+            ctx.fillStyle = 'rgba(128,128,128,.5)';
           } else {
-            // console.log(point, k)
             ctx.fillStyle = 'rgba(149, 98, 53,.5)';
           }
 
           ctx.moveTo(point[0], point[1]);
           ctx.beginPath();
-
-          // console.log(point[0], point[1])
 
           ctx.arc(point[0], point[1], 2, 0, Math.PI * 2);
           ctx.closePath();
@@ -254,43 +242,6 @@ const GridMatrix = ({ data, xLabels, yLabels, highlight, inconsistentSize }: Gri
         });
       });
     });
-
-    // xLabelsArr.forEach((xLabel, i) => {
-    //   yLabelsArr.forEach((yLabel, j) => {
-    //     const left = margin.l + indexXScale(i * 2) + padding * i;
-    //     const top = margin.t + indexYScale(j * 2) + padding * j;
-    //     // console.log(top)
-    //     data.forEach((point, k) => {
-    //       // 绘制点
-    //       const posX = xScale(point[0]) + left;
-    //       const posY = yScale(point[1]) + top;
-
-    //       const pointX = xLabels[k];
-    //       const pointY = yLabels[k];
-
-    //       if (pointX === xLabel && pointY === yLabel) {
-    //         // ctx.fillStyle="rgba(149, 98, 53,.5)";
-
-    //         ctx.moveTo(posX, posY);
-    //         ctx.beginPath();
-
-    //         ctx.arc(posX, posY, 2, 0, Math.PI * 2);
-    //         ctx.closePath();
-    //         ctx.fill();
-    //       }
-    //       // else {
-    //       //   ctx.fillStyle = 'rgba(200,200,200,0.1)';
-
-    //       //   ctx.moveTo(posX, posY);
-    //       //   ctx.beginPath();
-
-    //       //   ctx.arc(posX, posY, 2, 0, Math.PI * 2);
-    //       //   ctx.closePath();
-    //       //   ctx.fill();
-    //       // }
-    //     });
-    //   });
-    // });
   }, [
     $chart,
     data,
@@ -298,7 +249,6 @@ const GridMatrix = ({ data, xLabels, yLabels, highlight, inconsistentSize }: Gri
     gridPoints,
     height,
     highlight,
-    inconsistentSize,
     indexXScale,
     indexYScale,
     svgHeight,
@@ -324,7 +274,11 @@ const GridMatrix = ({ data, xLabels, yLabels, highlight, inconsistentSize }: Gri
     () =>
       gridPoints.map((gridRow: any) =>
         gridRow.map((pointsArr: any) =>
-          d3.polygonHull(pointsArr.map((point: number[]) => [point[0], point[1]]))
+          d3.polygonHull(
+            pointsArr
+              .filter((d: number[]) => d[2] === 1)
+              .map((point: number[]) => [point[0], point[1]])
+          )
         )
       ),
     [gridPoints]
@@ -348,9 +302,16 @@ const GridMatrix = ({ data, xLabels, yLabels, highlight, inconsistentSize }: Gri
           </div>
         </div>
 
-        <div className="checkbox">
-          <span>Display scatters</span>
-          <input type="checkbox" checked={display} onChange={handleDisplay} />
+        <div className="tgl-wrapper">
+          <span>Display scatters: </span>
+          <input
+            className="tgl"
+            id="cb4"
+            type="checkbox"
+            checked={display}
+            onChange={handleDisplay}
+          />
+          <label className="tgl-btn" htmlFor="cb4" />
         </div>
       </div>
 
@@ -358,7 +319,7 @@ const GridMatrix = ({ data, xLabels, yLabels, highlight, inconsistentSize }: Gri
         <p className="yLabel-title">Output label</p>
 
         <div className="xLabels">
-          <div>
+          <div className="title">
             <span>Ground-truth label</span>
             <div className="input-wrapper">
               <span> (density:</span>
@@ -371,14 +332,14 @@ const GridMatrix = ({ data, xLabels, yLabels, highlight, inconsistentSize }: Gri
               <span>)</span>
             </div>
           </div>
-          <div>
+          <div className="xLabels-arr">
             {xLabelsArr.map((text) => (
               <span key={text}> Label{text}</span>
             ))}
           </div>
         </div>
 
-        <div className="chart-wrapper">
+        <div className="chart-wrapper" ref={$wrapper}>
           <div className="yLabels" style={{ height: `${svgHeight}px` }}>
             {yLabelsArr.map((text, j) => (
               <span key={j}>Label{text}</span>
@@ -391,62 +352,52 @@ const GridMatrix = ({ data, xLabels, yLabels, highlight, inconsistentSize }: Gri
               height={`${svgHeight}px`}
             >
               <g transform={`translate(${margin.l},${margin.t})`}>
-                {xLabelsArr.map((x, i) =>
-                  yLabelsArr.map((y, j) => {
-                    const left = margin.l + indexXScale(i * 2) + padding * i;
-                    const top = margin.t + indexYScale(j * 2) + padding * j;
-                    const hull = hullArr[i][j];
+                {width > 0 &&
+                  xLabelsArr.map((x, i) =>
+                    yLabelsArr.map((y, j) => {
+                      const left = margin.l + indexXScale(i * 2) + padding * i;
+                      const top = margin.t + indexYScale(j * 2) + padding * j;
+                      const hull = hullArr[i][j];
 
-                    return clusterPoints[i].map((cluster: any, k: number) => (
-                      <g key={`${i}-${j}-${k}`}>
-                        <rect
-                          x={left}
-                          y={top}
-                          width={width}
-                          height={height}
-                          fill="none"
-                          stroke="#777"
-                          strokeDasharray="2 2"
-                        />
-                        {cluster.map((rect: any) => {
-                          const { x0, x1, y0, y1, ratio } = rect;
-                          return (
-                            <rect
-                              key={`${x0},${y0},${i}`}
-                              fill={colorScale(ratio)}
-                              x={x0 + left}
-                              y={y0 + top}
-                              width={x1 - x0}
-                              height={y1 - y0}
-                              fillOpacity="0.5"
-                            />
-                          );
-                        })}
-
-                        {hull && (
-                          <path
-                            d={`M${hull.join(' L')} Z`}
+                      return clusterPoints[i].map((cluster: any, k: number) => (
+                        <g key={`${i}-${j}-${k}`}>
+                          <rect
+                            x={left}
+                            y={top}
+                            width={width}
+                            height={height}
                             fill="none"
-                            strokeWidth={2}
-                            stroke="var(--primary-color)"
+                            stroke="#777"
+                            strokeDasharray="2 2"
                           />
-                        )}
-                      </g>
-                    ));
-                  })
-                )}
-              </g>
+                          {cluster.map((rect: any) => {
+                            const { x0, x1, y0, y1, ratio } = rect;
+                            return (
+                              <rect
+                                key={`${x0},${y0},${i}`}
+                                fill={colorScale(ratio)}
+                                x={x0 + left}
+                                y={y0 + top}
+                                width={x1 - x0}
+                                height={y1 - y0}
+                                fillOpacity="0.5"
+                              />
+                            );
+                          })}
 
-              {/* {
-                hullArr.map((hull,i )=> hull && <path
-                key={i}
-                d={`M${hull.join('L')}Z`}
-                // fill="var(--primary-color)"
-                fill="none"
-                strokeWidth={2}
-                stroke="var(--primary-color)"
-              />)
-              } */}
+                          {hull && (
+                            <path
+                              d={`M${hull.join(' L')} Z`}
+                              fill="none"
+                              strokeWidth={2}
+                              stroke="var(--primary-color)"
+                            />
+                          )}
+                        </g>
+                      ));
+                    })
+                  )}
+              </g>
             </svg>
 
             <canvas
@@ -454,7 +405,7 @@ const GridMatrix = ({ data, xLabels, yLabels, highlight, inconsistentSize }: Gri
               width={`${svgWidth}px`}
               height={`${svgHeight}px`}
               style={{
-                opacity: display ? 1 : 0,
+                opacity: display ? 0 : 1,
               }}
             />
           </div>

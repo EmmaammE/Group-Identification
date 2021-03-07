@@ -19,7 +19,8 @@ function strokeType(type: string) {
 
 function pointColor(label: boolean | number) {
   // return label ? 'rgba(84, 122, 167, .7)' : 'rgba(216, 85, 88, .7)';
-  return label ? 'rgba(221,221,221, .5)' : 'rgba(149, 98, 53,.7)';
+  // return label ? 'rgba(221,221,221, .5)' : 'rgba(149, 98, 53,.7)';
+  return label ? 'rgba(128,128,128,.5)' : 'rgba(149, 98, 53,.7)';
 }
 
 interface ScatterplotProps {
@@ -27,9 +28,22 @@ interface ScatterplotProps {
   points: number[][];
   x: number[];
   y: number[];
+  // 哪种点在上面
+  onTop: number;
 }
 
-function Scatterplot({ chartConfig: { yaxis, xaxis, margin }, points, x, y }: ScatterplotProps) {
+const topArr = [
+  [true, false],
+  [false, true],
+];
+
+function Scatterplot({
+  chartConfig: { yaxis, xaxis, margin },
+  points,
+  x,
+  y,
+  onTop,
+}: ScatterplotProps) {
   const $chart: any = useRef(null);
   const $wrapper = useRef<any>(null);
 
@@ -37,6 +51,7 @@ function Scatterplot({ chartConfig: { yaxis, xaxis, margin }, points, x, y }: Sc
   const [height, setHeight] = useState<number>(0);
 
   const heteroLabels = useSelector((state: any) => state.identify.heteroLabels);
+  const topOrder = topArr[onTop];
 
   useEffect(() => {
     const { offsetWidth, offsetHeight } = $wrapper.current;
@@ -62,7 +77,7 @@ function Scatterplot({ chartConfig: { yaxis, xaxis, margin }, points, x, y }: Sc
       // console.log('drawPoint', pointsMap)
       ctx.save();
 
-      [true, false].forEach((label) => {
+      topOrder.forEach((label) => {
         // 先画一致的点（灰色）再画不一致的
         ctx.fillStyle = pointColor(label);
 
@@ -80,7 +95,7 @@ function Scatterplot({ chartConfig: { yaxis, xaxis, margin }, points, x, y }: Sc
 
       ctx.restore();
     },
-    [heteroLabels, points]
+    [heteroLabels, points, topOrder]
   );
 
   const drawLines = useCallback(
@@ -118,7 +133,7 @@ function Scatterplot({ chartConfig: { yaxis, xaxis, margin }, points, x, y }: Sc
       chartctx.clearRect(0, 0, width, height);
       // chartctx.translate(0.5, 0.5);
       // lines
-      drawLines(chartctx);
+      // drawL ines(chartctx);
 
       // points
       drawPoints(xScale, yScale, chartctx);

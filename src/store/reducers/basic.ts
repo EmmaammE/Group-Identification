@@ -5,6 +5,7 @@ const SET_UPDATE = 'SET_UPDATE';
 const SET_POS = 'SET_POS';
 const SET_SIZE = 'SET_SIZE';
 const SET_LISTS = 'SET_LISTS';
+const INIT_BASIC = 'INIT_BASIC';
 
 export const setRoundAction = (index: number) => ({
   type: SET_ROUND,
@@ -49,6 +50,10 @@ export const fetchLists = () => (dispatch: any) => {
      })
     });
 }
+
+export const initBasicData = () => ({
+  type: INIT_BASIC
+})
 export interface BasicData {
   // 当前分析的round
   round: number,
@@ -90,6 +95,8 @@ const basicReducer = (state = initState, action: any ) => {
       return {...state, size: action.data}
     case SET_LISTS:
       return {...state, annoLists: action.data}
+    case INIT_BASIC:
+      return {...initState}
     default:
       return state;
   }

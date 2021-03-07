@@ -5,9 +5,10 @@ import { stat } from 'fs';
 import { transpose, mmultiply } from '../../utils/mm';
 import Heatmap from './Heatmap';
 import { StateType } from '../../types/data';
-import { getHeteList } from '../../store/reducers/identify';
+import { getHeteList, loading } from '../../store/reducers/identify';
 import { setSizeAction } from '../../store/reducers/basic';
 import { setIndexAction } from '../../store/reducers/blockIndex';
+import HTTP_LEVEL from '../../utils/level';
 
 export const WIDTH = 60;
 export const HEIGHT = 60;
@@ -21,11 +22,11 @@ interface HeatmapWrapperProps {
   x: number[];
   // y范围
   y: number[];
-  nOfCluster: number;
+  nOfCluster: number | null;
 }
 
 const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
-  const heteroList = useSelector((state: StateType) => state.identify.heteroList);
+  const heteroList = useSelector((state: StateType) => state.identify.heteroList.clusterList);
   const round = useSelector((state: StateType) => state.basic.round);
 
   const width = WIDTH - MARGIN.left - MARGIN.right;
@@ -35,17 +36,21 @@ const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
   const yScale = d3.scaleLinear().domain(y).range([height, 0]).nice();
 
   const dispatch = useDispatch();
-  const getLists = useCallback((count: number) => dispatch(getHeteList(count)), [dispatch]);
+  const getLists = useCallback((count: number | null) => dispatch(getHeteList(count)), [dispatch]);
 
   const blockIndex = useSelector((state: StateType) => state.blockIndex);
   const setClusterSize = useCallback((s) => dispatch(setSizeAction(s)), [dispatch]);
   const updateBlock = useCallback((i) => dispatch(setIndexAction(i)), [dispatch]);
 
+  const level = useSelector((state: StateType) => state.identify.level);
+
+  // const loading = useSelector((state: StateType) => state.identify.loading);
+
   useEffect(() => {
-    if (round !== 0) {
+    if (round !== 0 && level === HTTP_LEVEL.clusters) {
       getLists(nOfCluster);
     }
-  }, [getLists, nOfCluster, round]);
+  }, [getLists, level, nOfCluster, round]);
 
   const densityData = useMemo(
     () =>
@@ -89,7 +94,7 @@ const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
   }, [blockIndex, heteroList, setClusterSize]);
 
   // console.log(heteroPointsArr)
-  const n = nOfCluster < 4 ? nOfCluster : 4;
+  const n = nOfCluster !== null && nOfCluster < 4 ? nOfCluster : 4;
   return (
     <div
       className="pair-rect-wrapper"

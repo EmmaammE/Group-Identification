@@ -16,13 +16,21 @@
     .scatter-legends {
       display: flex;
       flex-direction: column;
+      justify-content: center;
 
-      span {
-        &::before {
-          content: '';
+      div {
+        display: flex;
+        align-items: center;
+
+        span {
+          user-select: none;
+        }
+
+        span.legend {
+          cursor: pointer;
           display: inline-block;
-          width: 10px;
-          height: 10px;
+          width: 14px;
+          height: 14px;
           border-radius: 50%;
           margin: 0 5px;
           line-height: normal;
@@ -30,11 +38,11 @@
         }
       }
 
-      span:nth-child(1)::before {
+      div:nth-child(1) span.legend {
         background: #b5b6b6;
       }
 
-      span:nth-child(2)::before {
+      div:nth-child(2) span.legend {
         background: var(--primary-color);
       }
     }
@@ -44,6 +52,7 @@
       position: relative;
       display: flex;
       justify-content: center;
+      margin: 5px 0;
 
       // min-height: 38vh;
       // width: 38vh;
@@ -106,6 +115,7 @@
 
     .pair-rect {
       outline: none;
+      padding: 0 10px;
 
       p {
         white-space: nowrap;
