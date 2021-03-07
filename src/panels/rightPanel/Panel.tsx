@@ -18,7 +18,7 @@ import Icon from '../../components/ui/JoinIcon';
 import { setLevelAction } from '../../store/reducers/identify';
 import HTTP_LEVEL from '../../utils/level';
 
-const margin = { t: 50, r: 20, b: 35, l: 50 };
+const margin = { t: 20, r: 20, b: 35, l: 50 };
 
 function RightPanel() {
   const index: number = useSelector((state: any) => state.blockIndex);
@@ -276,21 +276,21 @@ function RightPanel() {
           </div>
 
           <div className="row svg-legends">
-            <svg height="20px" viewBox="0 0 95 20">
+            <svg height="24px" viewBox="0 0 95 20">
               <line x1="0" y1="10" x2="10" y2="10" stroke="#b6b6b6" />
               <text x="12" y="15">
                 Consistent
               </text>
             </svg>
 
-            <svg height="20px" viewBox="0 0 95 20">
+            <svg height="24px" viewBox="0 0 95 20">
               <line x1="0" y1="10" x2="10" y2="10" stroke="var(--primary-color)" />
               <text x="12" y="15">
                 Inconsistent
               </text>
             </svg>
 
-            <svg height="20px" viewBox="0 0 30 20">
+            <svg height="24px" viewBox="0 0 30 20">
               <line x1="0" y1="10" x2="10" y2="10" stroke="#ea4d40" />
               <text x="12" y="15">
                 All
