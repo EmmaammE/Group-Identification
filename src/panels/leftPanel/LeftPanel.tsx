@@ -175,8 +175,8 @@ function LeftPanel() {
 
       <div className="content">
         <div className="info-container">
-          <h3>Information Panel</h3>
-
+          <h3>Model Information Panel</h3>
+          {/* <p className='title'>Model Information Panel</p> */}
           <div>
             <p>Label: {info.labels} </p>
             <p>#Dimensions: {info.dimensions}</p>
@@ -185,12 +185,16 @@ function LeftPanel() {
           </div>
 
           <div id="info-two">
+            {/* <p className='title'>Local Information Panel</p> */}
+            <h3>Local Information Panel</h3>
+
             <div className="info-row">
               <span>Name of this client: </span>
               <Dropdown items={names} setIndex={onDropdownChange} index={index} />
             </div>
-            <p>Size: {info.trainingDataSize} records in the training set</p>
-            <p className="next-line">{info.testDataSize} records in the test set</p>
+            <p>Size of the local data: </p>
+            <p>{info.trainingDataSize} records in the training set</p>
+            <p>{info.testDataSize} records in the test set</p>
           </div>
         </div>
 
@@ -209,15 +213,6 @@ function LeftPanel() {
               />
               {/* </div> */}
 
-              <p>Disagreement (Cosine) :</p>
-              <div className="cosine-legend">
-                <Gradient
-                  colors={GRADIENT}
-                  legends={[`${cosineExtent[0]}`, `${cosineExtent[1]}`]}
-                  width="90px"
-                />
-              </div>
-
               <div>
                 <svg height="20px" viewBox="0 0 180 20">
                   <circle cx="8" cy="10" r="2" stroke="#000" fill="#fff" />
@@ -227,7 +222,7 @@ function LeftPanel() {
                 </svg>
               </div>
               <div>
-                <svg height="20px" viewBox="0 0 160 20">
+                <svg height="20px" viewBox="0 0 200 20">
                   <defs>
                     <marker
                       id="arrow-tip"
@@ -251,9 +246,20 @@ function LeftPanel() {
                     markerEnd="url(#arrow-tip)"
                   />
                   <text x="20" y="15">
-                    Local parameter
+                    Local parameter updates
                   </text>
                 </svg>
+              </div>
+
+              <div className="row">
+                <p>Update disagreement (Cosine) :</p>
+                <div className="cosine-legend">
+                  <Gradient
+                    colors={GRADIENT}
+                    legends={[`${cosineExtent[0]}`, `${cosineExtent[1]}`]}
+                    width="90px"
+                  />
+                </div>
               </div>
             </div>
 

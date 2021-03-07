@@ -43,20 +43,23 @@ function MiddlePanel() {
   const [nOfCluster, setNOfCluster] = useState<number | null>(null);
   const round = useSelector((state: StateType) => state.basic.round);
 
-  const cpArray = useSelector((state: StateType) => [
-    state.identify.pca.cpc1,
-    state.identify.pca.cpc2,
-  ]);
+  // const cpArray = useSelector((state: StateType) => [
+  //   state.identify.pca.cpc1,
+  //   state.identify.pca.cpc2,
+  // ]);
+  // all cpca
+  const [cpArray, setCpArray] = useState<number[][]>([[], []]);
+
   const samples = useSelector((state: StateType) => state.identify.samples);
 
   const dispatch = useDispatch();
   const getSamples = useCallback((type) => dispatch(getSamplesAction(type)), [dispatch]);
-  const getPCA = useCallback((alpha) => dispatch(getPCAResults(alpha)), [dispatch]);
+  // const getPCA = useCallback((alpha) => dispatch(getPCAResults(alpha)), [dispatch]);
   const getLabels = useCallback((roundParam) => dispatch(getLabelsAction(roundParam)), [dispatch]);
   // const heteroList = useSelector((state: StateType) => state.identify.heteroList);
   // const loading = useSelector((state: StateType) => state.identify.loading);
-  const paramFromRes = useSelector((state: StateType) => state.identify.pca.alpha);
-  const clusterFromRes = useSelector((state: StateType) => state.identify.heteroList.nOfClusters);
+  // const paramFromRes = useSelector((state: StateType) => state.identify.pca.alpha);
+  const clusterFromRes = useSelector((state: StateType) => state.identify.heteroList.nrOfClusters);
 
   useEffect(() => {
     setNOfCluster(clusterFromRes);
@@ -70,7 +73,7 @@ function MiddlePanel() {
   // 当选择local时，从store的local加载数据。否则从samplesData加载数据
   const [data, setRequest]: any = useFetch('');
 
-  const [topStatus, setTopStatus] = useState<number>(0);
+  const [topStatus, setTopStatus] = useState<number>(1);
 
   const handleParamChange = useCallback(
     (e: any) => {
@@ -79,11 +82,11 @@ function MiddlePanel() {
     [setParam]
   );
 
-  useEffect(() => {
-    if (param === null) {
-      setParam(paramFromRes);
-    }
-  }, [param, paramFromRes]);
+  // useEffect(() => {
+  //   if (param === null) {
+  //     setParam(paramFromRes);
+  //   }
+  // }, [param, paramFromRes]);
 
   const points = useMemo(() => {
     try {
@@ -125,10 +128,31 @@ function MiddlePanel() {
       }
       if (level === HTTP_LEVEL.pca) {
         await getLabels(round);
-        await getPCA(param);
+
+        try {
+          const res = await fetch('/fl-hetero/cpca/all/', {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: param
+              ? JSON.stringify({
+                  alpha: param,
+                })
+              : JSON.stringify({}),
+          });
+          const resp = await res.json();
+
+          setCpArray([resp.cpc1, resp.cpc2]);
+
+          setParam(resp.alpha);
+        } catch (err) {
+          console.log(err);
+        }
       }
     }
-  }, [dataIndex, getLabels, getPCA, getSamples, level, param, round, samples.length, setRequest]);
+  }, [dataIndex, getLabels, getSamples, level, param, round, samples.length, setRequest]);
 
   useEffect(() => {
     loadData();
@@ -167,20 +191,23 @@ function MiddlePanel() {
                   min="0.01"
                   max="100"
                   step="1"
-                  value={param || ''}
-                  onChange={handleParamChange}
+                  defaultValue={param?.toFixed(2) || ''}
+                  onBlur={handleParamChange}
+                  // readOnly
                 />
               </div>
             </div>
           </div>
           <div className="scatter-legends">
             <div>
-              <span className="legend" onClick={() => setTopStatus(1)} />
+              <span className="legend" onClick={() => setTopStatus(0)} />
               <span>Consistent records: {nOfConsistent}</span>
+              {topStatus === 0 && <span>(on top)</span>}
             </div>
             <div>
-              <span className="legend" onClick={() => setTopStatus(0)} />
+              <span className="legend" onClick={() => setTopStatus(1)} />
               <span>Inconsistent records: {samples.length - nOfConsistent}</span>
+              {topStatus === 1 && <span>(on top)</span>}
             </div>
           </div>
           <Scatterplot chartConfig={chartProps} points={points} x={x} y={y} onTop={topStatus} />

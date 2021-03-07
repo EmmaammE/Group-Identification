@@ -79,15 +79,19 @@ function RightPanel() {
         body: param
           ? JSON.stringify({
               clusterID: blockIndex,
-              alpha: param, // 默认30
+              alpha: +param, // 默认30
             })
           : JSON.stringify({
               clusterID: blockIndex,
             }),
+        // body: JSON.stringify({
+        //       clusterID: blockIndex,
+        //       alpha: param, // 默认30
+        //     })
       })
         .then((res) => res.json())
         .then((res) => {
-          setParam(res.alpha.toFixed(2));
+          setParam(res.alpha);
           setcPCA([res.cpc1, res.cpc2]);
         })
         .catch((err) => {
@@ -108,7 +112,6 @@ function RightPanel() {
       body: JSON.stringify({
         clusterID: blockIndex,
         text: annoText,
-        // "round": 5
       }),
     }).then((res) => {
       console.log(res);
@@ -132,14 +135,17 @@ function RightPanel() {
   }, [samples, cpT, heteroLabels]);
 
   const datum = useMemo(() => {
-    if (heteroList[index] === undefined || samples.length === 0 || cpT.length === 0) {
+    // if (heteroList[index] === undefined || samples.length === 0 || cpT.length === 0) {
+    //   return [[]];
+    // }
+    if (samples.length === 0 || cpT.length === 0) {
       return [[]];
     }
+    // const temp = heteroList[index].heteroIndex.map((i: number) => samples[i]);
 
-    const temp = heteroList[index].heteroIndex.map((i: number) => samples[i]);
-
-    return consistentData.concat(mmultiply(temp, cpT));
-  }, [consistentData, cpT, heteroList, index, samples]);
+    // return consistentData.concat(mmultiply(temp, cpT));
+    return mmultiply(samples, cpT);
+  }, [cpT, samples]);
 
   const lineDatum = useMemo(() => {
     // 一致的点，不一致的点
@@ -199,8 +205,8 @@ function RightPanel() {
                   min="0.01"
                   max="100"
                   step="1"
-                  value={param || ''}
-                  onChange={handleParamChange}
+                  defaultValue={param?.toFixed(2) || ''}
+                  onBlur={handleParamChange}
                 />
               </div>
             </div>

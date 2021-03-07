@@ -47,6 +47,7 @@ const BottomPanel = () => {
 
   const getList = useCallback(() => dispatch(fetchLists()), [dispatch]);
   const setLevel = useCallback((level: number) => dispatch(setLevelAction(level)), [dispatch]);
+  const level = useSelector((state: StateType) => state.identify.level);
 
   useEffect(() => {
     if (clientName) {
@@ -80,8 +81,10 @@ const BottomPanel = () => {
   }, [datum, index]);
 
   useEffect(() => {
-    getList();
-  }, []);
+    if (level === HTTP_LEVEL.client || level === HTTP_LEVEL.cpca) {
+      getList();
+    }
+  }, [getList, level]);
 
   return (
     <div id="BottomPanel">

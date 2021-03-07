@@ -2,7 +2,7 @@
   "name": "group-identification",
   "version": "0.1.0",
   "private": true,
-  "proxy": "http://10.76.2.232:2021",
+  "proxy": "http://10.186.121.196:8000",
   "dependencies": {
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",

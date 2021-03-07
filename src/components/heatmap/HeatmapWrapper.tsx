@@ -75,6 +75,7 @@ const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
 
   const heteroPointsArr = useMemo(
     () =>
+      // console.log(heteroList)
       heteroList.map((heteroItem) =>
         heteroItem.heteroIndex.map((index) => {
           const point = points[index];

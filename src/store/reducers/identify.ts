@@ -31,7 +31,7 @@ export interface IdentifyData {
       "heteroIndex": [], // 分块内不一致数据点的下标
       "heteroRate": number, // 不一致点在块中所占的比例
     }>,
-    nOfClusters: number|null
+    nrOfClusters: number|null
   },
   // 所有点的cpca
   "pca": {
@@ -52,7 +52,7 @@ const initState: any= {
   // 预先排序好
   heteroList: {
     clusterList: [],
-    nOfClusters: null
+    nrOfClusters: null
   },
   groundTruth: [],
   outputLabels: [],
@@ -86,8 +86,8 @@ export const getSamplesAction = (type: string) => async (dispatch: any) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        // samplingType: type
-        samplingType: 'samples'
+        samplingType: type
+        // samplingType: 'samples'
       }),
     })
     const resp = await res.json();
@@ -115,7 +115,8 @@ export const getPCAResults = (alpha: number|null) => async (dispatch: any) => {
       },
       body: alpha ? JSON.stringify({
         alpha
-      }): JSON.stringify({}),
+      }): JSON.stringify({
+      }),
     });
     const resp = await res.json();
 
@@ -174,7 +175,7 @@ export const getHeteList = (count: number|null) => (dispatch: any) => {
     .then(res =>{
       dispatch({
         type: SET_HETELIST,
-        data: res.clusterList
+        data: res
       })
 
       dispatch({

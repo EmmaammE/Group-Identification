@@ -33,8 +33,8 @@ interface ScatterplotProps {
 }
 
 const topArr = [
-  [true, false],
   [false, true],
+  [true, false],
 ];
 
 function Scatterplot({
@@ -52,6 +52,8 @@ function Scatterplot({
 
   const heteroLabels = useSelector((state: any) => state.identify.heteroLabels);
   const topOrder = topArr[onTop];
+
+  console.log(topOrder);
 
   useEffect(() => {
     const { offsetWidth, offsetHeight } = $wrapper.current;

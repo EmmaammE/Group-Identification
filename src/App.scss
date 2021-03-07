@@ -20,7 +20,7 @@
 
 .App {
   display: grid;
-  grid-template-columns: 22% 24% auto;
+  grid-template-columns: 20% 22% auto;
   grid-template-rows: 77% auto;
   row-gap: 8px;
   column-gap: 10px;
@@ -46,7 +46,7 @@
     }
 
     .content {
-      padding: 0 10px;
+      padding: 0 15px;
       height: $height - $line-height;
     }
 

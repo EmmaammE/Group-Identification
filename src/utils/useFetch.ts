@@ -22,8 +22,8 @@ const useFetch = (type: string) => {
       const response = await fetch('/fl-hetero/sampling/', {
         method: 'POST',
         body: JSON.stringify({
-          // samplingType: request
-          samplingType: 'samples'
+          samplingType: request
+          // samplingType: 'samples'
         })
       })
 
