@@ -16,7 +16,7 @@ export interface CpLineChartProps {
 }
 
 const WIDTH = 420;
-const HEIGHT = 180;
+const HEIGHT = 160;
 
 type Hash = { [key: number]: number };
 

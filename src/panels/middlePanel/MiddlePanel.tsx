@@ -202,12 +202,12 @@ function MiddlePanel() {
             <div>
               <span className="legend" onClick={() => setTopStatus(0)} />
               <span>Consistent records: {nOfConsistent}</span>
-              {topStatus === 0 && <span>(on top)</span>}
+              {topStatus === 0 && <span>-on the top</span>}
             </div>
             <div>
               <span className="legend" onClick={() => setTopStatus(1)} />
               <span>Inconsistent records: {samples.length - nOfConsistent}</span>
-              {topStatus === 1 && <span>(on top)</span>}
+              {topStatus === 1 && <span>-on the top</span>}
             </div>
           </div>
           <Scatterplot chartConfig={chartProps} points={points} x={x} y={y} onTop={topStatus} />

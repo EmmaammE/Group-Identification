@@ -12,6 +12,7 @@
 .row {
   display: flex;
   justify-content: space-between;
+  height: 24px;
 
   p {
     white-space: nowrap;
@@ -36,6 +37,7 @@
     overflow: hidden;
     box-sizing: border-box;
     background: var(--default-color);
+
     // h2 title
     h2 {
       margin: 0;
@@ -99,6 +101,7 @@ svg {
   padding: 0;
   position: relative;
   box-sizing: border-box;
+  line-height: 17px;
 }
 
 .select-dropdown {
@@ -199,6 +202,10 @@ div::-webkit-scrollbar-thumb {
   }
 }
 
+input[type='number'] {
+  height: 24px;
+}
+
 .checkbox {
   $size: 14px;
 
@@ -213,6 +220,10 @@ div::-webkit-scrollbar-thumb {
     height: $size;
     box-sizing: border-box;
     padding: 0;
+  }
+
+  input[type='radio'] {
+    color: white;
   }
 
   input[type='checkbox'] {
