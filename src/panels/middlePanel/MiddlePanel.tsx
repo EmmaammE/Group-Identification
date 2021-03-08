@@ -190,7 +190,7 @@ function MiddlePanel() {
                   type="number"
                   min="0.01"
                   max="100"
-                  step="1"
+                  step="0.1"
                   defaultValue={param?.toFixed(2) || ''}
                   onBlur={handleParamChange}
                   // readOnly
@@ -200,14 +200,14 @@ function MiddlePanel() {
           </div>
           <div className="scatter-legends">
             <div>
-              <span className="legend" onClick={() => setTopStatus(0)} />
-              <span>Consistent records: {nOfConsistent}</span>
-              {topStatus === 0 && <span>-on the top</span>}
-            </div>
-            <div>
               <span className="legend" onClick={() => setTopStatus(1)} />
               <span>Inconsistent records: {samples.length - nOfConsistent}</span>
-              {topStatus === 1 && <span>-on the top</span>}
+              {topStatus === 1 && <span>-shown on the top</span>}
+            </div>
+            <div>
+              <span className="legend" onClick={() => setTopStatus(0)} />
+              <span>Consistent records: {nOfConsistent}</span>
+              {topStatus === 0 && <span>-shown on the top</span>}
             </div>
           </div>
           <Scatterplot chartConfig={chartProps} points={points} x={x} y={y} onTop={topStatus} />

@@ -96,29 +96,35 @@ const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
 
   // console.log(heteroPointsArr)
   const n = nOfCluster !== null && nOfCluster < 4 ? nOfCluster : 4;
+  const ifMultiLine = nOfCluster !== null && nOfCluster > 4;
   return (
-    <div
-      className="pair-rect-wrapper"
-      style={{
-        gridTemplateColumns: `repeat(${n}, ${`${100 / n}%`})`,
-      }}
-    >
-      {heteroList.map((heteroItem, i) => (
-        <div
-          className="pair-rect"
-          key={i}
-          role="menuitem"
-          tabIndex={0}
-          onClick={() => updateBlock(i)}
-          onKeyDown={() => updateBlock(i)}
-        >
-          <div className={blockIndex === i ? 'selected' : ''}>
-            <Heatmap densityData={densityData} linear={linear} heteroPoints={heteroPointsArr[i]} />
+    <div className="pair-rect-wrapper">
+      <div
+        className="scroll-glyphs"
+        style={{
+          gridTemplateColumns: `repeat(${n}, ${`${((ifMultiLine ? 100 : 103) - n * 3) / n}%`})`,
+        }}
+      >
+        {heteroList.map((heteroItem, i) => (
+          <div
+            className="pair-rect"
+            key={i}
+            role="menuitem"
+            tabIndex={0}
+            onClick={() => updateBlock(i)}
+            onKeyDown={() => updateBlock(i)}
+          >
+            <div className={blockIndex === i ? 'selected' : ''}>
+              <Heatmap
+                densityData={densityData}
+                linear={linear}
+                heteroPoints={heteroPointsArr[i]}
+              />
+            </div>
+            <p>Size: {heteroItem.heteroSize}</p>
           </div>
-          <p>Size: {heteroItem.heteroSize}</p>
-          <p>Purity: {d3.format('.0%')(heteroItem.heteroRate)}</p>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 };
