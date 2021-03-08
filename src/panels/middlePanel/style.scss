@@ -2,6 +2,7 @@
   .content {
     display: flex;
     flex-direction: column;
+    padding-right: 0;
   }
 
   .input-wrapper {
@@ -12,6 +13,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
+    padding-right: 15px;
 
     .scatter-legends {
       display: flex;
@@ -39,11 +41,11 @@
       }
 
       div:nth-child(1) span.legend {
-        background: #b5b6b6;
+        background: var(--primary-color);
       }
 
       div:nth-child(2) span.legend {
-        background: var(--primary-color);
+        background: #b5b6b6;
       }
     }
 
@@ -95,6 +97,7 @@
     flex-direction: column;
     justify-content: space-around;
     position: relative;
+    padding-right: 15px;
 
     .legend {
       display: flex;
@@ -107,19 +110,25 @@
 
   .pair-rect-wrapper {
     overflow: auto;
-    height: 20vh;
-    padding: 10px;
-    display: grid;
-    // grid-template-columns: repeat(2, 25%);
-    // grid-gap: 5px;
+    height: 22vh;
+    width: 400px;
+    margin-top: 5px;
+
+    .scroll-glyphs {
+      display: grid;
+      // padding: 10px;
+      // grid-template-columns: repeat(2, 25%);
+      grid-gap: 3%;
+      width: 390px;
+    }
 
     .pair-rect {
       outline: none;
-      padding: 0 10px;
 
       p {
         white-space: nowrap;
-        font-size: 12px;
+        font-size: 16px;
+        line-height: 10px;
       }
 
       svg {
@@ -129,6 +138,7 @@
       .selected svg {
         border: 3px solid #000;
       }
+
       // div {
       //   display: flex;
       //   justify-content: center;

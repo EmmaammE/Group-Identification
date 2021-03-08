@@ -218,10 +218,10 @@ function LeftPanel() {
               {/* </div> */}
 
               <div>
-                <svg height="20px" viewBox="0 0 180 20">
+                <svg height="20px" viewBox="0 0 300 20">
                   <circle cx="8" cy="10" r="2" stroke="#000" fill="#fff" />
                   <text x="20" y="15">
-                    Federated parameter
+                    Selected communication round
                   </text>
                 </svg>
               </div>

@@ -250,7 +250,7 @@ function RightPanel() {
                   type="number"
                   min="0.01"
                   max="100"
-                  step="1"
+                  step="0.1"
                   defaultValue={param?.toFixed(2) || ''}
                   onBlur={handleParamChange}
                 />
@@ -258,7 +258,7 @@ function RightPanel() {
             </div>
             <div className="row">
               <span>Weights:</span>
-              <Gradient colors={['#0aa6e9', '#fff', '#ea4d40']} legends={['-1', '1']} width="80" />
+              <Gradient colors={['#1365c2', '#fff', '#c21317']} legends={['-1', '1']} width="80" />
             </div>
           </div>
           <div className="pair-rects">
