@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as d3 from 'd3';
 import { useDispatch, useSelector } from 'react-redux';
 import Triangle from '../markers/Triangle';
-import { setRoundAction, setUpdateAction } from '../../store/reducers/basic';
+import { setRoundAction } from '../../store/reducers/basic';
 import { StateType } from '../../types/data';
 import chat from '../../assets/chat.svg';
 
@@ -23,30 +23,12 @@ const HEIGHT = 200;
 const xTicks = 20;
 const yTicks = 5;
 
-const GAP = 0.1;
-
-const brushHandle = (g: any, selection: any) =>
-  g
-    .selectAll('.handle--custom')
-    .data([(selection[0] + selection[1]) / 2])
-    .join((enter: any) =>
-      enter
-        .append('path')
-        .attr('class', 'handle--custom')
-        .attr('fill', 'var(--primary-color)')
-        // .attr("stroke", "#000")
-        // .attr("stroke-width", 1.5)
-        // .attr("cursor", "ew-resize")
-        .attr('d', 'M0 8 L-15 -8 L15 -8Z')
-    )
-    .attr('display', selection === null ? 'none' : null)
-    .attr('transform', selection === null ? null : (d: any, i: number) => `translate(${d},0)`);
+const DRAG_PADDING = 20;
 
 const AnnoLineChart = ({ margin, data, list }: LineChartProps) => {
   const widthMap: number = WIDTH - margin.l - margin.r;
   const heightMap: number = HEIGHT - margin.t - margin.b;
 
-  // const [round, setRound] = useState<number>(1);
   const round = useSelector((state: StateType) => state.basic.round);
   const dispatch = useDispatch();
   const setRound = useCallback((i) => dispatch(setRoundAction(i)), [dispatch]);
@@ -54,6 +36,7 @@ const AnnoLineChart = ({ margin, data, list }: LineChartProps) => {
   const $lines = useRef(null);
 
   const xScale = d3.scaleLinear().range([0, widthMap]).domain([0, data.length]).nice();
+  const [pos, setPos] = useState<number>(0);
 
   // const yScale = d3
   //   .scaleSymlog()
@@ -66,7 +49,7 @@ const AnnoLineChart = ({ margin, data, list }: LineChartProps) => {
     .domain(d3.extent(data) as any)
     .nice();
 
-  const $brush: any = useRef(null);
+  const $drag: any = useRef(null);
 
   const $xaxis: any = useRef(null);
   const $yaxis: any = useRef(null);
@@ -103,48 +86,35 @@ const AnnoLineChart = ({ margin, data, list }: LineChartProps) => {
     );
   }, [data, widthMap, xScale, yScale, $lines, heightMap]);
 
-  const onBrush = useCallback(function handle(this: any, { selection }) {
-    d3.select(this).call(brushHandle, selection);
-  }, []);
-
-  // reference: https://bl.ocks.org/EfratVil/5edc17dd98ece6aabc9744384e46f45b
-  const brush = useMemo(
+  const drag = useMemo(
     () =>
       d3
-        .brushX()
-        .extent([
-          [0, 0],
-          [widthMap, heightMap - 2],
-        ])
-        .on('brush', onBrush)
-        .on('end', ({ selection }) => {
-          const d = selection.map(xScale.invert);
-          const value = (d[0] + d[1]) / 2;
-          const fixedValue = Math.ceil(value);
-
+        .drag()
+        .on('drag', ({ x }) => {
+          setPos(x);
+        })
+        .on('end', ({ x }) => {
+          const d = xScale.invert(x);
+          const fixedValue = Math.round(d);
           if (round !== fixedValue) {
             setRound(fixedValue);
           }
+
+          const posX = xScale(fixedValue);
+          if (posX !== pos) {
+            setPos(posX);
+          }
         }),
-    [heightMap, onBrush, round, setRound, widthMap, xScale.invert]
+    [pos, round, setRound, xScale]
   );
 
   useEffect(() => {
     if (data.length === 0) {
       return;
     }
-    const brushSelection = d3.select($brush.current);
-
-    console.log('brushSelection');
-
-    const s = [xScale(round - GAP), xScale(round + GAP)];
-
-    brushSelection.call(brush).transition().call(brush.move, s);
-
-    brushSelection.selectAll('.handle').remove();
-    brushSelection.select('.overlay').remove();
-    brushSelection.call(brushHandle, s);
-  }, [$brush, brush, data.length, round, xScale]);
+    const dragSelection = d3.select($drag.current);
+    dragSelection.call(drag);
+  }, [data.length, drag, round, xScale]);
 
   const chatPos = useMemo(() => {
     const arr: any = [];
@@ -218,7 +188,25 @@ const AnnoLineChart = ({ margin, data, list }: LineChartProps) => {
           ))}
         </g>
 
-        <g ref={$brush} className="brush" />
+        <g
+          ref={$drag}
+          transform={`translate(${pos}, ${DRAG_PADDING})`}
+          cursor="move"
+          fill="var(--primary-color)"
+        >
+          <text textAnchor="middle" y={-DRAG_PADDING + 8} fill="#000">
+            {Math.round(xScale.invert(pos))}
+          </text>
+          <line
+            x1="0"
+            y1="0"
+            x2="0"
+            y2={heightMap - DRAG_PADDING}
+            strokeWidth="3"
+            stroke="var(--primary-color)"
+          />
+          <path d="M0 8 L-15 -8 L15 -8Z" />
+        </g>
       </g>
     </svg>
   );
