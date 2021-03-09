@@ -267,24 +267,22 @@ function RightPanel() {
       <div className="content">
         <div className="weight-rects r-panel">
           <div className="row">
-            <div className="row">
-              <p className="label">Contrastive parameter: </p>
-              <div className={inputStyles.wrapper}>
-                <input
-                  className={inputStyles.input}
-                  type="number"
-                  min="0.01"
-                  max="100"
-                  step="0.1"
-                  defaultValue={param?.toFixed(2) || ''}
-                  onBlur={handleParamChange}
-                />
-              </div>
+            <p className="label">Contrastive parameter: </p>
+            <div className={inputStyles.wrapper}>
+              <input
+                className={inputStyles.input}
+                type="number"
+                min="0.01"
+                max="100"
+                step="0.1"
+                defaultValue={param?.toFixed(2) || ''}
+                onBlur={handleParamChange}
+              />
             </div>
-            <div className="row">
-              <span>Weights:</span>
-              <Gradient colors={['#c21317', '#fff', '#1365c2']} legends={['-1', '1']} width="80" />
-            </div>
+          </div>
+          <div className="row">
+            <span>Weights:</span>
+            <Gradient colors={['#c21317', '#fff', '#1365c2']} legends={['-1', '1']} width="80" />
           </div>
           <div className="pair-rects">
             {pcArr[0].length > 0 && pcArr.map((pc, i) => <PairRect key={i} data={pc} title={i} />)}

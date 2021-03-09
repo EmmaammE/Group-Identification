@@ -167,7 +167,7 @@ const PairRect = ({ data, title }: PairRectProps) => {
 
   return (
     <div className="wrapper">
-      <p>ccPC{title + 1}</p>
+      <p>ccPC{title + 1}:</p>
       <div className="chart-wrapper" ref={$svg}>
         <canvas
           className="pair-canvas"
