@@ -15,7 +15,12 @@ export interface IdentifyData {
   // 本地原始数据
   "localData": number[][],
   // 采样数据
-  "samples": number[][],
+  "samples": {
+    // 数据的范围
+    data: number[][],
+    // 数据映射的范围
+    range: number[]
+  },
   // 真实标签
   "groundTruth": number[],
   // 模型输出标签
@@ -56,7 +61,10 @@ const initState: any= {
   },
   groundTruth: [],
   outputLabels: [],
-  samples: [],
+  samples: {
+    data: [],
+    range: []
+  },
   heteroLabels: [],
   pca: {
     "cpc1": [],
@@ -91,9 +99,13 @@ export const getSamplesAction = (type: string) => async (dispatch: any) => {
       }),
     })
     const resp = await res.json();
+    console.log(resp.attr_range);
     await dispatch({
       type: SET_SAMPLES,
-      data: resp.data
+      data: {
+        data: resp.data,
+        range: resp.attr_range
+      }
     })
   
     await dispatch({
@@ -140,7 +152,7 @@ export const getLabelsAction = (round: number) => async (dispatch: any) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        "round": round,
+        "round": round-1,
       }),
     })
     const resp = await res.json();

@@ -11,9 +11,15 @@ import Dropdown from '../../components/ui/Dropdown';
 import HeatmapWrapper from '../../components/heatmap/HeatmapWrapper';
 import { StateType } from '../../types/data';
 import { mmultiply, transpose } from '../../utils/mm';
-import { getPCAResults, getSamplesAction, getLabelsAction } from '../../store/reducers/identify';
+import {
+  getPCAResults,
+  getSamplesAction,
+  getLabelsAction,
+  setLevelAction,
+} from '../../store/reducers/identify';
 import useFetch from '../../utils/useFetch';
 import HTTP_LEVEL from '../../utils/level';
+import ICON from '../../assets/convex.svg';
 
 const chartProps: ChartProps = {
   width: 400,
@@ -50,7 +56,7 @@ function MiddlePanel() {
   // all cpca
   const [cpArray, setCpArray] = useState<number[][]>([[], []]);
 
-  const samples = useSelector((state: StateType) => state.identify.samples);
+  const samples = useSelector((state: StateType) => state.identify.samples.data);
 
   const dispatch = useDispatch();
   const getSamples = useCallback((type) => dispatch(getSamplesAction(type)), [dispatch]);
@@ -60,6 +66,7 @@ function MiddlePanel() {
   // const loading = useSelector((state: StateType) => state.identify.loading);
   // const paramFromRes = useSelector((state: StateType) => state.identify.pca.alpha);
   const clusterFromRes = useSelector((state: StateType) => state.identify.heteroList.nrOfClusters);
+  const setLevel = useCallback((level: number) => dispatch(setLevelAction(level)), [dispatch]);
 
   useEffect(() => {
     setNOfCluster(clusterFromRes);
@@ -78,8 +85,9 @@ function MiddlePanel() {
   const handleParamChange = useCallback(
     (e: any) => {
       setParam(+e.target.value);
+      setLevel(HTTP_LEVEL.pca);
     },
-    [setParam]
+    [setLevel]
   );
 
   // useEffect(() => {
@@ -158,11 +166,20 @@ function MiddlePanel() {
     loadData();
   }, [loadData]);
 
+  const handleDropDown = useCallback(
+    (e: any) => {
+      setLevel(HTTP_LEVEL.sampling);
+      setDataIndex(e);
+    },
+    [setLevel]
+  );
+
   const onInputNumber = (e: any) => {
     const reg = new RegExp('^[0-9]*$');
 
     if (e.target.value.match(reg)) {
       setNOfCluster(+e.target.value);
+      setLevel(HTTP_LEVEL.clusters);
     } else {
       setNOfCluster(null);
     }
@@ -179,7 +196,7 @@ function MiddlePanel() {
           <div className="row">
             <div className="info-row">
               <p>Inputs: </p>
-              <Dropdown items={items} index={dataIndex} setIndex={setDataIndex} />
+              <Dropdown items={items} index={dataIndex} setIndex={handleDropDown} />
             </div>
 
             <div className="row">
@@ -226,16 +243,21 @@ function MiddlePanel() {
                     min="1"
                     step="1"
                     defaultValue={nOfCluster || ''}
-                    onInput={onInputNumber}
+                    onBlur={onInputNumber}
                   />
                 </div>
+              </div>
+
+              <div className="convex-legend">
+                <img src={ICON} alt="convex" />
+                <span>Convex</span>
               </div>
 
               <div className="input-wrapper">
                 <span>Density:</span>
                 <div className="legend-wrapper">
                   <p>0</p>
-                  <svg width="100" viewBox="0 0 80 15">
+                  <svg width="80" viewBox="0 0 80 15">
                     <defs>
                       <linearGradient id="#fff#000" x1="0%" y1="0%" x2="100%" y2="0%">
                         <stop offset="0%" stopColor="#fff" />

@@ -15,8 +15,8 @@ export interface CpLineChartProps {
   hetData: number[];
 }
 
-const WIDTH = 420;
-const HEIGHT = 160;
+const WIDTH = 500;
+const HEIGHT = 200;
 
 type Hash = { [key: number]: number };
 
@@ -96,7 +96,6 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
     if (data === null || Object.keys(data[0]).length === 0) {
       return;
     }
-    console.log(data);
     const bins = d3
       .bin()
       // .thresholds(step)
@@ -160,7 +159,7 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
 
     setBinsCount(countBins);
     setHetBinCount(hetBin);
-    console.log(bins, hetBin, countBins);
+    // console.log(bins, hetBin, countBins);
     // console.log(title, countBins)
 
     // console.log(hetBin)
@@ -222,19 +221,12 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
         .tickFormat('' as any) as any
     );
 
-    d3.select($xaxis.current).call(
-      xAxis.scale(xScale).tickFormat((x) => {
-        if (+title < 8) {
-          return Number(x).toFixed(4);
-        }
-        return Number(x).toFixed(2);
-      })
-    );
+    d3.select($xaxis.current).call(xAxis.scale(xScale).tickFormat(d3.format('.3s')));
     d3.select($yaxis.current).call(yAxis.scale(yScale).tickFormat(d3.format('.3p')));
-  }, [xScale, yScale, title, widthMap, heightMap]);
+  }, [xScale, yScale, widthMap, heightMap]);
 
   return (
-    <svg width="100%" viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
+    <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
       <g transform={`translate(${margin.l}, ${margin.t})`}>
         <g transform={`translate(0, ${heightMap})`} className="axes x-axis" ref={$xaxis} />
         <g className="axes y-axis" ref={$yaxis} />
@@ -259,7 +251,7 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
           stroke="rgba(0,0,0,0.8)"
           markerEnd="url(#arrow)"
         />
-        <text dy={-25} textAnchor="middle">
+        <text dy={-20} textAnchor="middle">
           Percentage
         </text>
         <text transform={`translate(${widthMap - 30},${heightMap + margin.b})`}>Value</text>
@@ -278,20 +270,18 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
         {binsCount.map((datum: any, i: number) => (
           <g key={`c-${i}`}>
             {datum !== null &&
-              Object.keys(datum).map((key, j) =>
-                datum[key] > 0 ? (
-                  <circle
-                    key={`c-${i}-${j}`}
-                    cx={xScale(+key)}
-                    cy={yScale(datum[key as any])}
-                    r={2}
-                    stroke={lineColor[i]}
-                    fill="#fff"
-                    id={datum[key]}
-                    // opacity="0.7"
-                  />
-                ) : null
-              )}
+              Object.keys(datum).map((key, j) => (
+                <circle
+                  key={`c-${i}-${j}`}
+                  cx={xScale(+key)}
+                  cy={yScale(datum[key as any])}
+                  r={2}
+                  stroke={lineColor[i]}
+                  fill="#fff"
+                  id={datum[key]}
+                  // opacity="0.7"
+                />
+              ))}
           </g>
         ))}
 
@@ -306,18 +296,16 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
               stroke="#c04548"
               fill="none"
             />
-            {Object.keys(hetBinCount).map((key, j) =>
-              hetBinCount[key] > 0 ? (
-                <circle
-                  key={`h-${j}`}
-                  cx={xScale(+key)}
-                  cy={yScale(hetBinCount[key])}
-                  r={2}
-                  stroke="#c04548"
-                  fill="#fff"
-                />
-              ) : null
-            )}
+            {Object.keys(hetBinCount).map((key, j) => (
+              <circle
+                key={`h-${j}`}
+                cx={xScale(+key)}
+                cy={yScale(hetBinCount[key])}
+                r={2}
+                stroke="#c04548"
+                fill="#fff"
+              />
+            ))}
           </g>
         )}
       </g>

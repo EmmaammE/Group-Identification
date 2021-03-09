@@ -7,7 +7,7 @@ interface RangeSliderProps {
   extent: number;
 }
 
-const WIDTH = 320;
+const WIDTH = 290;
 const HEIGHT = 20;
 const MARGIN = {
   bottom: 5,
@@ -66,7 +66,7 @@ const RangeSlider = ({ range, setRange, extent }: RangeSliderProps) => {
     <div className="legend-wrapper tip">
       <p>{range[0] + 1}</p>
       <div>
-        <svg width="320px" viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
+        <svg width="290px" viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
           <defs>
             <linearGradient id="range" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#fff" />

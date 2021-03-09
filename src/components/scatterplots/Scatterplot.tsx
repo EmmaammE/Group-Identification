@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { useSelector } from 'react-redux';
 import * as d3 from 'd3';
 import { ChartProps } from '../../types/chart';
+import useWindowSize from '../../utils/useResize';
 
 function strokeType(type: string) {
   switch (type) {
@@ -53,14 +54,14 @@ function Scatterplot({
   const heteroLabels = useSelector((state: any) => state.identify.heteroLabels);
   const topOrder = topArr[onTop];
 
-  console.log(topOrder);
-
-  useEffect(() => {
+  const handleResize = useCallback(() => {
     const { offsetWidth, offsetHeight } = $wrapper.current;
     const size = Math.min(offsetWidth, offsetHeight);
     setWidth(size);
     setHeight(size);
-  }, [$chart, margin.b, margin.l, margin.r, margin.t]);
+  }, []);
+
+  useWindowSize(handleResize);
 
   const xScale = d3
     .scaleLinear()

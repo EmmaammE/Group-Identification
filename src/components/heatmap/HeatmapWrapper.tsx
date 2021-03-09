@@ -48,6 +48,7 @@ const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
 
   useEffect(() => {
     if (round !== 0 && level === HTTP_LEVEL.clusters) {
+      // console.log('test')
       getLists(nOfCluster);
     }
   }, [getLists, level, nOfCluster, round]);

@@ -95,9 +95,14 @@ const BottomPanel = () => {
           <Dropdown items={items} setIndex={setIndex} index={index} />
         </div>
 
-        <p>Round: {round}</p>
+        <p>Communication round</p>
       </div>
-      <AnnoLineChart data={lineData} margin={lineChartMargin} list={annoList} />
+      <AnnoLineChart
+        data={datum}
+        margin={lineChartMargin}
+        list={annoList}
+        datumKey={items[index]}
+      />
     </div>
   );
 };

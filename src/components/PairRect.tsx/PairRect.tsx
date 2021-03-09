@@ -4,6 +4,7 @@ import './PairRect.scss';
 import { useDispatch, useSelector } from 'react-redux';
 import { StateType } from '../../types/data';
 import { setPosAction, setPropertyAction } from '../../store/reducers/basic';
+import useWindowSize from '../../utils/useResize';
 
 export interface PairRectProps {
   data: number[];
@@ -30,8 +31,8 @@ function getPixelRatio(context: any) {
   return dpr / bsr;
 }
 
-// const color = d3.scaleLinear<string>().domain([-1, 0, 1]).range(['#e60d17', '#eee', '#f7b326']);
-const color = d3.scaleLinear<string>().domain([-0.3, 0, 0.3]).range(['#0aa6e9', '#fff', '#ea4d40']);
+const color = d3.scaleLinear<string>().domain([-1, 0, 1]).range(['#c21317', '#fff', '#1365c2']);
+// const color = d3.scaleLinear<string>().domain([-0.3, 0, 0.3]).range(['#0aa6e9', '#fff', '#ea4d40']);
 
 const rectWidth = 20;
 const rectHeight = 20;
@@ -94,14 +95,16 @@ const PairRect = ({ data, title }: PairRectProps) => {
     }
   }, [chosePro, columnCount, pos, rectHeightMap, rectWidthMap, updatePos]);
 
-  useEffect(() => {
+  const handleResize = useCallback(() => {
     const { offsetWidth, offsetHeight } = ($svg as any).current;
     const size = Math.min(offsetHeight - 10, offsetWidth);
     setBound({
       width: size,
       height: size,
     });
-  }, [$svg]);
+  }, []);
+
+  useWindowSize(handleResize);
 
   useEffect(() => {
     if (!$chart.current) {

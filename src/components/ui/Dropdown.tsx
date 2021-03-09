@@ -9,7 +9,7 @@ interface DropdownProps {
 
 const Dropdown = ({ items, index, setIndex }: DropdownProps) => {
   const handleChange = (e: any) => {
-    console.log(e.target.value, 'change dropdown');
+    // console.log(e.target.value, 'change dropdown');
     setIndex(e.target.value);
   };
   return (

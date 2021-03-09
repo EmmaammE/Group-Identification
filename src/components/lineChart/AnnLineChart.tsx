@@ -5,6 +5,8 @@ import Triangle from '../markers/Triangle';
 import { setRoundAction } from '../../store/reducers/basic';
 import { StateType } from '../../types/data';
 import chat from '../../assets/chat.svg';
+import { setLevelAction } from '../../store/reducers/identify';
+import HTTP_LEVEL from '../../utils/level';
 
 export interface LineChartProps {
   margin: {
@@ -13,8 +15,9 @@ export interface LineChartProps {
     l: number;
     t: number;
   };
-  data: number[];
+  data: { [key: string]: number[] };
   list: { [key: string]: any };
+  datumKey: string;
 }
 
 const WIDTH = 1920;
@@ -25,7 +28,7 @@ const yTicks = 5;
 
 const DRAG_PADDING = 20;
 
-const AnnoLineChart = ({ margin, data, list }: LineChartProps) => {
+const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps) => {
   const widthMap: number = WIDTH - margin.l - margin.r;
   const heightMap: number = HEIGHT - margin.t - margin.b;
 
@@ -33,10 +36,13 @@ const AnnoLineChart = ({ margin, data, list }: LineChartProps) => {
   const dispatch = useDispatch();
   const setRound = useCallback((i) => dispatch(setRoundAction(i)), [dispatch]);
 
+  const data = useMemo(() => (rawData && rawData[datumKey]) || [], [datumKey, rawData]);
+
   const $lines = useRef(null);
 
   const xScale = d3.scaleLinear().range([0, widthMap]).domain([0, data.length]).nice();
   const [pos, setPos] = useState<number>(0);
+  const setLevel = useCallback((level: number) => dispatch(setLevelAction(level)), [dispatch]);
 
   // const yScale = d3
   //   .scaleSymlog()
@@ -57,8 +63,12 @@ const AnnoLineChart = ({ margin, data, list }: LineChartProps) => {
   const line = d3
     .line()
     .curve(d3.curveMonotoneX)
-    .x((d, i) => xScale(i))
+    .x((d, i) => xScale(i + 1))
     .y((d: any) => yScale(d));
+
+  useEffect(() => {
+    setPos(widthMap);
+  }, [rawData, widthMap]);
 
   useEffect(() => {
     const xAxis = d3.axisBottom(xScale).ticks(xTicks);
@@ -95,9 +105,10 @@ const AnnoLineChart = ({ margin, data, list }: LineChartProps) => {
         })
         .on('end', ({ x }) => {
           const d = xScale.invert(x);
-          const fixedValue = Math.round(d);
+          const fixedValue = Math.max(0, Math.round(d));
           if (round !== fixedValue) {
             setRound(fixedValue);
+            setLevel(HTTP_LEVEL.labels);
           }
 
           const posX = xScale(fixedValue);
@@ -105,7 +116,7 @@ const AnnoLineChart = ({ margin, data, list }: LineChartProps) => {
             setPos(posX);
           }
         }),
-    [pos, round, setRound, xScale]
+    [pos, round, setLevel, setRound, xScale]
   );
 
   useEffect(() => {
@@ -170,9 +181,9 @@ const AnnoLineChart = ({ margin, data, list }: LineChartProps) => {
           stroke="rgba(0,0,0,0.8)"
           markerEnd="url(#arrow)"
         />
-        <g transform={`translate(${WIDTH - 40},${HEIGHT - 50})`}>
+        {/* <g transform={`translate(${WIDTH - 40},${HEIGHT - 50})`}>
           <text textAnchor="end">Communication round</text>
-        </g>
+        </g> */}
         <path d={line(data as any) || ''} stroke="#777" fill="none" />
         <g>
           {chatPos.map((chatItem: any, i: number) => (
@@ -194,6 +205,15 @@ const AnnoLineChart = ({ margin, data, list }: LineChartProps) => {
           cursor="move"
           fill="var(--primary-color)"
         >
+          <rect
+            transform={`translate(-10, ${-DRAG_PADDING - 10})`}
+            x="0"
+            y="0"
+            width="20"
+            height="20"
+            fill="#fff"
+            fillOpacity="0.5"
+          />
           <text textAnchor="middle" y={-DRAG_PADDING + 8} fill="#000">
             {Math.round(xScale.invert(pos))}
           </text>

@@ -2,7 +2,9 @@
 import * as d3 from 'd3';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import inputStyles from '../../styles/input.module.css';
+import useWindowSize from '../../utils/useResize';
 import Gradient from '../ui/Gradient';
+import ICON from '../../assets/convex.svg';
 
 interface GridMatrixProps {
   // 一个二维数组，表示点的投影坐标
@@ -16,7 +18,13 @@ interface GridMatrixProps {
   heteroLabels: boolean[];
   strokeSet: Set<number>;
   strokeStatus: number;
+  chosePoint: number;
+  setChosePoint: Function;
+  setStrokePoints: Function;
 }
+
+const isInCircle = (point: number[], x: number, y: number) =>
+  (point[0] - x) * (point[0] - x) + (point[1] - y) * (point[1] - y) <= 4;
 
 // const margin = { t: 50, r: 0, b: 0, l: 60 };
 const margin = { t: 0, r: 0, b: 0, l: 0 };
@@ -27,7 +35,7 @@ const colorScale = d3
   .scaleLinear<string>()
   // .domain([0, 0.5, 1])
   .domain([0, 1])
-  .range(['#fff', '#9ccb3c']);
+  .range(['#fff', '#39915f']);
 // 红白蓝
 // .range(['#e60d17', '#fff', '#0b69b6']);
 
@@ -40,6 +48,9 @@ const GridMatrix = ({
   heteroLabels,
   strokeSet,
   strokeStatus,
+  chosePoint,
+  setChosePoint,
+  setStrokePoints,
 }: GridMatrixProps) => {
   const $chart = useRef(null);
   const $wrapper = useRef(null);
@@ -52,10 +63,10 @@ const GridMatrix = ({
 
   // 格子的大小
   const [gridSize, setGridSize] = useState<number>(0.1);
-  // false是checked
-  const [display, toggelDisplat] = useState<boolean>(false);
+  // true是checked
+  const [display, toggelDisplat] = useState<boolean>(true);
 
-  useEffect(() => {
+  const handleResize = useCallback(() => {
     const { offsetWidth, offsetHeight } = ($wrapper as any).current;
     const size = Math.min(offsetWidth, offsetHeight);
     if (xLabelsArr.length === 0) {
@@ -68,7 +79,9 @@ const GridMatrix = ({
       setWidth(size);
       setHeight(h);
     }
-  }, [$wrapper, xLabelsArr.length, yLabelsArr.length]);
+  }, [xLabelsArr.length, yLabelsArr.length]);
+
+  useWindowSize(handleResize);
 
   const indexXScale = d3
     .scaleLinear()
@@ -113,7 +126,7 @@ const GridMatrix = ({
       data.map((point, k) => {
         const pointX = xLabels[k];
         const pointY = yLabels[k];
-        return [xScale(point[0]), yScale(point[1]), pointX, pointY];
+        return [xScale(point[0]), yScale(point[1]), pointX, pointY, k];
       }),
     [data, xLabels, yLabels, xScale, yScale]
   );
@@ -242,6 +255,10 @@ const GridMatrix = ({
                   break;
               }
 
+              // if (isStroke) {
+              //   strokePoints.push(k);
+              // }
+
               if (heteroLabels[k] === false) {
                 // 不一致
                 pointsArr1.push([posX, posY, 1, isStroke, k]);
@@ -271,6 +288,20 @@ const GridMatrix = ({
   );
 
   useEffect(() => {
+    const arr: any = [];
+    gridPoints.forEach((gridPointsRow) => {
+      gridPointsRow.forEach((point) => {
+        if (point[3]) {
+          arr.push(point[4]);
+        }
+      });
+    });
+
+    setStrokePoints(arr);
+    // console.log('setStroke')
+  }, [gridPoints, setStrokePoints]);
+
+  useEffect(() => {
     if (!$chart.current || !xScale || !yScale) {
       return;
     }
@@ -290,7 +321,7 @@ const GridMatrix = ({
         gridPoint.forEach((point) => {
           let alpha = 0.5;
 
-          if (highlight.has(point[3])) {
+          if (highlight.has(point[4])) {
             alpha = 1;
           }
           if (point[2] === 0) {
@@ -304,7 +335,7 @@ const GridMatrix = ({
           ctx.moveTo(point[0], point[1]);
           ctx.beginPath();
 
-          ctx.arc(point[0], point[1], 2, 0, Math.PI * 2);
+          ctx.arc(point[0], point[1], point[4] === chosePoint ? 4 : 2, 0, Math.PI * 2);
           ctx.closePath();
           ctx.fill();
 
@@ -331,6 +362,7 @@ const GridMatrix = ({
     yLabels,
     yLabelsArr,
     yScale,
+    chosePoint,
   ]);
 
   const handleGridSizeChange = (e: any) => {
@@ -340,8 +372,41 @@ const GridMatrix = ({
   const handleDisplay = () => {
     toggelDisplat(!display);
   };
-
   // console.log(pointsInHull, hullArr)
+
+  const clickPoint = (e: any) => {
+    // console.log(e)
+
+    const { pos } = e.target.dataset;
+    const { offsetX, offsetY } = e.nativeEvent;
+    // ${i}-${j}-${rectX}-${rectY}
+    if (pos) {
+      const [i, j, rectX, rectY] = pos.split('-');
+      const gridPoint = clusterPoints[i][rectX][rectY];
+
+      const { x0, y0, x1, y1 } = gridPoint;
+      // console.log(clusterPoints);
+      // console.log(gridPoint);
+
+      const searched = search(x0, y0, x1, y1).filter(
+        (point: number[]) => point[2] === xLabelsArr[i] && point[3] === yLabelsArr[j]
+      );
+      // console.log(searched)
+
+      const left = margin.l + indexXScale(i * 2) + padding * i;
+      const top = margin.t + indexYScale(j * 2) + padding * j;
+
+      const results = searched.filter((point: number[]) => {
+        const pointOffset = [point[0] + left, point[1] + top];
+        return isInCircle(pointOffset, offsetX, offsetY);
+      });
+      // console.log(results)
+
+      if (results.length) {
+        setChosePoint(results[0][4]);
+      }
+    }
+  };
 
   return (
     <div className="grid-container">
@@ -361,6 +426,18 @@ const GridMatrix = ({
           </div>
         </div>
 
+        <div className="input-wrapper">
+          <span> Ground-truth labels: </span>
+          <Gradient
+            colors={['#fff', '#9ccb3c']}
+            legends={['0%', '100%']}
+            width="50px"
+            height={25}
+          />
+        </div>
+      </div>
+
+      <div className="row">
         <div className="tgl-wrapper">
           <span>Display scatters: </span>
           <input
@@ -372,24 +449,19 @@ const GridMatrix = ({
           />
           <label className="tgl-btn" htmlFor="cb4" />
         </div>
+
+        <div className="convex-legend">
+          <img src={ICON} alt="convex" />
+          <span>Convex of the selected cluster</span>
+        </div>
       </div>
 
       <div className="chart-container">
-        <p className="yLabel-title">Output label</p>
+        <p className="yLabel-title">Output label (federated learning model) </p>
 
         <div className="xLabels">
           <div className="title">
             <span>Ground-truth label</span>
-            <div className="input-wrapper">
-              <span> (density:</span>
-              <Gradient
-                colors={['#fff', '#9ccb3c']}
-                legends={['0%', '100%']}
-                width="50px"
-                height={25}
-              />
-              <span>)</span>
-            </div>
           </div>
           <div className="xLabels-arr">
             {xLabelsArr.map((text) => (
@@ -409,8 +481,9 @@ const GridMatrix = ({
               viewBox={`-1 0 ${svgWidth + 2} ${svgHeight}`}
               width={`${svgWidth + 2}px`}
               height={`${svgHeight}px`}
+              cursor="pointer"
             >
-              <g transform={`translate(${margin.l},${margin.t})`}>
+              <g transform={`translate(${margin.l},${margin.t})`} onClick={clickPoint}>
                 {width > 0 &&
                   xLabelsArr.map((x, i) =>
                     yLabelsArr.map((y, j) => {
@@ -418,8 +491,8 @@ const GridMatrix = ({
                       const top = margin.t + indexYScale(j * 2) + padding * j;
                       // const hull = hullArr[i][j];
 
-                      return clusterPoints[i].map((cluster: any, k: number) => (
-                        <g key={`${i}-${j}-${k}`}>
+                      return clusterPoints[i].map((cluster: any, rectX: number) => (
+                        <g key={`${i}-${j}-${rectX}`}>
                           <rect
                             x={left}
                             y={top}
@@ -429,17 +502,17 @@ const GridMatrix = ({
                             stroke="#777"
                             strokeDasharray="2 2"
                           />
-                          {cluster.map((rect: any) => {
+                          {cluster.map((rect: any, rectY: number) => {
                             const { x0, x1, y0, y1, ratio } = rect;
                             return (
                               <rect
+                                data-pos={`${i}-${j}-${rectX}-${rectY}`}
                                 key={`${x0},${y0},${i}`}
                                 fill={colorScale(ratio)}
                                 x={x0 + left}
                                 y={y0 + top}
                                 width={x1 - x0}
                                 height={y1 - y0}
-                                fillOpacity="0.5"
                               />
                             );
                           })}
@@ -465,7 +538,8 @@ const GridMatrix = ({
               width={`${svgWidth}px`}
               height={`${svgHeight}px`}
               style={{
-                opacity: display ? 0 : 1,
+                opacity: display ? 1 : 0,
+                pointerEvents: 'none',
               }}
             />
           </div>

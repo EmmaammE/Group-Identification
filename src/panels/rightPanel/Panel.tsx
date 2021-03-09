@@ -3,6 +3,7 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import * as d3 from 'd3';
 import { setIndexAction } from '../../store/reducers/blockIndex';
 import CpLineChart from '../../components/lineChart/CpLineChart';
 import GridMatrix from '../../components/PairRect.tsx/GridMatrix';
@@ -17,8 +18,26 @@ import { fetchLists, setPropertyAction, setUpdateAction } from '../../store/redu
 import Icon from '../../components/ui/JoinIcon';
 import { setLevelAction } from '../../store/reducers/identify';
 import HTTP_LEVEL from '../../utils/level';
+import PureRect from '../../components/PairRect.tsx/PureRect';
 
 const margin = { t: 20, r: 20, b: 35, l: 50 };
+const WIDTH = 25;
+
+const areEqual = (first: number[], second: number[]) => {
+  if (first.length !== second.length) {
+    return false;
+  }
+  for (let i = 0; i < first.length; i++) {
+    // 因为都是从points中加载的，所以如果相同, 顺序一定一样
+    //  if(!second.includes(first[i])){
+    //     return false;
+    //  };
+    if (second[i] !== first[i]) {
+      return false;
+    }
+  }
+  return true;
+};
 
 function RightPanel() {
   const index: number = useSelector((state: any) => state.blockIndex);
@@ -67,20 +86,27 @@ function RightPanel() {
 
   const updatePropertyIndex = useCallback((i) => dispatch(setPropertyAction(i)), [dispatch]);
 
-  // useEffect(() => {
-  //   if(heteroList[index]) {
-  //     setStrokePoints(new Set(heteroList[index].heteroIndex));
-  //   }
-  // }, [heteroList, index])
+  const [chosePoint, setChosePoint] = useState<number>(-1);
+
+  const [strokePoints, setStrokePoints] = useState<number[]>([]);
+
+  const setPoints = useCallback(
+    (p: any) => {
+      if (!areEqual(p, strokePoints)) {
+        setStrokePoints(p);
+      }
+    },
+    [strokePoints]
+  );
 
   useEffect(() => {
     let defaultIndex = 0;
     let maxV = Number.MIN_VALUE;
 
     pcArr[0].forEach((cpc1, i) => {
-      const v = cpc1 + pcArr[1][i];
+      const v = Math.max(cpc1) + Math.max(pcArr[1][i]);
 
-      if (maxV < cpc1 + pcArr[1][i]) {
+      if (maxV < v) {
         maxV = v;
         defaultIndex = i;
       }
@@ -93,6 +119,12 @@ function RightPanel() {
     // 每次标注列表更新，更新状态
     setAnnoListStatus(Array.from({ length: annoList.length }, () => 0));
   }, [annoList]);
+
+  useEffect(() => {
+    if (round === 0) {
+      setcPCA([[], []]);
+    }
+  }, [round]);
 
   useEffect(() => {
     if (round !== 0 && level === HTTP_LEVEL.cpca) {
@@ -138,11 +170,11 @@ function RightPanel() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        clusterID: blockIndex,
+        dataIndex: strokePoints,
         text: annoText,
       }),
     }).then((res) => {
-      console.log(res);
+      // console.log(res);
       getList();
       setAnnoText('');
     });
@@ -152,35 +184,28 @@ function RightPanel() {
     setAnnoText(e.target.value);
   };
 
-  const consistentData = useMemo(() => {
-    if (samples.length === 0 || cpT.length === 0 || heteroLabels.length === 0) {
-      return [[]];
-    }
-    // console.log('consistentData', samples, heteroLabels, cpT);
-    const temp = samples.filter((u: any, i: number) => heteroLabels[i] === false);
-
-    return mmultiply(temp, cpT);
-  }, [samples, cpT, heteroLabels]);
-
   const datum = useMemo(() => {
-    // if (heteroList[index] === undefined || samples.length === 0 || cpT.length === 0) {
-    //   return [[]];
-    // }
-    if (samples.length === 0 || cpT.length === 0) {
+    if (samples.data.length === 0 || cpT.length === 0) {
       return [[]];
     }
-    // const temp = heteroList[index].heteroIndex.map((i: number) => samples[i]);
+    return mmultiply(samples.data, cpT);
+  }, [cpT, samples.data]);
 
-    // return consistentData.concat(mmultiply(temp, cpT));
-    return mmultiply(samples, cpT);
-  }, [cpT, samples]);
+  const samplesByRange = useMemo(() => {
+    if (samples.data.length > 0) {
+      const extent = d3.extent(samples.data.flat()) as any;
+      const scale = d3.scaleLinear().domain(extent).range(samples.range);
+      return samples.data.map((samplesItem: number[]) => samplesItem.map((item) => scale(item)));
+    }
+    return [];
+  }, [samples]);
 
   const lineDatum = useMemo(() => {
     // 一致的点，不一致的点
     const temp: number[][] = [[], []];
     const tempHeteData: number[] = [];
 
-    samples.forEach((d: number[], j: number) => {
+    samplesByRange.forEach((d: number[], j: number) => {
       // 如果不一致
       if (heteroLabels[j] === false) {
         temp[1].push(d[propertyIndex]);
@@ -193,7 +218,7 @@ function RightPanel() {
     setHeteData(tempHeteData);
 
     return temp;
-  }, [heteroLabels, propertyIndex, samples]);
+  }, [heteroLabels, propertyIndex, samplesByRange]);
 
   const handleHover = useCallback(
     (e: any) => {
@@ -258,7 +283,7 @@ function RightPanel() {
             </div>
             <div className="row">
               <span>Weights:</span>
-              <Gradient colors={['#1365c2', '#fff', '#c21317']} legends={['-1', '1']} width="80" />
+              <Gradient colors={['#c21317', '#fff', '#1365c2']} legends={['-1', '1']} width="80" />
             </div>
           </div>
           <div className="pair-rects">
@@ -276,23 +301,23 @@ function RightPanel() {
           </div>
 
           <div className="row svg-legends">
-            <svg height="24px" viewBox="0 0 95 20">
-              <line x1="0" y1="10" x2="10" y2="10" stroke="#b6b6b6" />
-              <text x="12" y="15">
+            <svg height="22px" viewBox="0 0 95 20">
+              <line x1="0" y1="10" x2={WIDTH} y2="10" stroke="#b6b6b6" />
+              <text x={WIDTH + 3} y="15">
                 Consistent
               </text>
             </svg>
 
-            <svg height="24px" viewBox="0 0 95 20">
-              <line x1="0" y1="10" x2="10" y2="10" stroke="var(--primary-color)" />
-              <text x="12" y="15">
+            <svg height="22px" viewBox="0 0 105 20">
+              <line x1="0" y1="10" x2={WIDTH} y2="10" stroke="var(--primary-color)" />
+              <text x={WIDTH + 3} y="15">
                 Inconsistent
               </text>
             </svg>
 
-            <svg height="24px" viewBox="0 0 30 20">
-              <line x1="0" y1="10" x2="10" y2="10" stroke="#ea4d40" />
-              <text x="12" y="15">
+            <svg height="22px" viewBox="0 0 48 20">
+              <line x1="0" y1="10" x2={WIDTH} y2="10" stroke="#ea4d40" />
+              <text x={WIDTH + 3} y="15">
                 All
               </text>
             </svg>
@@ -323,66 +348,67 @@ function RightPanel() {
             heteroLabels={heteroLabels}
             strokeSet={strokeSet}
             strokeStatus={strokeStatus}
+            chosePoint={chosePoint}
+            setChosePoint={setChosePoint}
+            setStrokePoints={setPoints}
           />
         </div>
 
-        <div className="op-container r-panel">
-          <div id="anno-panel">
-            <p className="title">Instance Verification</p>
-            <div className="lists instance-panel">
-              <div id="data-wrapper">
-                <p>Data:</p>
-              </div>
-              <div>
-                <p>Ground-truth label:</p>
-                <p>Output:</p>
-                <p>Federated learning model: </p>
-                <p>Stand-alone training model: </p>
-              </div>
+        <div className="op-container r-panel" id="anno-panel">
+          <p className="title">Instance Verification</p>
+          <div className="lists instance-panel">
+            <div id="data-wrapper">
+              <p>Data:</p>
+              <PureRect data={chosePoint !== -1 ? samplesByRange[chosePoint] : []} />
+            </div>
+            <div>
+              <p>Ground-truth label:</p>
+              <p>Output:</p>
+              <p>Federated learning model: </p>
+              <p>Stand-alone training model: </p>
             </div>
           </div>
+        </div>
 
-          <div id="control-panel">
-            <p className="title">Control Panel</p>
-            <div className="lists">
-              <div className="list-content">
-                <p>Overlap lists:</p>
-                <div
-                  className="list-area"
-                  onClick={handleChange}
-                  onMouseOver={handleHover}
-                  onFocus={handleHover}
-                  onMouseOut={handleOut}
-                  onBlur={handleOut}
-                >
-                  {annoList.map(({ round: r, text, dataIndex }, i) => (
-                    <div className="list-item" key={i} data-id={i}>
-                      <span
-                        className="img-wrapper"
-                        style={{ pointerEvents: 'none', cursor: 'pointer' }}
-                      >
-                        {/* <img src={JOIN as any} alt="join" /> */}
-                        <Icon status={annoListStatus[i]} id={i} />
-                      </span>
+        <div className="op-container r-panel" id="control-panel">
+          <p className="title">Control Panel</p>
+          <div className="lists">
+            <div className="list-content">
+              <p>Overlap lists:</p>
+              <div
+                className="list-area"
+                onClick={handleChange}
+                onMouseOver={handleHover}
+                onFocus={handleHover}
+                onMouseOut={handleOut}
+                onBlur={handleOut}
+              >
+                {annoList.map(({ round: r, text, dataIndex }, i) => (
+                  <div className="list-item" key={i} data-id={i}>
+                    <span
+                      className="img-wrapper"
+                      style={{ pointerEvents: 'none', cursor: 'pointer' }}
+                    >
+                      <Icon status={annoListStatus[i]} id={i} />
+                    </span>
 
-                      <div style={{ pointerEvents: 'none' }}>
-                        <p>
-                          In round {r} (size:{dataIndex.length}){' '}
-                        </p>
-                        <p className="anno">{text}</p>
-                      </div>
+                    <div style={{ pointerEvents: 'none' }}>
+                      <p>
+                        In round {r} (size:{dataIndex.length}){' '}
+                      </p>
+                      <p className="anno">{text}</p>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
+            </div>
 
-              <div id="input-wrapper">
-                <textarea placeholder="Input" value={annoText} onInput={handleInput} />
-                <div className="btn-area">
-                  <button type="button" className="c-btn" onClick={addAnn}>
-                    Record
-                  </button>
-                </div>
+            <div id="input-wrapper">
+              <textarea placeholder="Input" value={annoText} onInput={handleInput} />
+              <div className="btn-area">
+                <button type="button" className="c-btn" onClick={addAnn}>
+                  Record
+                </button>
               </div>
             </div>
           </div>

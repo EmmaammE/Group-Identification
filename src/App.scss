@@ -262,3 +262,12 @@ textarea {
     appearance: none;
   }
 }
+
+.convex-legend {
+  display: flex;
+
+  img {
+    width: 22px;
+    height: 22px;
+  }
+}

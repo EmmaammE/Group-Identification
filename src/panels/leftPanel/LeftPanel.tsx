@@ -74,10 +74,12 @@ function LeftPanel() {
 
   const onDropdownChange = (i: any) => {
     setIndex(i);
-    if (index !== 0) {
+    // console.log('test')
+    if (index !== -1) {
       initBasic();
       initIdentity();
       setRound(0);
+      setLevel(HTTP_LEVEL.client);
     }
   };
 
@@ -135,6 +137,7 @@ function LeftPanel() {
         .then((res) => {
           setRawWeights(res);
           setRange([0, res.serverWeights.length - 1]);
+          setRound(res.serverWeights.length);
         });
     }
   }, [index, initBasic, initIdentity, level, setRound]);
