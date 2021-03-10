@@ -281,7 +281,7 @@ function RightPanel() {
             </div>
           </div>
           <div className="row">
-            <span>Weights:</span>
+            <span>Dimension weights:</span>
             <Gradient colors={['#c21317', '#fff', '#1365c2']} legends={['-1', '1']} width="80" />
           </div>
           <div className="pair-rects">
