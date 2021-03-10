@@ -25,7 +25,6 @@ const Heatmap = ({ densityData, linear, heteroPoints }: HeatmapProps) => {
 
   const hull = d3.polygonHull(heteroPoints as any);
 
-  // console.log(hull);
   return (
     <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} width="100%">
       <defs>

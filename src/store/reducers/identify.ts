@@ -16,7 +16,7 @@ export interface IdentifyData {
   "localData": number[][],
   // 采样数据
   "samples": {
-    // 数据的范围
+    // 数据的范围 
     data: number[][],
     // 数据映射的范围
     range: number[]

@@ -20,8 +20,8 @@ function strokeType(type: string) {
 
 function pointColor(label: boolean | number) {
   // return label ? 'rgba(84, 122, 167, .7)' : 'rgba(216, 85, 88, .7)';
-  // return label ? 'rgba(221,221,221, .5)' : 'rgba(149, 98, 53,.7)';
-  return label ? 'rgba(128,128,128,.5)' : 'rgba(149, 98, 53,.7)';
+  return label ? 'rgba(201,201,201, .5)' : 'rgba(149, 98, 53,.7)';
+  // return label ? 'rgba(128,128,128,.5)' : 'rgba(149, 98, 53,.7)';
 }
 
 interface ScatterplotProps {

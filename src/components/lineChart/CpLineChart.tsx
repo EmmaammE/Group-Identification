@@ -49,6 +49,14 @@ const getMax = (...arr: number[][]) => {
 // 灰色（一致））棕色（不一致）
 const lineColor = ['#b5b6b6', '#aa815d'];
 
+const getDomain = (a: number, b: number, type: string) => {
+  if (a === undefined && b === undefined) return 0;
+  if (a === undefined) return b;
+  if (b === undefined) return a;
+
+  return (Math as any)[type](a, b);
+};
+
 const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineChartProps) => {
   const widthMap: number = WIDTH - margin.l - margin.r;
   const heightMap: number = HEIGHT - margin.t - margin.b;
@@ -60,7 +68,7 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
   const [hetBinCount, setHetBinCount] = useState<any>(null);
 
   useEffect(() => {
-    if (rawData) {
+    if (rawData[0].length > 0) {
       const hashArr = rawData.map((d) => count(d));
       setData(hashArr);
     }
@@ -84,8 +92,12 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
       d3
         .scaleLinear()
         .domain([
-          Math.min(+dataKeys[0][0], +dataKeys[1][0]),
-          Math.max(+dataKeys[0][dataKeys[0].length - 1], +dataKeys[1][dataKeys[1].length - 1]),
+          getDomain(dataKeys[0][0], dataKeys[1][0], 'min'),
+          getDomain(
+            dataKeys[0][dataKeys[0].length - 1],
+            dataKeys[1][dataKeys[1].length - 1],
+            'max'
+          ),
         ])
         .range([0, widthMap])
         .nice(),
@@ -93,7 +105,7 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
   );
 
   useEffect(() => {
-    if (data === null || Object.keys(data[0]).length === 0) {
+    if (data === null || Object.keys(hetData).length === 0) {
       return;
     }
     const bins = d3
@@ -105,6 +117,8 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
     const hetBin: any = {};
 
     const hetHash = count(hetData);
+
+    // console.log(hetHash, countBins)
 
     bins.forEach((bin: any) => {
       const value = (bin.x0 + bin.x1) / 2;
@@ -159,7 +173,7 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
 
     setBinsCount(countBins);
     setHetBinCount(hetBin);
-    // console.log(bins, hetBin, countBins);
+    // console.log(bins, hetBin, countBins, dataKeys, xScale.domain());
     // console.log(title, countBins)
 
     // console.log(hetBin)
@@ -225,6 +239,8 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
     d3.select($yaxis.current).call(yAxis.scale(yScale).tickFormat(d3.format('.3p')));
   }, [xScale, yScale, widthMap, heightMap]);
 
+  // console.log(hetBinCount, binsCount)
+
   return (
     <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
       <g transform={`translate(${margin.l}, ${margin.t})`}>
@@ -274,7 +290,7 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
                 <circle
                   key={`c-${i}-${j}`}
                   cx={xScale(+key)}
-                  cy={yScale(datum[key as any])}
+                  cy={yScale(datum[key as any]) || 0}
                   r={2}
                   stroke={lineColor[i]}
                   fill="#fff"
@@ -291,7 +307,7 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
               d={
                 line(hetBinCount)(
                   (Object.keys(hetBinCount) as any).sort((a: any, b: any) => +a - +b)
-                ) || ''
+                ) as string
               }
               stroke="#c04548"
               fill="none"
@@ -300,7 +316,7 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
               <circle
                 key={`h-${j}`}
                 cx={xScale(+key)}
-                cy={yScale(hetBinCount[key])}
+                cy={yScale(hetBinCount[key]) || 0}
                 r={2}
                 stroke="#c04548"
                 fill="#fff"

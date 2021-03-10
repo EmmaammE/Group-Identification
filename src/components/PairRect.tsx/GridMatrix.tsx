@@ -126,7 +126,7 @@ const GridMatrix = ({
       data.map((point, k) => {
         const pointX = xLabels[k];
         const pointY = yLabels[k];
-        return [xScale(point[0]), yScale(point[1]), pointX, pointY, k];
+        return [xScale(point[0]) || 0, yScale(point[1]) || 0, pointX, pointY, k];
       }),
     [data, xLabels, yLabels, xScale, yScale]
   );
@@ -201,11 +201,18 @@ const GridMatrix = ({
   }, [gridSize, normScale, search, xLabelsArr]);
 
   const hull = useMemo(() => {
-    const pointsArr: any[] = points
-      .filter((d, k) => heteroIndex.has(k))
-      .map((point) => [point[0], point[1]]);
+    if (points.length > 0) {
+      // console.log(points)
 
-    return d3.polygonHull(pointsArr);
+      const pointsArr: any[] = points
+        .filter((d, k) => heteroIndex.has(k))
+        .map((point) => [point[0], point[1]]);
+
+      // console.log(pointsArr)
+
+      return d3.polygonHull(pointsArr);
+    }
+    return [];
   }, [heteroIndex, points]);
 
   const gridPoints = useMemo(
@@ -326,10 +333,10 @@ const GridMatrix = ({
           }
           if (point[2] === 0) {
             // 0 一致
-            ctx.fillStyle = `rgba(128,128,128,${alpha})`;
+            ctx.fillStyle = `rgba(201,201,201,${alpha - 0.1})`;
           } else {
-            // ctx.fillStyle = `rgba(149, 98, 53,${alpha})`;
-            ctx.fillStyle = `rgba(197,92,0,${alpha})`;
+            ctx.fillStyle = `rgba(149, 98, 53,${alpha})`;
+            // ctx.fillStyle = `rgba(197,92,0,${alpha})`;
           }
 
           ctx.moveTo(point[0], point[1]);

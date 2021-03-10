@@ -29,12 +29,12 @@ const areEqual = (first: number[], second: number[]) => {
   }
   for (let i = 0; i < first.length; i++) {
     // 因为都是从points中加载的，所以如果相同, 顺序一定一样
-    //  if(!second.includes(first[i])){
-    //     return false;
-    //  };
-    if (second[i] !== first[i]) {
+    if (!second.includes(first[i])) {
       return false;
     }
+    // if (second[i] !== first[i]) {
+    //   return false;
+    // }
   }
   return true;
 };
@@ -93,7 +93,7 @@ function RightPanel() {
   const setPoints = useCallback(
     (p: any) => {
       if (!areEqual(p, strokePoints)) {
-        setStrokePoints(p);
+        // setStrokePoints(p);
       }
     },
     [strokePoints]
@@ -188,7 +188,10 @@ function RightPanel() {
     if (samples.data.length === 0 || cpT.length === 0) {
       return [[]];
     }
-    return mmultiply(samples.data, cpT);
+    return mmultiply(
+      samples.data.filter((d: any) => d.length !== 0),
+      cpT
+    );
   }, [cpT, samples.data]);
 
   const samplesByRange = useMemo(() => {
