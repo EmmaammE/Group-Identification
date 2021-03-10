@@ -35,8 +35,8 @@ const padding = 10;
 const colorScale = d3
   .scaleLinear<string>()
   // .domain([0, 0.5, 1])
-  .domain([0, 1])
-  .range(['#fff', '#39915f']);
+  .domain([0, 0.5, 1])
+  .range(['#ffdfb2', '#eee', '#cde8ba']);
 // 红白蓝
 // .range(['#e60d17', '#fff', '#0b69b6']);
 
@@ -187,7 +187,7 @@ const GridMatrix = ({
             x1,
             y0,
             y1,
-            ratio: searched.length ? positive.length / searched.length : 0,
+            ratio: searched.length ? positive.length / searched.length : -1,
           });
         }
 
@@ -327,7 +327,7 @@ const GridMatrix = ({
     ctx.clearRect(0, 0, svgWidth, svgHeight);
     ctx.lineWidth = 1;
 
-    ctx.strokeStyle = 'rgba(120,120,120,0.3)';
+    ctx.strokeStyle = 'rgba(0,0,0, 0.2)';
 
     // console.log(pointsInHullArr);
     gridPoints.forEach((gridPointRow, i) => {
@@ -438,7 +438,7 @@ const GridMatrix = ({
                 type="number"
                 min="0.0"
                 max="1.0"
-                step="0.1"
+                step="0.01"
                 value={gridSize}
                 onChange={handleGridSizeChange}
               />
@@ -448,7 +448,7 @@ const GridMatrix = ({
           <div className="input-wrapper">
             <span> Ground-truth labels: </span>
             <Gradient
-              colors={['#fff', '#9ccb3c']}
+              colors={['#ffdfb2', '#eee', '#cde8ba']}
               legends={['0%', '100%']}
               width="50px"
               height={25}

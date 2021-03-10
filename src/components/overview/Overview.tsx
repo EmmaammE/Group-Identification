@@ -39,18 +39,14 @@ function Overview({ data, flag, round, colorExtent }: OverviewProps) {
         .domain(
           flag
             ? mergeDomain(
-                d3.extent(data.local, (d) => d[0]) as any,
-                d3.extent(data.server, (d) => d[0]) as any,
-                data.weight0
+                d3.extent([...data.local, ...data.server, data.weight0], (d) => d[0]) as any
               )
-            : mergeDomain(
-                d3.extent(data.local, (d) => d[0]) as any,
-                d3.extent(data.server, (d) => d[0]) as any
-              )
-        )
-        .nice(),
+            : mergeDomain(d3.extent([...data.local, ...data.server], (d) => d[0]) as any)
+        ),
     [data.local, data.server, data.weight0, flag]
   );
+  console.log(data.weight0);
+  console.log(xScale.domain());
   const yScale = useMemo(
     () =>
       d3
@@ -59,16 +55,10 @@ function Overview({ data, flag, round, colorExtent }: OverviewProps) {
         .domain(
           flag
             ? mergeDomain(
-                d3.extent(data.local, (d) => d[1]) as any,
-                d3.extent(data.server, (d) => d[1]) as any,
-                data.weight0
+                d3.extent([...data.local, ...data.server, data.weight0], (d) => d[1]) as any
               )
-            : mergeDomain(
-                d3.extent(data.local, (d) => d[1]) as any,
-                d3.extent(data.server, (d) => d[1]) as any
-              )
-        )
-        .nice(),
+            : mergeDomain(d3.extent([...data.local, ...data.server], (d) => d[1]) as any)
+        ),
     [data.local, data.server, data.weight0, flag]
   );
 
