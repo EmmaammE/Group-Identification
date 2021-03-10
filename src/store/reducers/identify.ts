@@ -28,6 +28,7 @@ export interface IdentifyData {
   // 异构标签（0：一致，1：不一致）
   // true: 一致
   "heteroLabels": [],
+  "localOutputLabel": [],
   // 联邦模型是否正确（0：错误，1：正确）
   "fedResult": [],
   "heteroList": {
@@ -66,6 +67,7 @@ const initState: any= {
     range: []
   },
   heteroLabels: [],
+  localOutputLabel: [],
   pca: {
     "cpc1": [],
     "cpc2": [],
@@ -255,11 +257,12 @@ const identifyReducer = (state = initState, action: any) => {
       return {...state, samples: action.data}
     case SET_LABELS:
       // eslint-disable-next-line no-case-declarations
-      const {consistencyLabel, groundTruthLabel, outputLabel} = action.data;
+      const {consistencyLabel, groundTruthLabel, outputLabel, localOutputLabel} = action.data;
       return {...state, 
         groundTruth: groundTruthLabel,
         outputLabels: outputLabel,
         heteroLabels: consistencyLabel,
+        localOutputLabel,
         loading: true
       }
     case SET_HETELIST:

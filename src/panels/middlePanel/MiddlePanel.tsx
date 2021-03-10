@@ -20,6 +20,7 @@ import {
 import useFetch from '../../utils/useFetch';
 import HTTP_LEVEL from '../../utils/level';
 import ICON from '../../assets/convex.svg';
+import { setType } from '../../utils/getType';
 
 const chartProps: ChartProps = {
   width: 400,
@@ -174,6 +175,14 @@ function MiddlePanel() {
     [setLevel]
   );
 
+  useEffect(() => {
+    setType(items[dataIndex]);
+  }, [dataIndex]);
+
+  useEffect(() => {
+    setType(items[dataIndex]);
+  }, []);
+
   const onInputNumber = (e: any) => {
     const reg = new RegExp('^[0-9]*$');
 
@@ -210,7 +219,6 @@ function MiddlePanel() {
                   step="0.1"
                   defaultValue={param?.toFixed(2) || ''}
                   onBlur={handleParamChange}
-                  // readOnly
                 />
               </div>
             </div>

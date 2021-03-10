@@ -1,4 +1,6 @@
 #RightPanel {
+  $color: #dfd0c2;
+
   .content {
     padding: 0;
     display: grid;
@@ -214,8 +216,6 @@
   }
 
   .op-container {
-    $color: #dfd0c2;
-
     padding: 0;
     display: flex;
     flex-direction: column;
@@ -289,7 +289,7 @@
     .list-area {
       overflow: auto;
       height: 15vh;
-      font-size: 12px;
+      cursor: pointer;
     }
 
     #input-wrapper {
@@ -313,28 +313,28 @@
 
     path {
       fill: #efefef;
-      stroke: #000;
+      stroke: #777;
       stroke-width: 20;
-      transition: fill 300ms ease-in-out;
+      transition: fill 100ms ease-out;
     }
   }
 
   .sum {
     path {
-      fill: #aaa;
+      fill: $color;
     }
   }
 
   .intersection {
     #path-2 {
-      fill: #aaa;
+      fill: $color;
     }
   }
 
   .right-join {
     #path-2,
     #path-1 {
-      fill: #aaa;
+      fill: $color;
     }
   }
 }
@@ -408,4 +408,8 @@
       left: 50%;
     }
   }
+}
+
+.outline {
+  outline-offset: -1px;
 }

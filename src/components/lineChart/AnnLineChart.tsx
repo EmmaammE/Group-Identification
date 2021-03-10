@@ -43,6 +43,8 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
   const xScale = d3.scaleLinear().range([0, widthMap]).domain([0, data.length]).nice();
   const [pos, setPos] = useState<number>(0);
   const setLevel = useCallback((level: number) => dispatch(setLevelAction(level)), [dispatch]);
+  const [tipPos, setTipPos] = useState<number[]>([0, 0]);
+  const [tipId, setTipid] = useState<number>(-1);
 
   // const yScale = d3
   //   .scaleSymlog()
@@ -143,6 +145,8 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
             text: anno.text,
             x,
             y: indexScale(j),
+            r: anno.round,
+            dataIndex: anno.dataIndex,
           });
         });
       });
@@ -151,84 +155,116 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
     return arr;
   }, [heightMap, list, xScale]);
 
+  const handleMouseover = (e: any) => {
+    const { offsetY, offsetX } = e.nativeEvent;
+    setTipPos([offsetX - 20, offsetY - 30]);
+    setTipid(e.target.id);
+  };
+
+  const handleMouseout = () => {
+    setTipid(-1);
+  };
+
   return (
-    <svg width="100%" viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
-      <defs>
-        <Triangle />
-      </defs>
-      <g transform={`translate(${margin.l}, ${margin.t})`}>
-        <g transform={`translate(0, ${heightMap})`} className="axes x-axis" ref={$xaxis} />
-        <g className="axes y-axis" ref={$yaxis} />
+    <>
+      <svg width="100%" viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
+        <defs>
+          <Triangle />
+        </defs>
+        <g transform={`translate(${margin.l}, ${margin.t})`}>
+          <g transform={`translate(0, ${heightMap})`} className="axes x-axis" ref={$xaxis} />
+          <g className="axes y-axis" ref={$yaxis} />
 
-        <g ref={$lines} className="lines">
-          <g className="yline" />
-          <g className="xline" />
-        </g>
+          <g ref={$lines} className="lines">
+            <g className="yline" />
+            <g className="xline" />
+          </g>
 
-        <line
-          x1={0}
-          x2={widthMap + 5}
-          y1={heightMap}
-          y2={heightMap}
-          stroke="rgba(0,0,0,0.8)"
-          markerEnd="url(#arrow)"
-        />
-        <line
-          x1={0}
-          x2={0}
-          y1={heightMap}
-          y2={-10}
-          stroke="rgba(0,0,0,0.8)"
-          markerEnd="url(#arrow)"
-        />
-        {/* <g transform={`translate(${WIDTH - 40},${HEIGHT - 50})`}>
+          <line
+            x1={0}
+            x2={widthMap + 5}
+            y1={heightMap}
+            y2={heightMap}
+            stroke="rgba(0,0,0,0.8)"
+            markerEnd="url(#arrow)"
+          />
+          <line
+            x1={0}
+            x2={0}
+            y1={heightMap}
+            y2={-10}
+            stroke="rgba(0,0,0,0.8)"
+            markerEnd="url(#arrow)"
+          />
+          {/* <g transform={`translate(${WIDTH - 40},${HEIGHT - 50})`}>
           <text textAnchor="end">Communication round</text>
         </g> */}
-        <path d={line(data as any) || ''} stroke="#777" fill="none" />
-        <g>
-          {chatPos.map((chatItem: any, i: number) => (
-            <image
-              xlinkHref={chat}
-              key={i}
-              id={`${i}`}
-              x={chatItem.x}
-              y={chatItem.y}
-              height="20"
+          <path d={line(data as any) || ''} stroke="#777" fill="none" />
+          <g onMouseOver={handleMouseover} onMouseOut={handleMouseout}>
+            {chatPos.map((chatItem: any, i: number) => (
+              <image
+                xlinkHref={chat}
+                key={i}
+                id={`${i}`}
+                x={chatItem.x}
+                y={chatItem.y}
+                height="20"
+                width="20"
+                data-tip="hhh"
+                data-for="annTip"
+                cursor="pointer"
+              />
+            ))}
+          </g>
+          <g
+            ref={$drag}
+            transform={`translate(${pos}, ${DRAG_PADDING})`}
+            cursor="move"
+            fill="var(--primary-color)"
+          >
+            <rect
+              transform={`translate(-10, ${-DRAG_PADDING - 10})`}
+              x="0"
+              y="0"
               width="20"
+              height="20"
+              fill="#fff"
+              fillOpacity="0.5"
             />
-          ))}
+            <text textAnchor="middle" y={-DRAG_PADDING + 8} fill="#000">
+              {Math.round(xScale.invert(pos))}
+            </text>
+            <line
+              x1="0"
+              y1="0"
+              x2="0"
+              y2={heightMap - DRAG_PADDING}
+              strokeWidth="3"
+              stroke="var(--primary-color)"
+            />
+            <path d="M0 8 L-15 -8 L15 -8Z" />
+          </g>
         </g>
+      </svg>
 
-        <g
-          ref={$drag}
-          transform={`translate(${pos}, ${DRAG_PADDING})`}
-          cursor="move"
-          fill="var(--primary-color)"
-        >
-          <rect
-            transform={`translate(-10, ${-DRAG_PADDING - 10})`}
-            x="0"
-            y="0"
-            width="20"
-            height="20"
-            fill="#fff"
-            fillOpacity="0.5"
-          />
-          <text textAnchor="middle" y={-DRAG_PADDING + 8} fill="#000">
-            {Math.round(xScale.invert(pos))}
-          </text>
-          <line
-            x1="0"
-            y1="0"
-            x2="0"
-            y2={heightMap - DRAG_PADDING}
-            strokeWidth="3"
-            stroke="var(--primary-color)"
-          />
-          <path d="M0 8 L-15 -8 L15 -8Z" />
-        </g>
-      </g>
-    </svg>
+      <div
+        className="tooltip"
+        style={{
+          left: tipPos[0],
+          top: tipPos[1],
+          opacity: tipId === -1 ? 0 : 1,
+        }}
+      >
+        {tipId !== -1 && (
+          <>
+            <p>
+              In round {chatPos[tipId].r} (size: {chatPos[tipId].dataIndex.length})
+            </p>
+            <p className="anno">{chatPos[tipId].text}</p>
+          </>
+        )}
+      </div>
+    </>
   );
 };
 

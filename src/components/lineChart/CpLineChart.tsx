@@ -104,6 +104,8 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
     [dataKeys, widthMap]
   );
 
+  const minValue = [0, 1e-4, 0][index];
+
   useEffect(() => {
     if (data === null || Object.keys(hetData).length === 0) {
       return;
@@ -150,12 +152,12 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
 
       countBins.forEach((countBin) => {
         if (countBin[value] === undefined) {
-          countBin[value] = 0;
+          countBin[value] = minValue;
         }
       });
 
       if (hetBin[value] === undefined) {
-        hetBin[value] = 0;
+        hetBin[value] = minValue;
       }
     });
 
@@ -173,11 +175,11 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
 
     setBinsCount(countBins);
     setHetBinCount(hetBin);
-    // console.log(bins, hetBin, countBins, dataKeys, xScale.domain());
+    // console.log( hetBin, countBins);
     // console.log(title, countBins)
 
     // console.log(hetBin)
-  }, [data, dataKeys, hetData, rawData, xScale]);
+  }, [data, dataKeys, hetData, minValue, rawData, xScale]);
 
   useEffect(() => {
     if (binsCount[0]) {
@@ -236,13 +238,28 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
     );
 
     d3.select($xaxis.current).call(xAxis.scale(xScale).tickFormat(d3.format('.3s')));
-    d3.select($yaxis.current).call(yAxis.scale(yScale).tickFormat(d3.format('.3p')));
+    d3.select($yaxis.current).call(
+      yAxis.scale(yScale).tickFormat((d) => {
+        if (d < 1e-4) {
+          return d3.format('.1p')(d);
+        }
+        if (d < 1e-3) {
+          return d3.format('.2p')(d);
+        }
+        return d3.format('.3p')(d);
+      })
+    );
   }, [xScale, yScale, widthMap, heightMap]);
 
   // console.log(hetBinCount, binsCount)
 
   return (
     <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
+      <defs>
+        <clipPath id="cut">
+          <rect x={0} y={0} width={WIDTH} height={heightMap} />
+        </clipPath>
+      </defs>
       <g transform={`translate(${margin.l}, ${margin.t})`}>
         <g transform={`translate(0, ${heightMap})`} className="axes x-axis" ref={$xaxis} />
         <g className="axes y-axis" ref={$yaxis} />
@@ -279,7 +296,9 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
                 d={line(datum)((Object.keys(datum) as any).sort((a: any, b: any) => +a - +b)) || ''}
                 stroke={lineColor[i]}
                 fill="none"
+                // clipPath="url(#cut-off)"
                 // opacity="0.7"
+                clipPath="url(#cut)"
               />
             )
         )}
@@ -290,7 +309,7 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
                 <circle
                   key={`c-${i}-${j}`}
                   cx={xScale(+key)}
-                  cy={yScale(datum[key as any]) || 0}
+                  cy={yScale(datum[key as any])}
                   r={2}
                   stroke={lineColor[i]}
                   fill="#fff"
@@ -300,6 +319,15 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
               ))}
           </g>
         ))}
+
+        {/* <rect 
+        x='0'
+        y='0'
+        width={WIDTH}
+        height={HEIGHT}
+        clipPath="url(#cut)"
+        fill='#000'
+      /> */}
 
         {hetBinCount && (
           <g>
@@ -311,12 +339,13 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
               }
               stroke="#c04548"
               fill="none"
+              clipPath="url(#cut)"
             />
             {Object.keys(hetBinCount).map((key, j) => (
               <circle
                 key={`h-${j}`}
                 cx={xScale(+key)}
-                cy={yScale(hetBinCount[key]) || 0}
+                cy={yScale(hetBinCount[key])}
                 r={2}
                 stroke="#c04548"
                 fill="#fff"
