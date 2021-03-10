@@ -186,7 +186,7 @@ const GridMatrix = ({
             x1,
             y0,
             y1,
-            ratio: searched.length ? positive.length / searched.length : 0,
+            ratio: searched.length ? positive.length / searched.length : -1,
           });
         }
 
@@ -318,7 +318,7 @@ const GridMatrix = ({
     ctx.clearRect(0, 0, svgWidth, svgHeight);
     ctx.lineWidth = 1;
 
-    ctx.strokeStyle = 'rgba(120,120,120,0.3)';
+    ctx.strokeStyle = 'rgba(0,0,0, 0.2)';
 
     // console.log(pointsInHullArr);
     gridPoints.forEach((gridPointRow, i) => {
@@ -508,7 +508,8 @@ const GridMatrix = ({
                             height={height}
                             fill="none"
                             stroke="#777"
-                            strokeDasharray="2 2"
+                            strokeWidth="0.5px"
+                            strokeDasharray="4 2"
                           />
                           {cluster.map((rect: any, rectY: number) => {
                             const { x0, x1, y0, y1, ratio } = rect;
@@ -516,7 +517,7 @@ const GridMatrix = ({
                               <rect
                                 data-pos={`${i}-${j}-${rectX}-${rectY}`}
                                 key={`${x0},${y0},${i}`}
-                                fill={colorScale(ratio)}
+                                fill={ratio === -1 ? '#fff' : colorScale(ratio)}
                                 x={x0 + left}
                                 y={y0 + top}
                                 width={x1 - x0}
