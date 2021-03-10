@@ -418,48 +418,49 @@ const GridMatrix = ({
   return (
     <div className="grid-container">
       <div className="row">
-        <div className="input-wrapper">
-          <p className="label">Grid size: </p>
-          <div className={inputStyles.wrapper}>
-            <input
-              className={inputStyles.input}
-              type="number"
-              min="0.0"
-              max="1.0"
-              step="0.1"
-              value={gridSize}
-              onChange={handleGridSizeChange}
+        <div className="col">
+          <div className="input-wrapper">
+            <p className="label">Grid size: </p>
+            <div className={inputStyles.wrapper}>
+              <input
+                className={inputStyles.input}
+                type="number"
+                min="0.0"
+                max="1.0"
+                step="0.1"
+                value={gridSize}
+                onChange={handleGridSizeChange}
+              />
+            </div>
+          </div>
+
+          <div className="input-wrapper">
+            <span> Ground-truth labels: </span>
+            <Gradient
+              colors={['#fff', '#9ccb3c']}
+              legends={['0%', '100%']}
+              width="50px"
+              height={25}
             />
           </div>
         </div>
+        <div className="col">
+          <div className="tgl-wrapper">
+            <input
+              className="tgl"
+              id="cb4"
+              type="checkbox"
+              checked={display}
+              onChange={handleDisplay}
+            />
+            <label className="tgl-btn" htmlFor="cb4" />
+            <span>Display scatters</span>
+          </div>
 
-        <div className="input-wrapper">
-          <span> Ground-truth labels: </span>
-          <Gradient
-            colors={['#fff', '#9ccb3c']}
-            legends={['0%', '100%']}
-            width="50px"
-            height={25}
-          />
-        </div>
-      </div>
-
-      <div className="row">
-        <div className="tgl-wrapper">
-          <span>Display scatters: </span>
-          <input
-            className="tgl"
-            id="cb4"
-            type="checkbox"
-            checked={display}
-            onChange={handleDisplay}
-          />
-          <label className="tgl-btn" htmlFor="cb4" />
-        </div>
-
-        <div className="convex-legend">
-          <img src={ICON} alt="convex" />
-          <span>Convex of the selected cluster</span>
+          <div className="convex-legend">
+            <img src={ICON} alt="convex" />
+            <span>Convex of the selected cluster</span>
+          </div>
         </div>
       </div>
 

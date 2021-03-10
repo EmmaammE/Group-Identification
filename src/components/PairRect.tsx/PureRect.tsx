@@ -73,9 +73,9 @@ const PureRect = ({ data }: PureRectProps) => {
         ref={$chart}
         width={`${bound.width}px`}
         height={`${bound.height}px`}
-        style={{
-          border: '1px dashed #777',
-        }}
+        // style={{
+        //   border: '1px dashed #777',
+        // }}
       />
     </div>
   );
