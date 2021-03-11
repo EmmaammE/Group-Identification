@@ -54,7 +54,7 @@ const PairRect = ({ data, title }: PairRectProps) => {
   const $chart = useRef(null);
   const $rect = useRef(null);
 
-  const [bound, setBound] = useState<any>({ width: 0, height: 0 });
+  const [bound, setBound] = useState<any>({ width: 200, height: 200 });
   const [scale, setScale] = useState<number>(1);
   const dispatch = useDispatch();
 
@@ -167,7 +167,9 @@ const PairRect = ({ data, title }: PairRectProps) => {
 
   return (
     <div className="wrapper">
-      <p>ccPC{title + 1}:</p>
+      <div>
+        <p className="rotate">ccPC{title + 1}</p>
+      </div>
       <div className="chart-wrapper" ref={$svg}>
         <canvas
           className="pair-canvas"

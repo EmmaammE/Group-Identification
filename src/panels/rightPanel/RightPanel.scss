@@ -132,13 +132,20 @@
   .pair-rects {
     display: flex;
     height: 100%;
-    padding: 8px 30px;
+
+    .rotate {
+      writing-mode: vertical-rl;
+      text-align: center;
+      width: 20px;
+      height: 200px;
+      line-height: 15px;
+    }
 
     .wrapper {
       flex: 1 1 50%;
       position: relative;
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
 
       .chart-wrapper {
         // position: relative;
@@ -152,7 +159,7 @@
       .pair-canvas {
         position: absolute;
         bottom: 0;
-        left: 0;
+        left: 20;
         // border: 1px solid #000;
       }
     }

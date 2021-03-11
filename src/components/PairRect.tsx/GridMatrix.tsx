@@ -56,8 +56,8 @@ const GridMatrix = ({
   const $chart = useRef(null);
   const $wrapper = useRef(null);
 
-  const [svgWidth, setWidth] = useState(430);
-  const [svgHeight, setHeight] = useState(430);
+  const [svgWidth, setWidth] = useState(425);
+  const [svgHeight, setHeight] = useState(425);
 
   const xLabelsArr = useMemo(() => Array.from(new Set(xLabels)).sort(), [xLabels]);
   const yLabelsArr = useMemo(() => Array.from(new Set(yLabels)).sort(), [yLabels]);
