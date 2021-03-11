@@ -412,10 +412,12 @@ const GridMatrix = ({
       const left = margin.l + indexXScale(i * 2) + padding * i;
       const top = margin.t + indexYScale(j * 2) + padding * j;
 
-      const results = searched.filter((point: number[]) => {
-        const pointOffset = [point[0] + left, point[1] + top];
-        return isInCircle(pointOffset, offsetX, offsetY);
-      });
+      const results = searched
+        .filter((point: number[]) => {
+          const pointOffset = [point[0] + left, point[1] + top];
+          return isInCircle(pointOffset, offsetX, offsetY);
+        })
+        .sort((a: number[], b: number[]) => a[3] - b[3]);
       // console.log(results)
 
       if (results.length) {
@@ -549,6 +551,7 @@ const GridMatrix = ({
                               strokeWidth={2}
                               stroke="var(--primary-color)"
                               transform={`translate(${left}, ${top})`}
+                              pointerEvents="none"
                             />
                           )}
                         </g>

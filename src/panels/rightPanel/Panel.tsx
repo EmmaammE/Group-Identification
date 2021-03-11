@@ -47,6 +47,8 @@ function RightPanel() {
   const outputLabels = useSelector((state: any) => state.identify.outputLabels);
   const groundTruth = useSelector((state: any) => state.identify.groundTruth);
 
+  const localLabels = useSelector((state: StateType) => state.identify.localOutputLabel);
+
   const blockIndex = useSelector((state: StateType) => state.blockIndex);
 
   const propertyIndex = useSelector((state: StateType) => state.basic.propertyIndex);
@@ -363,10 +365,10 @@ function RightPanel() {
               <PureRect data={chosePoint !== -1 ? samplesByRange[chosePoint] : []} />
             </div>
             <div>
-              <p>Ground-truth label:</p>
+              <p>Ground-truth label: {chosePoint !== -1 ? groundTruth[chosePoint] : ''}</p>
               <p>Output:</p>
-              <p>Federated learning model: </p>
-              <p>Stand-alone training model: </p>
+              <p>Federated learning model: {chosePoint !== -1 ? outputLabels[chosePoint] : ''}</p>
+              <p>Stand-alone training model: {chosePoint !== -1 ? localLabels[chosePoint] : ''}</p>
             </div>
           </div>
         </div>

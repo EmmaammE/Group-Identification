@@ -52,7 +52,8 @@
         'b a a'
         'b c c'
         'b c c';
-      height: 93%;
+      height: 90%;
+      padding: 4px 0;
 
       .xLabels {
         grid-area: a;
@@ -158,8 +159,8 @@
       .overlay,
       .pair-canvas {
         position: absolute;
-        bottom: 0;
-        left: 20;
+        bottom: 5px;
+        left: 20px;
         // border: 1px solid #000;
       }
     }
