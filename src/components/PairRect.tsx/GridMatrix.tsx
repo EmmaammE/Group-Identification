@@ -56,8 +56,8 @@ const GridMatrix = ({
   const $chart = useRef(null);
   const $wrapper = useRef(null);
 
-  const [svgWidth, setWidth] = useState(350);
-  const [svgHeight, setHeight] = useState(350);
+  const [svgWidth, setWidth] = useState(430);
+  const [svgHeight, setHeight] = useState(430);
 
   const xLabelsArr = useMemo(() => Array.from(new Set(xLabels)).sort(), [xLabels]);
   const yLabelsArr = useMemo(() => Array.from(new Set(yLabels)).sort(), [yLabels]);
@@ -342,7 +342,7 @@ const GridMatrix = ({
           }
           if (point[2] === 0) {
             // 0 一致
-            ctx.fillStyle = `rgba(178,178,178,${alpha - 0.1})`;
+            ctx.fillStyle = `rgba(200,200,200,${alpha - 0.1})`;
           } else {
             ctx.fillStyle = `rgba(149, 98, 53,${alpha})`;
             // ctx.fillStyle = `rgba(197,92,0,${alpha})`;
@@ -520,7 +520,7 @@ const GridMatrix = ({
                                   <rect
                                     data-pos={`${i}-${j}-${rectX}-${rectY}`}
                                     key={`${x0},${y0},${i}`}
-                                    fill={colorScale(ratio)}
+                                    fill={ratio === -1 ? '#fff' : colorScale(ratio)}
                                     x={x0 + left}
                                     y={y0 + top}
                                     width={x1 - x0}
@@ -538,7 +538,7 @@ const GridMatrix = ({
                             fill="none"
                             stroke="#777"
                             strokeDasharray="2 2"
-                            strokeWidth="1"
+                            strokeWidth="1px"
                             className="outline"
                           />
 

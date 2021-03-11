@@ -45,8 +45,7 @@ function Overview({ data, flag, round, colorExtent }: OverviewProps) {
         ),
     [data.local, data.server, data.weight0, flag]
   );
-  console.log(data.weight0);
-  console.log(xScale.domain());
+
   const yScale = useMemo(
     () =>
       d3

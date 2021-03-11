@@ -16,7 +16,7 @@ export interface CpLineChartProps {
 }
 
 const WIDTH = 500;
-const HEIGHT = 200;
+const HEIGHT = 210;
 
 type Hash = { [key: number]: number };
 
@@ -280,14 +280,16 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
           x1={0}
           x2={0}
           y1={heightMap}
-          y2={-10}
+          y2={-5}
           stroke="rgba(0,0,0,0.8)"
           markerEnd="url(#arrow)"
         />
-        <text dy={-20} textAnchor="middle">
+        <text dy={-15} textAnchor="middle">
           Percentage
         </text>
-        <text transform={`translate(${widthMap - 30},${heightMap + margin.b})`}>Value</text>
+        <text transform={`translate(${widthMap - 30},${heightMap + margin.t + margin.b - 15})`}>
+          Value
+        </text>
         {binsCount.map(
           (datum: any, i: number) =>
             datum && (

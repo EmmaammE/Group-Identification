@@ -29,13 +29,13 @@ const areEqual = (first: number[], second: number[]) => {
   }
   for (let i = 0; i < first.length; i++) {
     // 因为都是从points中加载的，所以如果相同, 顺序一定一样
-    if (second[i] !== first[i]) {
+    if (!second.includes(first[i])) {
       return false;
     }
+    // if (second[i] !== first[i]) {
+    //   return false;
+    // }
   }
-  // if(JSON.stringify(first) !== JSON.stringify(second)) {
-  //   return false;
-  // }
   return true;
 };
 
@@ -46,7 +46,6 @@ function RightPanel() {
   const heteroLabels = useSelector((state: any) => state.identify.heteroLabels);
   const outputLabels = useSelector((state: any) => state.identify.outputLabels);
   const groundTruth = useSelector((state: any) => state.identify.groundTruth);
-  const localLabels = useSelector((state: StateType) => state.identify.localOutputLabel);
 
   const blockIndex = useSelector((state: StateType) => state.blockIndex);
 
@@ -91,12 +90,10 @@ function RightPanel() {
 
   const [strokePoints, setStrokePoints] = useState<number[]>([]);
 
-  const [lineIndex, setLineIndex] = useState<number>(0);
-
   const setPoints = useCallback(
     (p: any) => {
       if (!areEqual(p, strokePoints)) {
-        setStrokePoints(p);
+        // setStrokePoints(p);
       }
     },
     [strokePoints]
@@ -120,17 +117,8 @@ function RightPanel() {
 
   useEffect(() => {
     // 每次标注列表更新，更新状态
-    if (annoListStatus.length !== annoList.length) {
-      const newStatusArr = Array.from({ length: annoList.length }, (d, i) => {
-        if (annoListStatus[i]) {
-          return annoListStatus[i];
-        }
-        return 0;
-      });
-
-      setAnnoListStatus(newStatusArr);
-    }
-  }, [annoList, annoListStatus]);
+    setAnnoListStatus(Array.from({ length: annoList.length }, () => 0));
+  }, [annoList]);
 
   useEffect(() => {
     if (round === 0) {
@@ -171,6 +159,8 @@ function RightPanel() {
         });
     }
   }, [blockIndex, level, param, round]);
+
+  // console.log(pcArr)
 
   const addAnn = () => {
     fetch('/fl-hetero/annotation/', {
@@ -273,6 +263,7 @@ function RightPanel() {
     [setParam]
   );
 
+  // console.log(heteData, lineDatum)
   return (
     <div className="panel" id="RightPanel">
       <h2>Heterogenity Examination</h2>
@@ -306,7 +297,7 @@ function RightPanel() {
             <p>Dimension: pixel ({pos.join(', ')}) </p>
             <div className="info">
               <span>y-scale:</span>
-              <Dropdown items={['linear', 'log']} index={+lineIndex} setIndex={setLineIndex} />
+              <Dropdown items={['linear', 'log']} index={0} setIndex={setIndex} />
             </div>
           </div>
 
@@ -340,8 +331,8 @@ function RightPanel() {
                   margin={margin}
                   data={lineDatum}
                   title=""
+                  index={index}
                   hetData={heteData}
-                  index={lineIndex}
                 />
               )}
             </div>
@@ -372,10 +363,10 @@ function RightPanel() {
               <PureRect data={chosePoint !== -1 ? samplesByRange[chosePoint] : []} />
             </div>
             <div>
-              <p>Ground-truth label: {chosePoint === -1 ? '' : groundTruth[chosePoint]}</p>
+              <p>Ground-truth label:</p>
               <p>Output:</p>
-              <p>Federated learning model: {chosePoint === -1 ? '' : outputLabels[chosePoint]}</p>
-              <p>Stand-alone training model: {chosePoint === -1 ? '' : localLabels[chosePoint]}</p>
+              <p>Federated learning model: </p>
+              <p>Stand-alone training model: </p>
             </div>
           </div>
         </div>
@@ -404,7 +395,7 @@ function RightPanel() {
 
                     <div style={{ pointerEvents: 'none' }}>
                       <p>
-                        In round {r} (size: {dataIndex.length}){' '}
+                        In round {r} (size:{dataIndex.length}){' '}
                       </p>
                       <p className="anno">{text}</p>
                     </div>
