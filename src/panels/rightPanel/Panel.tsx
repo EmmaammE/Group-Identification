@@ -29,12 +29,12 @@ const areEqual = (first: number[], second: number[]) => {
   }
   for (let i = 0; i < first.length; i++) {
     // 因为都是从points中加载的，所以如果相同, 顺序一定一样
-    if (!second.includes(first[i])) {
-      return false;
-    }
-    // if (second[i] !== first[i]) {
+    // if (!second.includes(first[i])) {
     //   return false;
     // }
+    if (second[i] !== first[i]) {
+      return false;
+    }
   }
   return true;
 };
@@ -91,11 +91,12 @@ function RightPanel() {
   const [chosePoint, setChosePoint] = useState<number>(-1);
 
   const [strokePoints, setStrokePoints] = useState<number[]>([]);
+  const [lineIndex, setLineIndex] = useState<number>(0);
 
   const setPoints = useCallback(
     (p: any) => {
       if (!areEqual(p, strokePoints)) {
-        // setStrokePoints(p);
+        setStrokePoints(p);
       }
     },
     [strokePoints]
@@ -119,8 +120,17 @@ function RightPanel() {
 
   useEffect(() => {
     // 每次标注列表更新，更新状态
-    setAnnoListStatus(Array.from({ length: annoList.length }, () => 0));
-  }, [annoList]);
+    if (annoListStatus.length !== annoList.length) {
+      const newStatusArr = Array.from({ length: annoList.length }, (d, i) => {
+        if (annoListStatus[i]) {
+          return annoListStatus[i];
+        }
+        return 0;
+      });
+
+      setAnnoListStatus(newStatusArr);
+    }
+  }, [annoList, annoListStatus]);
 
   useEffect(() => {
     if (round === 0) {
@@ -299,7 +309,7 @@ function RightPanel() {
             <p>Dimension: pixel ({pos.join(', ')}) </p>
             <div className="info">
               <span>y-scale:</span>
-              <Dropdown items={['linear', 'log']} index={0} setIndex={setIndex} />
+              <Dropdown items={['linear', 'log']} index={+lineIndex} setIndex={setLineIndex} />
             </div>
           </div>
 
@@ -333,7 +343,7 @@ function RightPanel() {
                   margin={margin}
                   data={lineDatum}
                   title=""
-                  index={index}
+                  index={lineIndex}
                   hetData={heteData}
                 />
               )}
@@ -397,7 +407,7 @@ function RightPanel() {
 
                     <div style={{ pointerEvents: 'none' }}>
                       <p>
-                        In round {r} (size:{dataIndex.length}){' '}
+                        In round {r} (size: {dataIndex.length}){' '}
                       </p>
                       <p className="anno">{text}</p>
                     </div>

@@ -21,6 +21,7 @@ import useFetch from '../../utils/useFetch';
 import HTTP_LEVEL from '../../utils/level';
 import ICON from '../../assets/convex.svg';
 import { setType } from '../../utils/getType';
+import REFRESH from '../../assets/refresh.svg';
 
 const chartProps: ChartProps = {
   width: 400,
@@ -213,13 +214,13 @@ function MiddlePanel() {
               <div className={inputStyles.wrapper}>
                 <input
                   className={inputStyles.input}
-                  type="number"
-                  min="0.01"
-                  max="100"
-                  step="0.1"
+                  type="text"
                   defaultValue={param?.toFixed(2) || ''}
                   onBlur={handleParamChange}
                 />
+                <span className={inputStyles.icon}>
+                  <img src={REFRESH} alt="refresh" />
+                </span>
               </div>
             </div>
           </div>

@@ -39,7 +39,6 @@ const colorScale = d3
   .range(['#ffdfb2', '#eee', '#cde8ba']);
 // 红白蓝
 // .range(['#e60d17', '#fff', '#0b69b6']);
-
 const GridMatrix = ({
   data,
   xLabels,
@@ -269,10 +268,6 @@ const GridMatrix = ({
                 break;
             }
 
-            // if (isStroke) {
-            //   strokePoints.push(k);
-            // }
-
             if (heteroLabels[k] === false) {
               // 不一致
               pointsArr1.push([posX, posY, 1, isStroke, k]);
@@ -404,7 +399,8 @@ const GridMatrix = ({
       // console.log(clusterPoints);
       // console.log(gridPoint);
 
-      const searched = search(x0, y0, x1, y1).filter(
+      const offset = 5;
+      const searched = search(x0 - offset, y0 - offset, x1 + offset, y1 + offset).filter(
         (point: number[]) => point[2] === xLabelsArr[i] && point[3] === yLabelsArr[j]
       );
       // console.log(searched)
@@ -413,20 +409,18 @@ const GridMatrix = ({
       const top = margin.t + indexYScale(j * 2) + padding * j;
 
       const results = searched
-        .filter((point: number[]) => {
-          const pointOffset = [point[0] + left, point[1] + top];
-          return isInCircle(pointOffset, offsetX, offsetY);
-        })
+        .filter((point: number[]) =>
+          // const pointOffset = [point[0] + left, point[1] + top];
+          // console.log(x0, y0, x1, y1, pointOffset);
+          isInCircle([point[0], point[1]], offsetX - left, offsetY - top)
+        )
         .sort((a: number[], b: number[]) => a[3] - b[3]);
       // console.log(results)
-
       if (results.length) {
         setChosePoint(results[0][4]);
       }
     }
   };
-
-  // console.log(clusterPoints);
 
   return (
     <div className="grid-container">
