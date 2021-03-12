@@ -88,7 +88,6 @@ const BottomPanel = () => {
 
   return (
     <div id="BottomPanel">
-      {/* <h3>Federated Training Process</h3> */}
       <div className="row">
         <div className="tip">
           <span>Performance: </span>

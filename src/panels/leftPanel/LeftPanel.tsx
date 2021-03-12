@@ -12,8 +12,10 @@ import {
   getSamplesAction,
   initIdentityAction,
   setLevelAction,
+  onTypeUpdateOrInitAction,
 } from '../../store/reducers/identify';
 import HTTP_LEVEL from '../../utils/level';
+import { getType } from '../../utils/getType';
 
 const fakeData = {
   // 联邦模型矢量
@@ -71,6 +73,13 @@ function LeftPanel() {
   const setLevel = useCallback((level: number) => dispatch(setLevelAction(level)), [dispatch]);
   const level = useSelector((state: StateType) => state.identify.level);
   const setRound = useCallback((i) => dispatch(setRoundAction(i)), [dispatch]);
+  const onTypeUpdateOrInit = useCallback(
+    (type: string, r: number, alpha: number | null, count: number | null) =>
+      dispatch(onTypeUpdateOrInitAction(type, r, alpha, count)),
+    [dispatch]
+  );
+
+  const getSamples = useCallback((type) => dispatch(getSamplesAction(type)), [dispatch]);
 
   const onDropdownChange = (i: any) => {
     setIndex(i);
@@ -98,6 +107,7 @@ function LeftPanel() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
+            // datasetName: datasetNames,
             datasetName: datasetNames,
           }),
         })
@@ -138,9 +148,20 @@ function LeftPanel() {
           setRawWeights(res);
           setRange([0, res.serverWeights.length - 1]);
           setRound(res.serverWeights.length);
+          setLevel(HTTP_LEVEL.sampling);
         });
     }
-  }, [index, initBasic, initIdentity, level, setRound]);
+  }, [index, level, setLevel, setRound]);
+
+  useEffect(() => {
+    if (HTTP_LEVEL.sampling === level && round !== -1) {
+      console.log('init');
+      if (rawWeights) {
+        setRound(rawWeights.serverWeights.length);
+      }
+      onTypeUpdateOrInit(getType(), round, null, null);
+    }
+  }, [level, onTypeUpdateOrInit, rawWeights, round, setRound]);
 
   useEffect(() => {
     if (names[index]) {
@@ -182,7 +203,7 @@ function LeftPanel() {
 
       <div className="content">
         <div className="info-container">
-          <h3>Model Information Panel</h3>
+          <h3>Model Information</h3>
           {/* <p className='title'>Model Information Panel</p> */}
           <div>
             <p>Label: {info.labels} </p>
@@ -193,7 +214,7 @@ function LeftPanel() {
 
           <div id="info-two">
             {/* <p className='title'>Local Information Panel</p> */}
-            <h3>Local Information Panel</h3>
+            <h3>Local Information</h3>
 
             <div className="info-row">
               <span>Name of this client: </span>

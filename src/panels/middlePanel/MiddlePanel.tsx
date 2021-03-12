@@ -1,6 +1,6 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import * as d3 from 'd3';
 import Scatterplot from '../../components/scatterplots/Scatterplot';
@@ -12,16 +12,23 @@ import HeatmapWrapper from '../../components/heatmap/HeatmapWrapper';
 import { StateType } from '../../types/data';
 import { mmultiply, transpose } from '../../utils/mm';
 import {
-  getPCAResults,
+  getCPCAResults,
   getSamplesAction,
   getLabelsAction,
   setLevelAction,
+  getAllCPCA,
+  onTypeUpdateOrInitAction,
+  defaultCount,
+  setChosePointAction,
+  onRoundAction,
+  getHeteList,
 } from '../../store/reducers/identify';
 import useFetch from '../../utils/useFetch';
 import HTTP_LEVEL from '../../utils/level';
 import ICON from '../../assets/convex.svg';
-import { setType } from '../../utils/getType';
+import { getType, setType } from '../../utils/getType';
 import REFRESH from '../../assets/refresh.svg';
+import http from '../../utils/http';
 
 const chartProps: ChartProps = {
   width: 400,
@@ -42,23 +49,27 @@ const chartProps: ChartProps = {
 };
 
 const items = ['local', 'stratified', 'systematic'];
+const defaultCPACA = 5;
 
 function MiddlePanel() {
   const [dataIndex, setDataIndex] = useState<number>(0);
-  const [param, setParam] = useState<number | null>(null);
+  // const [param, setParam] = useState<number | null>(null);
+  const param = useSelector((state: StateType) => state.identify.pca.alpha);
 
   // cluster number 输入时的映射
-  const [nOfCluster, setNOfCluster] = useState<number | null>(null);
+  const [nOfCluster, setNOfCluster] = useState<number | null>(defaultCount);
   const round = useSelector((state: StateType) => state.basic.round);
 
-  // const cpArray = useSelector((state: StateType) => [
-  //   state.identify.pca.cpc1,
-  //   state.identify.pca.cpc2,
-  // ]);
+  const cpArray = useSelector((state: StateType) => [
+    state.identify.pca.cpc1,
+    state.identify.pca.cpc2,
+  ]);
   // all cpca
-  const [cpArray, setCpArray] = useState<number[][]>([[], []]);
+  // const [cpArray, setCpArray] = useState<number[][]>([[], []]);
 
-  const samples = useSelector((state: StateType) => state.identify.samples.data);
+  const samples = useSelector((state: StateType) =>
+    getType() === 'local' ? state.identify.localData : state.identify.samples
+  );
 
   const dispatch = useDispatch();
   const getSamples = useCallback((type) => dispatch(getSamplesAction(type)), [dispatch]);
@@ -69,9 +80,26 @@ function MiddlePanel() {
   // const paramFromRes = useSelector((state: StateType) => state.identify.pca.alpha);
   const clusterFromRes = useSelector((state: StateType) => state.identify.heteroList.nrOfClusters);
   const setLevel = useCallback((level: number) => dispatch(setLevelAction(level)), [dispatch]);
+  const getCPCA = useCallback((alpha: number | null) => dispatch(getAllCPCA(alpha)), [dispatch]);
+  const getLists = useCallback((count: number | null) => dispatch(getHeteList(count)), [dispatch]);
+
+  const onTypeUpdateOrInit = useCallback(
+    (type: string, r: number, alpha: number | null, count: number | null) =>
+      dispatch(onTypeUpdateOrInitAction(type, r, alpha, count)),
+    [dispatch]
+  );
+
+  const onRoundChange = useCallback(
+    (r: number, alpha: number | null, count: number | null) =>
+      dispatch(onRoundAction(r, alpha, count)),
+    [dispatch]
+  );
+
+  const $inputCount = useRef(null);
 
   useEffect(() => {
     setNOfCluster(clusterFromRes);
+    ($inputCount as any).current.value = clusterFromRes;
   }, [clusterFromRes]);
 
   const nOfConsistent = useSelector(
@@ -79,18 +107,23 @@ function MiddlePanel() {
   );
   const level = useSelector((state: StateType) => state.identify.level);
 
-  // 当选择local时，从store的local加载数据。否则从samplesData加载数据
-  const [data, setRequest]: any = useFetch('');
+  // // 当选择local时，从store的local加载数据。否则从samplesData加载数据
+  // const [data, setRequest]: any = useFetch('');
 
   const [topStatus, setTopStatus] = useState<number>(1);
 
+  // alpha变化
   const handleParamChange = useCallback(
     (e: any) => {
-      setParam(+e.target.value);
       setLevel(HTTP_LEVEL.pca);
+      getCPCA(+e.target.value);
     },
-    [setLevel]
+    [getCPCA, setLevel]
   );
+
+  const freshParam = useCallback(() => {
+    getCPCA(null);
+  }, [getCPCA]);
 
   // useEffect(() => {
   //   if (param === null) {
@@ -103,12 +136,10 @@ function MiddlePanel() {
       // console.log(cpArray)
       if (cpArray[0].length !== 0) {
         const cpT = transpose(cpArray); // 784*2
-        if (dataIndex === 0 && samples.length !== 0) {
-          return mmultiply(samples, cpT);
-        }
-        if (data.length !== 0) {
+
+        if (samples.length !== 0) {
           // console.log(data)
-          return mmultiply(data, cpT);
+          return mmultiply(samples, cpT);
         }
       }
       return [[]];
@@ -118,82 +149,77 @@ function MiddlePanel() {
     }
 
     return [[]];
-  }, [cpArray, dataIndex, samples, data]);
+  }, [cpArray, samples]);
 
   const x = d3.extent(points, (d) => d[0]) as any;
   const y = d3.extent(points, (d) => d[1]) as any;
 
-  const loadData = useCallback(async () => {
-    if (dataIndex !== -1 && round !== 0) {
-      // 如果是初次请求，加载samples。
-      if (level === HTTP_LEVEL.sampling) {
-        if (dataIndex === 0) {
-          if (samples.length === 0) {
-            // console.log('load samples')
-            await getSamples(items[dataIndex]);
-          }
-        } else {
-          setRequest(items[dataIndex]);
-        }
-      }
-      if (level === HTTP_LEVEL.pca) {
-        await getLabels(round);
+  // const onAlphaChange = useCallback(async () => {
+  // const res = await http('/fl-hetero/cpca/all/', {alpha: param});
+  // setCpArray([res.cpc1, res.cpc2]);
 
-        try {
-          const res = await fetch('/fl-hetero/cpca/all/', {
-            method: 'POST',
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json',
-            },
-            body: param
-              ? JSON.stringify({
-                  alpha: param,
-                })
-              : JSON.stringify({}),
-          });
-          const resp = await res.json();
+  // setParam(res.alpha);
+  // }, [param])
 
-          setCpArray([resp.cpc1, resp.cpc2]);
+  // const onTypeChange = useCallback(async () => {
+  //   // 当请求数据变化
+  //   await getSamples(items[dataIndex]);
+  //   await getLabels(round);
+  //   onAlphaChange();
+  // }, [dataIndex, getLabels, getSamples, onAlphaChange, round])
 
-          setParam(resp.alpha);
-        } catch (err) {
-          console.log(err);
-        }
-      }
-    }
-  }, [dataIndex, getLabels, getSamples, level, param, round, samples.length, setRequest]);
+  // const onRoundChange = useCallback(async (r) => {
+  //   await getLabels(r);
+  //   onAlphaChange();
+  // }, [getLabels, onAlphaChange])
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  // useEffect(() => {
+  //   if(HTTP_LEVEL.labels === level) {
+  //     getLabels(round);
+  //   }
+  // }, [round, getLabels, level])
 
   const handleDropDown = useCallback(
     (e: any) => {
       setLevel(HTTP_LEVEL.sampling);
       setDataIndex(e);
+      setType(items[e]);
+      onTypeUpdateOrInit(items[e], round, null, null);
     },
-    [setLevel]
+    [onTypeUpdateOrInit, round, setLevel]
   );
 
   useEffect(() => {
     setType(items[dataIndex]);
-  }, [dataIndex]);
+  }, []);
 
   useEffect(() => {
-    setType(items[dataIndex]);
-  }, []);
+    if (level === HTTP_LEVEL.labels) {
+      onRoundChange(round, param, nOfCluster);
+    }
+  }, [round, level, onRoundChange, param, nOfCluster]);
 
   const onInputNumber = (e: any) => {
     const reg = new RegExp('^[0-9]*$');
 
     if (e.target.value.match(reg)) {
       setNOfCluster(+e.target.value);
-      setLevel(HTTP_LEVEL.clusters);
+      setLevel(HTTP_LEVEL.cpca);
+      getLists(+e.target.value);
     } else {
       setNOfCluster(null);
     }
   };
+
+  const freshCount = useCallback(() => {
+    getLists(null);
+    setLevel(HTTP_LEVEL.cpca);
+  }, [getLists, setLevel]);
+
+  const $inputAlpha = useRef(null);
+  useEffect(() => {
+    ($inputAlpha as any).current.value = param?.toFixed(2);
+  }, [param]);
 
   return (
     <div id="MiddlePanel" className="panel">
@@ -217,8 +243,9 @@ function MiddlePanel() {
                   type="text"
                   defaultValue={param?.toFixed(2) || ''}
                   onBlur={handleParamChange}
+                  ref={$inputAlpha}
                 />
-                <span className={inputStyles.icon}>
+                <span className={inputStyles.icon} onClick={freshParam}>
                   <img src={REFRESH} alt="refresh" />
                 </span>
               </div>
@@ -245,15 +272,17 @@ function MiddlePanel() {
             <div className="row">
               <div className="input-wrapper">
                 <p className="label">#Clusters:</p>
-                <div className={inputStyles.wrapper}>
+                <div className={inputStyles.wrapper} style={{ maxWidth: '25px' }}>
                   <input
                     className={inputStyles.input}
-                    type="number"
-                    min="1"
-                    step="1"
+                    type="text"
                     defaultValue={nOfCluster || ''}
                     onBlur={onInputNumber}
+                    ref={$inputCount}
                   />
+                  <span className={inputStyles.icon} onClick={freshCount}>
+                    <img src={REFRESH} alt="refresh" />
+                  </span>
                 </div>
               </div>
 
@@ -280,13 +309,6 @@ function MiddlePanel() {
                 </div>
               </div>
             </div>
-
-            {/* <div className="row">
-              <p>Convex</p> */}
-
-            {/* <span>Weights:</span>
-              <Gradient width="100" colors={['#95c72c', '#fff', '#f8bb3e']} legends={['-1', '1']} /> */}
-            {/* </div> */}
           </div>
           <HeatmapWrapper points={points} x={x} y={y} nOfCluster={nOfCluster} />
         </div>

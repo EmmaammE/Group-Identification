@@ -19,13 +19,13 @@ const Gradient = ({ colors, legends, width, height }: GradientProps) => {
       <p>{legends[0]}</p>
       <svg width={width || '120px'} viewBox={`0 0 ${width ? 80 : 120} ${height || 15}`}>
         <defs>
-          <linearGradient id={colors.join('')} x1="0%" y1="0%" x2="100%" y2="0%">
+          <linearGradient id={colors.join('').slice(1)} x1="0%" y1="0%" x2="100%" y2="0%">
             {colors.map((color, i) => (
               <stop offset={scale(i)} stopColor={color} key={color} />
             ))}
           </linearGradient>
         </defs>
-        <rect x="0%" y="0" width="100%" height="100%" fill={`url(#${colors.join('')})`} />
+        <rect x="0%" y="0" width="100%" height="100%" fill={`url(#${colors.join('').slice(1)})`} />
       </svg>
       <p>{legends[1]}</p>
     </div>

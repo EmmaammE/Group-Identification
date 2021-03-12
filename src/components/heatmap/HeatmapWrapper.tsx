@@ -1,21 +1,39 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import * as d3 from 'd3';
 import { useDispatch, useSelector } from 'react-redux';
 import { stat } from 'fs';
 import { transpose, mmultiply } from '../../utils/mm';
 import Heatmap from './Heatmap';
 import { StateType } from '../../types/data';
-import { getHeteList, loading } from '../../store/reducers/identify';
-import { setSizeAction } from '../../store/reducers/basic';
+import { getHeteList, loading, setChosePointAction } from '../../store/reducers/identify';
+import { setSizeAction, setHeteroPointsAction } from '../../store/reducers/basic';
 import { setIndexAction } from '../../store/reducers/blockIndex';
 import HTTP_LEVEL from '../../utils/level';
+import usePrevious from '../../utils/usePrevious';
 
 export const WIDTH = 60;
 export const HEIGHT = 60;
 
 export const MARGIN = { top: 0, right: 0, bottom: 0, left: 0 };
 // const color = d3.scaleLinear<string>().domain([0, 0.2, 1]).range(['#fff', '#ccc', '#666']);
+const areEqual = (first: number[][], second: number[][]) => {
+  if (first.length !== second.length) {
+    return false;
+  }
 
+  if (first.length === 0 || second.length === 0) {
+    return false;
+  }
+  for (let i = 0; i < first.length; i++) {
+    if (first[i].join('') !== second[i].join('')) {
+      return false;
+    }
+  }
+  // if(JSON.stringify(first)!==JSON.stringify(second)) {
+  //   return false;
+  // }
+  return true;
+};
 interface HeatmapWrapperProps {
   points: number[][];
   // x范围
@@ -43,15 +61,14 @@ const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
   const updateBlock = useCallback((i) => dispatch(setIndexAction(i)), [dispatch]);
 
   const level = useSelector((state: StateType) => state.identify.level);
+  const heteroPoints = useSelector((state: StateType) => state.basic.heteroPoints);
+  const setHeteroPoints = useCallback(
+    (pointsParam) => dispatch(setHeteroPointsAction(pointsParam)),
+    [dispatch]
+  );
+  const setChosePoint = useCallback((i) => dispatch(setChosePointAction(i)), [dispatch]);
 
   // const loading = useSelector((state: StateType) => state.identify.loading);
-
-  useEffect(() => {
-    if (round !== 0 && level === HTTP_LEVEL.clusters) {
-      // console.log('test')
-      getLists(nOfCluster);
-    }
-  }, [getLists, level, nOfCluster, round]);
 
   const densityData = useMemo(
     () =>
@@ -90,10 +107,25 @@ const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
   );
 
   useEffect(() => {
-    if (heteroList[blockIndex]) {
-      setClusterSize(heteroList[blockIndex].heteroSize);
+    if (heteroList[blockIndex] && heteroList[blockIndex].heteroIndex) {
+      const d = heteroList[blockIndex].heteroIndex.map((index) => points[index] || []);
+      // console.log(d)
+      if (areEqual(heteroPoints, d) === false) {
+        // console.log('set hetero')
+        setClusterSize(heteroList[blockIndex].heteroSize);
+        setHeteroPoints(d);
+        setChosePoint(heteroList[blockIndex].heteroIndex[0]);
+      }
     }
-  }, [blockIndex, heteroList, setClusterSize]);
+  }, [
+    blockIndex,
+    heteroList,
+    heteroPoints,
+    points,
+    setChosePoint,
+    setClusterSize,
+    setHeteroPoints,
+  ]);
 
   // console.log(heteroPointsArr)
   const n = nOfCluster !== null && nOfCluster < 4 ? nOfCluster : 4;

@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as d3 from 'd3';
 import { useDispatch, useSelector } from 'react-redux';
 import Triangle from '../markers/Triangle';
-import { setRoundAction } from '../../store/reducers/basic';
+import { setRoundAction, setAnnoPointsAction } from '../../store/reducers/basic';
 import { StateType } from '../../types/data';
 import chat from '../../assets/chat.svg';
 import { setLevelAction } from '../../store/reducers/identify';
@@ -45,6 +45,8 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
   const setLevel = useCallback((level: number) => dispatch(setLevelAction(level)), [dispatch]);
   const [tipPos, setTipPos] = useState<number[]>([0, 0]);
   const [tipId, setTipid] = useState<number>(-1);
+
+  const setAnnoPoints = useCallback((param) => dispatch(setAnnoPointsAction(param)), [dispatch]);
 
   // const yScale = d3
   //   .scaleSymlog()
@@ -158,11 +160,16 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
   const handleMouseover = (e: any) => {
     const { offsetY, offsetX } = e.nativeEvent;
     setTipPos([offsetX - 20, offsetY - 30]);
-    setTipid(e.target.id);
+
+    const id = +e.target.id;
+
+    setTipid(id);
+    setAnnoPoints(chatPos[id].datIndex);
   };
 
   const handleMouseout = () => {
     setTipid(-1);
+    setAnnoPoints([]);
   };
 
   return (
@@ -196,9 +203,6 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
             stroke="rgba(0,0,0,0.8)"
             markerEnd="url(#arrow)"
           />
-          {/* <g transform={`translate(${WIDTH - 40},${HEIGHT - 50})`}>
-          <text textAnchor="end">Communication round</text>
-        </g> */}
           <path d={line(data as any) || ''} stroke="#777" fill="none" />
           <g onMouseOver={handleMouseover} onMouseOut={handleMouseout}>
             {chatPos.map((chatItem: any, i: number) => (

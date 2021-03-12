@@ -1,11 +1,13 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 import * as d3 from 'd3';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 import inputStyles from '../../styles/input.module.css';
 import useWindowSize from '../../utils/useResize';
 import Gradient from '../ui/Gradient';
 import ICON from '../../assets/convex.svg';
 import { getType } from '../../utils/getType';
+import { StateType } from '../../types/data';
 
 interface GridMatrixProps {
   // 一个二维数组，表示点的投影坐标
@@ -61,6 +63,8 @@ const GridMatrix = ({
   const xLabelsArr = useMemo(() => Array.from(new Set(xLabels)).sort(), [xLabels]);
   const yLabelsArr = useMemo(() => Array.from(new Set(yLabels)).sort(), [yLabels]);
 
+  const heteroPointsFromStore = useSelector((state: StateType) => state.basic.heteroPoints);
+  const annoPoints = useSelector((state: StateType) => new Set(state.basic.annoPoints));
   // 格子的大小
   const [gridSize, setGridSize] = useState<number>(0.05);
   // true是checked
@@ -131,6 +135,15 @@ const GridMatrix = ({
     [data, xLabels, yLabels, xScale, yScale]
   );
 
+  const type = getType();
+
+  const heteroPoints: [number, number][] = useMemo(() => {
+    if (type === 'local') {
+      return points.filter((d, k) => heteroIndex.has(k)).map((point) => [point[0], point[1]]);
+    }
+    return heteroPointsFromStore.map((point) => [xScale(point[0]), yScale(point[1])]);
+  }, [heteroIndex, heteroPointsFromStore, points, type, xScale, yScale]);
+
   const quadtree = d3
     .quadtree<any>()
     .extent([
@@ -200,101 +213,96 @@ const GridMatrix = ({
     return arr;
   }, [gridSize, normScale, search, xLabelsArr]);
 
-  const hull = useMemo(() => {
-    if (points.length > 0) {
-      // console.log(points)
+  // console.log(heteroPoints)
+  const hull = useMemo(() => d3.polygonHull(heteroPoints), [heteroPoints]);
 
-      const pointsArr: any[] = points
-        .filter((d, k) => heteroIndex.has(k))
-        .map((point) => [point[0], point[1]]);
+  const gridPoints = useMemo(
+    () =>
+      xLabelsArr.map((xLabel, i) =>
+        yLabelsArr.map((yLabel, j) => {
+          const left = margin.l + indexXScale(i * 2) + padding * i;
+          const top = margin.t + indexYScale(j * 2) + padding * j;
 
-      // console.log(pointsArr)
+          const pointsArr0: number[][] = [];
+          const pointsArr1: number[][] = [];
 
-      return d3.polygonHull(pointsArr);
-    }
-    return [];
-  }, [heteroIndex, points]);
+          points.forEach((point, k) => {
+            // 绘制点
+            const posX = point[0] + left;
+            const posY = point[1] + top;
 
-  const gridPoints = useMemo(() => {
-    const type = getType();
+            // const pointX = point[2];
+            // const pointY = point[3];
+            const pointX = xLabels[k];
+            const pointY = yLabels[k];
 
-    return xLabelsArr.map((xLabel, i) =>
-      yLabelsArr.map((yLabel, j) => {
-        const left = margin.l + indexXScale(i * 2) + padding * i;
-        const top = margin.t + indexYScale(j * 2) + padding * j;
+            if (pointX === xLabel && pointY === yLabel) {
+              let isStroke = 0;
 
-        const pointsArr0: number[][] = [];
-        const pointsArr1: number[][] = [];
-
-        points.forEach((point, k) => {
-          // 绘制点
-          const posX = point[0] + left;
-          const posY = point[1] + top;
-
-          // const pointX = point[2];
-          // const pointY = point[3];
-          const pointX = xLabels[k];
-          const pointY = yLabels[k];
-
-          if (pointX === xLabel && pointY === yLabel) {
-            let isStroke = 0;
-
-            let isInHull = false;
-            if (type === 'local') {
-              isInHull = heteroIndex.has(k);
-            } else {
-              isInHull = hull !== null && d3.polygonContains(hull, point as any);
-            }
-
-            switch (strokeStatus) {
-              case 0:
-                if (isInHull) {
-                  isStroke = 1;
+              if (Object.keys(annoPoints).length === 0) {
+                // 如果，没有高亮的标记点，计算当前选择的点和异构块中的点的关系
+                let isInHull = false;
+                if (type === 'local') {
+                  isInHull = heteroIndex.has(k);
+                } else {
+                  isInHull = hull !== null && d3.polygonContains(hull, point as any);
                 }
-                break;
-              case 1:
-                // 求交集
-                if (isInHull && strokeSet.has(k)) {
-                  isStroke = 1;
-                }
-                break;
-              case 2:
-                // 求并集
-                if (isInHull || strokeSet.has(k)) {
-                  isStroke = 1;
-                }
-                break;
-              default:
-                break;
-            }
 
-            if (heteroLabels[k] === false) {
-              // 不一致
-              pointsArr1.push([posX, posY, 1, isStroke, k]);
-            } else {
-              pointsArr0.push([posX, posY, 0, isStroke, k]);
-            }
-          }
-          // pointsArr0.push([posX, posY, heteroLabels[k] === false ? 1:0, 0, k]);
-        });
+                switch (strokeStatus) {
+                  case 0:
+                    if (isInHull) {
+                      isStroke = 1;
+                    }
+                    break;
+                  case 1:
+                    // 求交集
+                    if (isInHull && strokeSet.has(k)) {
+                      isStroke = 1;
+                    }
+                    break;
+                  case 2:
+                    // 求并集
+                    if (isInHull || strokeSet.has(k)) {
+                      isStroke = 1;
+                    }
+                    break;
+                  default:
+                    break;
+                }
+              } else if (annoPoints.has(k)) {
+                isStroke = 1;
+              }
 
-        return pointsArr0.concat(pointsArr1);
-      })
-    );
-  }, [
-    heteroIndex,
-    heteroLabels,
-    hull,
-    indexXScale,
-    indexYScale,
-    points,
-    strokeSet,
-    strokeStatus,
-    xLabels,
-    xLabelsArr,
-    yLabels,
-    yLabelsArr,
-  ]);
+              if (heteroLabels[k] === false) {
+                // 不一致
+                pointsArr1.push([posX, posY, 1, isStroke, k]);
+              } else {
+                pointsArr0.push([posX, posY, 0, isStroke, k]);
+              }
+            }
+            // pointsArr0.push([posX, posY, heteroLabels[k] === false ? 1:0, 0, k]);
+          });
+
+          return pointsArr0.concat(pointsArr1);
+        })
+      ),
+    [
+      annoPoints,
+      heteroIndex,
+      heteroLabels,
+      hull,
+      indexXScale,
+      indexYScale,
+      points,
+      strokeSet,
+      strokeStatus,
+      type,
+      xLabels,
+      xLabelsArr,
+      yLabels,
+      yLabelsArr,
+    ]
+  );
 
   useEffect(() => {
     const arr: any = [];
@@ -573,5 +581,5 @@ const GridMatrix = ({
   );
 };
 
-export default React.memo(GridMatrix);
-// export default GridMatrix;
+// export default React.memo(GridMatrix);
+export default GridMatrix;

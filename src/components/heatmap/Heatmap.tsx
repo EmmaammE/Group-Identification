@@ -67,4 +67,5 @@ const Heatmap = ({ densityData, linear, heteroPoints }: HeatmapProps) => {
   );
 };
 
-export default React.memo(Heatmap);
+// export default React.memo(Heatmap);
+export default Heatmap;

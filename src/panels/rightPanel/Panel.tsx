@@ -1,7 +1,7 @@
 /* eslint-disable no-case-declarations */
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import * as d3 from 'd3';
 import { setIndexAction } from '../../store/reducers/blockIndex';
@@ -16,9 +16,12 @@ import Gradient from '../../components/ui/Gradient';
 import inputStyles from '../../styles/input.module.css';
 import { fetchLists, setPropertyAction, setUpdateAction } from '../../store/reducers/basic';
 import Icon from '../../components/ui/JoinIcon';
-import { setLevelAction } from '../../store/reducers/identify';
+import { setLevelAction, setChosePointAction, defaultAlpha } from '../../store/reducers/identify';
 import HTTP_LEVEL from '../../utils/level';
 import PureRect from '../../components/PairRect.tsx/PureRect';
+import { getType } from '../../utils/getType';
+import REFRESH from '../../assets/refresh.svg';
+import http from '../../utils/http';
 
 const margin = { t: 20, r: 20, b: 35, l: 50 };
 const WIDTH = 25;
@@ -42,7 +45,9 @@ const areEqual = (first: number[], second: number[]) => {
 function RightPanel() {
   const index: number = useSelector((state: any) => state.blockIndex);
   const heteroList = useSelector((state: StateType) => state.identify.heteroList.clusterList);
-  const samples = useSelector((state: any) => state.identify.samples);
+  const samples = useSelector((state: StateType) =>
+    getType() === 'local' ? state.identify.localData : state.identify.samples
+  );
   const heteroLabels = useSelector((state: any) => state.identify.heteroLabels);
   const outputLabels = useSelector((state: any) => state.identify.outputLabels);
   const groundTruth = useSelector((state: any) => state.identify.groundTruth);
@@ -76,7 +81,7 @@ function RightPanel() {
   const annoList = useSelector((state: StateType) => state.basic.annoLists);
   const [chosedAnnList, setChoseAnnList] = useState<Set<number>>(new Set());
 
-  const [param, setParam] = useState<number | null>(null);
+  const [param, setParam] = useState<number | null>(defaultAlpha);
 
   const [annoListStatus, setAnnoListStatus] = useState<number[]>([]);
 
@@ -88,7 +93,9 @@ function RightPanel() {
 
   const updatePropertyIndex = useCallback((i) => dispatch(setPropertyAction(i)), [dispatch]);
 
-  const [chosePoint, setChosePoint] = useState<number>(-1);
+  // const [chosePoint, setChosePoint] = useState<number>(-1);
+  const chosePoint = useSelector((state: StateType) => state.identify.chosePoint);
+  const setChosePoint = useCallback((i) => dispatch(setChosePointAction(i)), [dispatch]);
 
   const [strokePoints, setStrokePoints] = useState<number[]>([]);
   const [lineIndex, setLineIndex] = useState<number>(0);
@@ -139,9 +146,9 @@ function RightPanel() {
   }, [round]);
 
   useEffect(() => {
+    console.log('cpca', level);
     if (round !== 0 && level === HTTP_LEVEL.cpca) {
-      // console.log('cpca', level)
-
+      // TODO
       fetch('/fl-hetero/cpca/cluster/', {
         method: 'POST',
         headers: {
@@ -158,19 +165,20 @@ function RightPanel() {
             }),
         // body: JSON.stringify({
         //       clusterID: blockIndex,
-        //       alpha: param, // 默认30
+        //       alpha: +param, // 默认30
         //     })
       })
         .then((res) => res.json())
         .then((res) => {
           setParam(res.alpha);
           setcPCA([res.cpc1, res.cpc2]);
+          setLevel(level + 1);
         })
         .catch((err) => {
           console.log(err);
         });
     }
-  }, [blockIndex, level, param, round]);
+  }, [blockIndex, level, param, round, setLevel]);
 
   // console.log(pcArr)
 
@@ -197,20 +205,21 @@ function RightPanel() {
   };
 
   const datum = useMemo(() => {
-    if (samples.data.length === 0 || cpT.length === 0) {
+    if (samples.length === 0 || cpT.length === 0) {
       return [[]];
     }
     return mmultiply(
-      samples.data.filter((d: any) => d.length !== 0),
+      samples.filter((d: any) => d.length !== 0),
       cpT
     );
-  }, [cpT, samples.data]);
+  }, [cpT, samples]);
 
   const samplesByRange = useMemo(() => {
-    if (samples.data.length > 0) {
-      const extent = d3.extent(samples.data.flat()) as any;
-      const scale = d3.scaleLinear().domain(extent).range(samples.range);
-      return samples.data.map((samplesItem: number[]) => samplesItem.map((item) => scale(item)));
+    if (samples.length > 0) {
+      const extent = d3.extent(samples.flat()) as any;
+      // TODO
+      const scale = d3.scaleLinear().domain(extent).range([0, 255]);
+      return samples.map((samplesItem: number[]) => samplesItem.map((item) => scale(item)));
     }
     return [];
   }, [samples]);
@@ -235,10 +244,18 @@ function RightPanel() {
     return temp;
   }, [heteroLabels, propertyIndex, samplesByRange]);
 
-  const handleHover = useCallback(
-    (e: any) => {
-      const { id } = e.target.dataset;
+  // const handleHover = useCallback(
+  //   (e: any) => {
+  //     const { id } = e.target.dataset;
 
+  //     if (annoList[id]) {
+  //       setChoseAnnList(new Set(annoList[id].dataIndex));
+  //     }
+  //   },
+  //   [annoList]
+  // );
+  const handleHover = useCallback(
+    (id: number) => {
       if (annoList[id]) {
         setChoseAnnList(new Set(annoList[id].dataIndex));
       }
@@ -246,12 +263,21 @@ function RightPanel() {
     [annoList]
   );
 
-  const handleOut = useCallback((e: any) => {
+  const handleOut = useCallback(() => {
     setChoseAnnList(new Set());
   }, []);
 
-  const handleChange = (e: any) => {
-    const { id } = e.target.dataset;
+  // const handleChange = (e: any) => {
+  //   const { id } = e.target.dataset;
+  //   const tmp = [...annoListStatus];
+  //   const updateStatus = (annoListStatus[id] + 1) % 3;
+  //   tmp[id] = updateStatus;
+
+  //   setAnnoListStatus(tmp);
+  //   setStrokeStatus(updateStatus);
+  //   setStrokeId(id);
+  // };
+  const handleChange = (id: number) => {
     const tmp = [...annoListStatus];
     const updateStatus = (annoListStatus[id] + 1) % 3;
     tmp[id] = updateStatus;
@@ -271,9 +297,22 @@ function RightPanel() {
   const handleParamChange = useCallback(
     (e: any) => {
       setParam(+e.target.value);
+      setLevel(HTTP_LEVEL.cpca);
     },
-    [setParam]
+    [setLevel]
   );
+
+  const $inputAlpha = useRef(null);
+
+  const freshCount = useCallback(() => {
+    http('/fl-hetero/cpca/cluster/', {
+      clusterID: blockIndex,
+    }).then((res) => {
+      setParam(res.alpha);
+      setcPCA([res.cpc1, res.cpc2]);
+      ($inputAlpha as any).current.value = res.alpha.toFixed(2);
+    });
+  }, [blockIndex]);
 
   // console.log(heteData, lineDatum)
   return (
@@ -286,13 +325,14 @@ function RightPanel() {
             <div className={inputStyles.wrapper}>
               <input
                 className={inputStyles.input}
-                type="number"
-                min="0.01"
-                max="100"
-                step="0.1"
+                type="text"
                 defaultValue={param?.toFixed(2) || ''}
                 onBlur={handleParamChange}
+                ref={$inputAlpha}
               />
+              <span className={inputStyles.icon} onClick={freshCount}>
+                <img src={REFRESH} alt="refresh" />
+              </span>
             </div>
           </div>
           <div className="row">
@@ -372,13 +412,14 @@ function RightPanel() {
           <div className="lists instance-panel">
             <div id="data-wrapper">
               <p>Data:</p>
-              <PureRect data={chosePoint !== -1 ? samplesByRange[chosePoint] : []} />
+              {/* <PureRect data={chosePoint !== -1 ? samplesByRange[chosePoint] : []} /> */}
+              <PureRect data={samplesByRange[chosePoint] || []} />
             </div>
             <div>
-              <p>Ground-truth label: {chosePoint !== -1 ? groundTruth[chosePoint] : ''}</p>
+              <p>Ground-truth label: {groundTruth[chosePoint] || ''}</p>
               <p>Output:</p>
-              <p>Federated learning model: {chosePoint !== -1 ? outputLabels[chosePoint] : ''}</p>
-              <p>Stand-alone training model: {chosePoint !== -1 ? localLabels[chosePoint] : ''}</p>
+              <p>Federated learning model: {outputLabels[chosePoint] || ''}</p>
+              <p>Stand-alone training model: {localLabels[chosePoint] || ''}</p>
             </div>
           </div>
         </div>
@@ -388,16 +429,18 @@ function RightPanel() {
           <div className="lists">
             <div className="list-content">
               <p>Overlap lists:</p>
-              <div
-                className="list-area"
-                onClick={handleChange}
-                onMouseOver={handleHover}
-                onFocus={handleHover}
-                onMouseOut={handleOut}
-                onBlur={handleOut}
-              >
+              <div className="list-area">
                 {annoList.map(({ round: r, text, dataIndex }, i) => (
-                  <div className="list-item" key={i} data-id={i}>
+                  <div
+                    className="list-item"
+                    key={i}
+                    data-id={i}
+                    onClick={() => handleChange(i)}
+                    onMouseOver={() => handleHover(i)}
+                    onFocus={() => handleHover(i)}
+                    onMouseOut={handleOut}
+                    onBlur={handleOut}
+                  >
                     <span
                       className="img-wrapper"
                       style={{ pointerEvents: 'none', cursor: 'pointer' }}

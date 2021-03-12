@@ -1,3 +1,6 @@
+/* eslint-disable no-console */
+import { batch } from "react-redux";
+import http from "../../utils/http";
 import HTTP_LEVEL from "../../utils/level";
 
 // identify接口
@@ -11,16 +14,17 @@ const TOGGLE_LOADING = 'TOGGLE_LOADING';
 const INIT_IDENTITY = 'INIT_IDENTITY';
 const SET_LEVEL = 'SET_LEVEL';
 const SET_CLUSTER_NUMBER = 'SET_CLUSTER_NUMBER';
+const SET_LOCAL = 'SET_LOCAL';
+const SET_CHOOSE_POINT = 'SET_CHOSE_POINT';
+
+export const defaultCount = 8;
+export const defaultAlpha = 10;
+export const defaultAllAlpha = 10;
 export interface IdentifyData {
   // 本地原始数据
   "localData": number[][],
   // 采样数据
-  "samples": {
-    // 数据的范围 
-    data: number[][],
-    // 数据映射的范围
-    range: number[]
-  },
+  "samples":  number[][],
   // 真实标签
   "groundTruth": number[],
   // 模型输出标签
@@ -34,7 +38,7 @@ export interface IdentifyData {
   "heteroList": {
     clusterList: Array<{
       "heteroSize": number,// 不一致数据所占空间大小/最细粒度采样节点数
-      "heteroIndex": [], // 分块内不一致数据点的下标
+      "heteroIndex": number[], // 分块内不一致数据点的下标
       "heteroRate": number, // 不一致点在块中所占的比例
     }>,
     nrOfClusters: number|null
@@ -50,8 +54,9 @@ export interface IdentifyData {
     "cpc1": [],
     "cpc2": [],
   },
-  // "loading": boolean,
-  "level": number
+  "loading": boolean,
+  "level": number,
+  "chosePoint": number,
 }
 
 const initState: any= {
@@ -62,23 +67,22 @@ const initState: any= {
   },
   groundTruth: [],
   outputLabels: [],
-  samples: {
-    data: [],
-    range: []
-  },
+  samples: [],
+  localData: [],
   heteroLabels: [],
   localOutputLabel: [],
   pca: {
     "cpc1": [],
     "cpc2": [],
-    'alpha': null
+    'alpha': defaultAllAlpha
   },
   cpca: {
     "cpc1": [],
     "cpc2": [],
   },
-  // loading: false,
-  level: 0
+  loading: false,
+  level: 0,
+  chosePoint: 0,
 };
 export interface IdentifyParam {
   "round": number, // 用户选择 communication round
@@ -87,56 +91,33 @@ export interface IdentifyParam {
 }
 
 export const getSamplesAction = (type: string) => async (dispatch: any) => {
-  // dispatch(loading);
   try {
-    const res = await fetch('/fl-hetero/sampling/', {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        samplingType: type
-        // samplingType: 'samples'
-      }),
+    const {data} = await http('/fl-hetero/sampling/', {
+      samplingType: type,
     })
-    const resp = await res.json();
-    console.log(resp.attr_range);
-    await dispatch({
-      type: SET_SAMPLES,
-      data: {
-        data: resp.data,
-        range: resp.attr_range
-      }
-    })
-  
-    await dispatch({
-      type: SET_LEVEL,
-      data: HTTP_LEVEL.sampling+1
-    })
+    
+    if(type === 'local') {
+      dispatch({
+        type: SET_LOCAL,
+        data,
+      })
+    } else {
+      dispatch({
+        type: SET_SAMPLES,
+        data,
+      })
+    }
   } catch(err) {
     console.log(err);
   }
 }
 
-export const getPCAResults = (alpha: number|null) => async (dispatch: any) => {
+export const getCPCAResults = (alpha: number|null) => async (dispatch: any) => {
   try {
-    const res = await fetch('/fl-hetero/cpca/all/', {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: alpha ? JSON.stringify({
-        alpha
-      }): JSON.stringify({
-      }),
-    });
-    const resp = await res.json();
-
-    await dispatch({
+    const res = await http('/fl-hetero/cpca/all/', alpha ? { alpha, } : {})
+    dispatch({
       type: SET_PCA,
-      data: resp
+      data: res
     })
   } catch(err) {
     console.log(err);
@@ -145,85 +126,52 @@ export const getPCAResults = (alpha: number|null) => async (dispatch: any) => {
 
 export const getLabelsAction = (round: number) => async (dispatch: any) => {
   // dispatch(loading);
-  
   try {
-    const res = await fetch('/fl-hetero/labels/', {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        "round": round-1,
-      }),
+    const res = await http('/fl-hetero/labels/', {
+      "round": round-1,
     })
-    const resp = await res.json();
-     
-    await dispatch({
+     dispatch({
       type: SET_LABELS,
-      data: resp
+      data: res
     })
-  
-    await dispatch({
-      type: SET_LEVEL,
-      data: HTTP_LEVEL.labels + 1
-    })
-  }catch(err) {
+  } catch(err) {
     console.log(err)
   }
   
 }
 
-export const getHeteList = (count: number|null) => (dispatch: any) => {
-  fetch('/fl-hetero/cluster/', {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    },
-    body: count ? JSON.stringify({
-      "nrOfClusters": count,
-    }): JSON.stringify({}),
-  })
-    .then(res => res.json())
-    .then(res =>{
-      dispatch({
-        type: SET_HETELIST,
-        data: res
-      })
-
-      dispatch({
-        type: SET_LEVEL,
-        data: HTTP_LEVEL.clusters + 1
-      })
-    })
-  .catch(err => {
-    console.log(err);
-  })
-}
-// actions
-export const getDataAction = (param: IdentifyParam) => async (dispatch: any) => {
+export const getHeteList = (count: number|null) => async (dispatch: any) => {
   try {
-    fetch('/fl-hetero/identify/', {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(param),
+    const res = await http('/fl-hetero/cluster/'
+      , count ? {
+        "nrOfClusters": count,
+      }: {})
+
+    dispatch({
+      type: SET_HETELIST,
+      data: res
     })
-      .then(resp => resp.json())
-      .then(res => dispatch({
-          type: SET_DATA,
-          data: res
-        }))
   } catch(err) {
     console.log(err);
   }
 }
 
-export const loading = () => ({
-  type: SET_LOADING
+export const getAllCPCA = (alpha: number|null) => async (dispatch: any) => {
+  try {
+    const res = await http('/fl-hetero/cpca/all/', {alpha});
+    dispatch({
+      type: SET_PCA,
+      data: res
+    })
+    // TODO 是否要level变换
+  } catch(err) {
+    console.log(err);
+  }
+}
+
+export const loading = (v: boolean) => ({
+  type: SET_LOADING,
+  data: v
 })
 
 export const toggleLoading = () => ({
@@ -237,6 +185,11 @@ export const initIdentityAction = () => ({
 export const setLevelAction = (level: number) => ({
   type: SET_LEVEL,
   data: level
+})
+
+export const setChosePointAction = (index: number) => ({
+  type: SET_CHOOSE_POINT,
+  data: index
 })
 // const initState: any= {
 //   // 预先排序好
@@ -255,6 +208,9 @@ const identifyReducer = (state = initState, action: any) => {
     case SET_SAMPLES:
       // console.log(action.data);
       return {...state, samples: action.data}
+    case SET_LOCAL:
+      return {...state, localData: action.data}
+
     case SET_LABELS:
       // eslint-disable-next-line no-case-declarations
       const {consistencyLabel, groundTruthLabel, outputLabel, localOutputLabel} = action.data;
@@ -263,10 +219,8 @@ const identifyReducer = (state = initState, action: any) => {
         outputLabels: outputLabel,
         heteroLabels: consistencyLabel,
         localOutputLabel,
-        loading: true
       }
     case SET_HETELIST:
-      // TODO cluster numbers
       return {...state, 
         heteroList: action.data
       }
@@ -275,16 +229,56 @@ const identifyReducer = (state = initState, action: any) => {
         pca: action.data
       }
     case SET_LOADING:
-      return {...state, loading: true};
+      return {...state, loading: action.data};
     case TOGGLE_LOADING:
       return {...state, loading: !state.loading};
     case INIT_IDENTITY:
       return {...initState, level: HTTP_LEVEL.client+1};
     case SET_LEVEL:
       return {...state, level: action.data};
+    case SET_CHOOSE_POINT:
+      return {...state, chosePoint: action.data}
     default:
       return state;
   }
 }
 
 export default identifyReducer;
+
+export const onTypeUpdateOrInitAction = (type: string, round: number, alpha: number|null, count: number|null) => async (dispatch: any) => {
+  await dispatch(loading(true));
+
+  await dispatch(getSamplesAction(type));
+  await dispatch(getLabelsAction(round));
+  await dispatch(getAllCPCA(alpha || defaultAllAlpha));
+  await dispatch(getHeteList(count || defaultCount));
+  dispatch({
+    type: SET_LEVEL,
+    data: HTTP_LEVEL.cpca
+  })
+  dispatch(loading(false));
+
+  // batch(() => {
+  //   dispatch(getSamplesAction(type));
+  //   dispatch(getLabelsAction(round));
+  //   dispatch(getAllCPCA(alpha || defaultAllAlpha));
+  //   dispatch(getHeteList(count || defaultCount));
+  //   dispatch({
+  //     type: SET_LEVEL,
+  //     data: HTTP_LEVEL.cpca
+  //   })
+  // })
+}
+
+export const onRoundAction = (round: number, alpha: number|null, count: number|null) => async (dispatch: any) => {
+  await dispatch(loading(true));
+
+  await dispatch(getLabelsAction(round));
+  await dispatch(getAllCPCA(alpha || defaultAllAlpha));
+  await dispatch(getHeteList(count || defaultCount));
+  dispatch({
+    type: SET_LEVEL,
+    data: HTTP_LEVEL.cpca
+  })
+  dispatch(loading(false));
+}
