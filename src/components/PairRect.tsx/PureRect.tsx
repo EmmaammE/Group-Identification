@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import useWindowSize from '../../utils/useResize';
+import { getDatasetInfo } from '../../utils/getType';
 
 interface PureRectProps {
   data: number[];
@@ -12,7 +13,8 @@ const rectHeight = 20;
 const rowCount = 28;
 
 const PureRect = ({ data }: PureRectProps) => {
-  const columnCount = data.length / rowCount;
+  // const columnCount = data.length / rowCount;
+  const columnCount = 784 / rowCount;
   const WIDTH = rectWidth * columnCount;
   const HEIGHT = rectHeight * rowCount;
 
@@ -47,12 +49,30 @@ const PureRect = ({ data }: PureRectProps) => {
 
     ctx.clearRect(0, 0, bound.width, bound.height);
 
-    data.forEach((d, j) => {
-      const x = j % columnCount;
-      const y = parseInt(`${j / columnCount}`, 10);
-      ctx.fillStyle = `rgb(${d}, ${d}, ${d})`;
-      ctx.fillRect(rectWidthMap * x, rectHeightMap * y, rectWidthMap, rectHeightMap);
-    });
+    const { type, dimension } = getDatasetInfo();
+    if (type === 'image') {
+      if (data.length > dimension) {
+        // 多通道
+        for (let i = 0; i < dimension; i++) {
+          const r = data[i];
+          const g = data[i + dimension];
+          const b = data[i + dimension * 2];
+
+          const x = i % columnCount;
+          const y = parseInt(`${i / columnCount}`, 10);
+          ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+          ctx.fillRect(rectWidthMap * x, rectHeightMap * y, rectWidthMap, rectHeightMap);
+        }
+      } else {
+        // 单通道
+        data.forEach((d, j) => {
+          const x = j % columnCount;
+          const y = parseInt(`${j / columnCount}`, 10);
+          ctx.fillStyle = `rgb(${d}, ${d}, ${d})`;
+          ctx.fillRect(rectWidthMap * x, rectHeightMap * y, rectWidthMap, rectHeightMap);
+        });
+      }
+    }
   }, [
     HEIGHT,
     WIDTH,

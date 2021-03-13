@@ -72,12 +72,6 @@ function MiddlePanel() {
   );
 
   const dispatch = useDispatch();
-  const getSamples = useCallback((type) => dispatch(getSamplesAction(type)), [dispatch]);
-  // const getPCA = useCallback((alpha) => dispatch(getPCAResults(alpha)), [dispatch]);
-  const getLabels = useCallback((roundParam) => dispatch(getLabelsAction(roundParam)), [dispatch]);
-  // const heteroList = useSelector((state: StateType) => state.identify.heteroList);
-  // const loading = useSelector((state: StateType) => state.identify.loading);
-  // const paramFromRes = useSelector((state: StateType) => state.identify.pca.alpha);
   const clusterFromRes = useSelector((state: StateType) => state.identify.heteroList.nrOfClusters);
   const setLevel = useCallback((level: number) => dispatch(setLevelAction(level)), [dispatch]);
   const getCPCA = useCallback((alpha: number | null) => dispatch(getAllCPCA(alpha)), [dispatch]);

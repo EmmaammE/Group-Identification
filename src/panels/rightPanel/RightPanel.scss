@@ -16,11 +16,43 @@
     border-bottom: 1px solid var(--divider-color);
     border-width: 0 1px 1px 0;
     display: flex;
-    flex-direction: column;
     margin: 0 10px;
+    flex-direction: column;
 
-    .row {
-      width: 55%;
+    .info-panel {
+      display: flex;
+      flex-direction: column;
+      // flex: 0 0 70%;
+      // .row {
+      //   width: 70%;
+      // }
+    }
+
+    .rgb-values {
+      display: flex;
+      align-items: flex-end;
+
+      span {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        cursor: pointer;
+        margin: 4px;
+        // opacity: 0;
+      }
+
+      span:nth-child(1) {
+        background: #f00;
+      }
+
+      span:nth-child(2) {
+        background: #0f0;
+      }
+
+      span:nth-child(3) {
+        background: #00f;
+      }
     }
   }
 
@@ -158,7 +190,7 @@
       .overlay,
       .pair-canvas {
         position: absolute;
-        bottom: 5px;
+        bottom: -1px;
         left: 20px;
         // border: 1px solid #000;
       }

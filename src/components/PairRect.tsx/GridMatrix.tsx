@@ -64,6 +64,8 @@ const GridMatrix = ({
   const yLabelsArr = useMemo(() => Array.from(new Set(yLabels)).sort(), [yLabels]);
 
   const heteroPointsFromStore = useSelector((state: StateType) => state.basic.heteroPoints);
+  const labelNames = useSelector((state: StateType) => state.basic.labelNames);
+
   const annoPoints = useSelector((state: StateType) => new Set(state.basic.annoPoints));
   // 格子的大小
   const [gridSize, setGridSize] = useState<number>(0.05);
@@ -77,10 +79,14 @@ const GridMatrix = ({
       setWidth(size);
       setHeight(size);
     } else {
-      const w = (size - padding * (xLabelsArr.length - 1)) / xLabelsArr.length;
-      const h = w * yLabelsArr.length + padding * (yLabelsArr.length - 1);
+      const wGrid = (offsetWidth - padding * (xLabelsArr.length - 1)) / xLabelsArr.length;
+      const hGrid = (offsetHeight - padding * (xLabelsArr.length - 1) - 4) / xLabelsArr.length;
+      const grid = Math.min(wGrid, hGrid);
 
-      setWidth(size);
+      const w = grid * xLabelsArr.length + padding * (xLabelsArr.length - 1);
+      const h = grid * yLabelsArr.length + padding * (yLabelsArr.length - 1);
+
+      setWidth(w);
       setHeight(h);
     }
   }, [xLabelsArr.length, yLabelsArr.length]);
@@ -488,7 +494,7 @@ const GridMatrix = ({
           </div>
           <div className="xLabels-arr">
             {xLabelsArr.map((text) => (
-              <span key={text}> Label{text}</span>
+              <span key={text}>{labelNames[text]}</span>
             ))}
           </div>
         </div>
@@ -496,7 +502,7 @@ const GridMatrix = ({
         <div className="chart-wrapper" ref={$wrapper}>
           <div className="yLabels" style={{ height: `${svgHeight}px` }}>
             {yLabelsArr.map((text, j) => (
-              <span key={j}>Label{text}</span>
+              <span key={j}>{labelNames[text]}</span>
             ))}
           </div>
           <div className="svg-wrapper">

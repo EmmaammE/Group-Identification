@@ -4,6 +4,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import * as d3 from 'd3';
+import { local } from 'd3';
 import { setIndexAction } from '../../store/reducers/blockIndex';
 import CpLineChart from '../../components/lineChart/CpLineChart';
 import GridMatrix from '../../components/PairRect.tsx/GridMatrix';
@@ -19,7 +20,7 @@ import Icon from '../../components/ui/JoinIcon';
 import { setLevelAction, setChosePointAction, defaultAlpha } from '../../store/reducers/identify';
 import HTTP_LEVEL from '../../utils/level';
 import PureRect from '../../components/PairRect.tsx/PureRect';
-import { getType } from '../../utils/getType';
+import { getDatasetInfo, getType } from '../../utils/getType';
 import REFRESH from '../../assets/refresh.svg';
 import http from '../../utils/http';
 
@@ -45,9 +46,7 @@ const areEqual = (first: number[], second: number[]) => {
 function RightPanel() {
   const index: number = useSelector((state: any) => state.blockIndex);
   const heteroList = useSelector((state: StateType) => state.identify.heteroList.clusterList);
-  const samples = useSelector((state: StateType) =>
-    getType() === 'local' ? state.identify.localData : state.identify.samples
-  );
+  const localData = useSelector((state: StateType) => state.identify.localData);
   const heteroLabels = useSelector((state: any) => state.identify.heteroLabels);
   const outputLabels = useSelector((state: any) => state.identify.outputLabels);
   const groundTruth = useSelector((state: any) => state.identify.groundTruth);
@@ -57,6 +56,7 @@ function RightPanel() {
   const blockIndex = useSelector((state: StateType) => state.blockIndex);
 
   const propertyIndex = useSelector((state: StateType) => state.basic.propertyIndex);
+  const labelNames = useSelector((state: StateType) => state.basic.labelNames);
 
   const dispatch = useDispatch();
   const setIndex = useCallback((i) => dispatch(setIndexAction(i)), [dispatch]);
@@ -99,6 +99,7 @@ function RightPanel() {
 
   const [strokePoints, setStrokePoints] = useState<number[]>([]);
   const [lineIndex, setLineIndex] = useState<number>(0);
+  const [channelIndex, setChannelIndex] = useState<number>(0);
 
   const setPoints = useCallback(
     (p: any) => {
@@ -138,6 +139,21 @@ function RightPanel() {
       setAnnoListStatus(newStatusArr);
     }
   }, [annoList, annoListStatus]);
+
+  const colorScale = useMemo(() => {
+    const extent: number =
+      pcArr[0].length > 0
+        ? Math.max(
+            Math.abs(Math.min(...pcArr[0], ...pcArr[1])),
+            Math.abs(Math.max(...pcArr[0], ...pcArr[1]))
+          )
+        : 1;
+    return d3
+      .scaleLinear<string, number>()
+      .domain([-extent, 0, extent])
+      .range(['#c21317', '#fff', '#1365c2'])
+      .nice();
+  }, [pcArr]);
 
   useEffect(() => {
     if (round === 0) {
@@ -205,24 +221,24 @@ function RightPanel() {
   };
 
   const datum = useMemo(() => {
-    if (samples.length === 0 || cpT.length === 0) {
+    if (localData.length === 0 || cpT.length === 0) {
       return [[]];
     }
     return mmultiply(
-      samples.filter((d: any) => d.length !== 0),
+      localData.filter((d: any) => d.length !== 0),
       cpT
     );
-  }, [cpT, samples]);
+  }, [cpT, localData]);
 
   const samplesByRange = useMemo(() => {
-    if (samples.length > 0) {
-      const extent = d3.extent(samples.flat()) as any;
+    if (localData.length > 0) {
+      const extent = d3.extent(localData.flat()) as any;
       // TODO
       const scale = d3.scaleLinear().domain(extent).range([0, 255]);
-      return samples.map((samplesItem: number[]) => samplesItem.map((item) => scale(item)));
+      return localData.map((samplesItem: number[]) => samplesItem.map((item) => scale(item)));
     }
     return [];
-  }, [samples]);
+  }, [localData]);
 
   const lineDatum = useMemo(() => {
     // 一致的点，不一致的点
@@ -314,33 +330,56 @@ function RightPanel() {
     });
   }, [blockIndex]);
 
-  // console.log(heteData, lineDatum)
+  const { dimension } = getDatasetInfo();
+
   return (
     <div className="panel" id="RightPanel">
       <h2>Heterogenity Examination</h2>
       <div className="content">
         <div className="weight-rects r-panel">
           <div className="row">
-            <p className="label">Contrastive parameter: </p>
-            <div className={inputStyles.wrapper}>
-              <input
-                className={inputStyles.input}
-                type="text"
-                defaultValue={param?.toFixed(2) || ''}
-                onBlur={handleParamChange}
-                ref={$inputAlpha}
-              />
-              <span className={inputStyles.icon} onClick={freshCount}>
-                <img src={REFRESH} alt="refresh" />
-              </span>
+            <div className="info-panel">
+              <div className="row">
+                <p className="label">Contrastive parameter: </p>
+                <div className={inputStyles.wrapper}>
+                  <input
+                    className={inputStyles.input}
+                    type="text"
+                    defaultValue={param?.toFixed(2) || ''}
+                    onBlur={handleParamChange}
+                    ref={$inputAlpha}
+                  />
+                  <span className={inputStyles.icon} onClick={freshCount}>
+                    <img src={REFRESH} alt="refresh" />
+                  </span>
+                </div>
+              </div>
+              <div className="row">
+                <p>Dimension weights:</p>
+                <Gradient
+                  colors={['#c21317', '#fff', '#1365c2']}
+                  legends={[colorScale.domain()[0], colorScale.domain()[2]]}
+                  width="80"
+                />
+              </div>
+            </div>
+
+            <div
+              className="rgb-values"
+              style={{
+                opacity: dimension < pcArr[0].length ? 1 : 0,
+              }}
+            >
+              <span onClick={() => setChannelIndex(0)} />
+              <span onClick={() => setChannelIndex(1)} />
+              <span onClick={() => setChannelIndex(2)} />
             </div>
           </div>
-          <div className="row">
-            <span>Dimension weights:</span>
-            <Gradient colors={['#c21317', '#fff', '#1365c2']} legends={['-1', '1']} width="80" />
-          </div>
           <div className="pair-rects">
-            {pcArr[0].length > 0 && pcArr.map((pc, i) => <PairRect key={i} data={pc} title={i} />)}
+            {pcArr[0].length > 0 &&
+              pcArr.map((pc, i) => (
+                <PairRect key={i} data={pc} title={i} color={colorScale} channel={channelIndex} />
+              ))}
           </div>
         </div>
 
@@ -416,10 +455,18 @@ function RightPanel() {
               <PureRect data={samplesByRange[chosePoint] || []} />
             </div>
             <div>
-              <p>Ground-truth label: {groundTruth[chosePoint] || ''}</p>
+              <p>
+                Ground-truth label: {chosePoint !== -1 ? labelNames[groundTruth[chosePoint]] : ''}
+              </p>
               <p>Output:</p>
-              <p>Federated learning model: {outputLabels[chosePoint] || ''}</p>
-              <p>Stand-alone training model: {localLabels[chosePoint] || ''}</p>
+              <p>
+                Federated learning model:{' '}
+                {chosePoint !== -1 ? labelNames[outputLabels[chosePoint]] : ''}
+              </p>
+              <p>
+                Stand-alone training model:{' '}
+                {chosePoint !== -1 ? labelNames[localLabels[chosePoint]] : ''}
+              </p>
             </div>
           </div>
         </div>

@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 import { batch } from "react-redux";
+import { getType } from "../../utils/getType";
 import http from "../../utils/http";
 import HTTP_LEVEL from "../../utils/level";
 
@@ -16,6 +17,7 @@ const SET_LEVEL = 'SET_LEVEL';
 const SET_CLUSTER_NUMBER = 'SET_CLUSTER_NUMBER';
 const SET_LOCAL = 'SET_LOCAL';
 const SET_CHOOSE_POINT = 'SET_CHOSE_POINT';
+const INIT_OR_UPDATE = 'INIT_OR_UPDATE_TYPE';
 
 export const defaultCount = 8;
 export const defaultAlpha = 10;
@@ -163,7 +165,6 @@ export const getAllCPCA = (alpha: number|null) => async (dispatch: any) => {
       type: SET_PCA,
       data: res
     })
-    // TODO 是否要level变换
   } catch(err) {
     console.log(err);
   }
@@ -205,6 +206,12 @@ export const setChosePointAction = (index: number) => ({
 
 const identifyReducer = (state = initState, action: any) => {
   switch(action.type) {
+    case INIT_OR_UPDATE:
+      return {
+        ...state,
+        ...action.data
+      }
+
     case SET_SAMPLES:
       // console.log(action.data);
       return {...state, samples: action.data}
@@ -245,40 +252,116 @@ const identifyReducer = (state = initState, action: any) => {
 
 export default identifyReducer;
 
+// const methodReturnPromise = (url: string, param: Object) => http(url, param).then(res => Promise.resolve(res))
+
 export const onTypeUpdateOrInitAction = (type: string, round: number, alpha: number|null, count: number|null) => async (dispatch: any) => {
   await dispatch(loading(true));
+  
+  const {data} = await http('/fl-hetero/sampling/', {
+    samplingType: type,
+  });
 
-  await dispatch(getSamplesAction(type));
-  await dispatch(getLabelsAction(round));
-  await dispatch(getAllCPCA(alpha || defaultAllAlpha));
-  await dispatch(getHeteList(count || defaultCount));
-  dispatch({
-    type: SET_LEVEL,
-    data: HTTP_LEVEL.cpca
+  const res2 = await http('/fl-hetero/labels/',  {
+    "round": round-1,
   })
-  dispatch(loading(false));
 
-  // batch(() => {
-  //   dispatch(getSamplesAction(type));
-  //   dispatch(getLabelsAction(round));
-  //   dispatch(getAllCPCA(alpha || defaultAllAlpha));
-  //   dispatch(getHeteList(count || defaultCount));
-  //   dispatch({
-  //     type: SET_LEVEL,
-  //     data: HTTP_LEVEL.cpca
-  //   })
+  const res3 = await http('/fl-hetero/cpca/all/', {
+    alpha: alpha || defaultAllAlpha
+  })
+
+  const res4 = await http('/fl-hetero/cluster/', {
+    "nrOfClusters": count || defaultCount
+  })
+
+  if(type === 'local') {
+    dispatch({
+      type: INIT_OR_UPDATE,
+      data: {
+        localData: data,
+        groundTruth: res2.groundTruthLabel,
+        outputLabels: res2.outputLabel,
+        heteroLabels: res2.consistencyLabel,
+        localOutputLabel: res2.localOutputLabel,
+        pca: res3,
+        heteroList: res4 ,
+        level: HTTP_LEVEL.cpca,
+        loading: false
+      }
+    })
+  } else {
+    dispatch({
+      type: INIT_OR_UPDATE,
+      data: {
+        samples: data,
+        heteroLabels: res2.consistencyLabel,
+        pca: res3,
+        heteroList: res4,
+        level: HTTP_LEVEL.cpca,
+        loading: false
+      }
+    })
+  }
+  // await dispatch(getSamplesAction(type));
+  // await dispatch(getLabelsAction(round));
+  // await dispatch(getAllCPCA(alpha || defaultAllAlpha));
+  // await dispatch(getHeteList(count || defaultCount));
+  // dispatch({
+  //   type: SET_LEVEL,
+  //   data: HTTP_LEVEL.cpca
   // })
+
+  // dispatch(loading(false));
+
 }
 
 export const onRoundAction = (round: number, alpha: number|null, count: number|null) => async (dispatch: any) => {
   await dispatch(loading(true));
 
-  await dispatch(getLabelsAction(round));
-  await dispatch(getAllCPCA(alpha || defaultAllAlpha));
-  await dispatch(getHeteList(count || defaultCount));
-  dispatch({
-    type: SET_LEVEL,
-    data: HTTP_LEVEL.cpca
+  const res2 = await http('/fl-hetero/labels/',  {
+    "round": round-1,
   })
-  dispatch(loading(false));
+
+  const res3 = await http('/fl-hetero/cpca/all/', {
+    alpha: alpha || defaultAllAlpha
+  })
+
+  const res4 = await http('/fl-hetero/cluster/', {
+    "nrOfClusters": count || defaultCount
+  })
+
+  if(getType() === 'local') {
+    dispatch({
+      type: INIT_OR_UPDATE,
+      data: {
+        groundTruth: res2.groundTruthLabel,
+        outputLabels: res2.outputLabel,
+        heteroLabels: res2.consistencyLabel,
+        localOutputLabel: res2.localOutputLabel,
+        pca: res3,
+        heteroList: res4 ,
+        level: HTTP_LEVEL.cpca,
+        loading: false
+      }
+    })
+  } else {
+    dispatch({
+      type: INIT_OR_UPDATE,
+      data: {
+        heteroLabels: res2.consistencyLabel,
+        pca: res3,
+        heteroList: res4,
+        level: HTTP_LEVEL.cpca,
+        loading: false
+      }
+    })
+  }
+  // await dispatch(getLabelsAction(round));
+  // await dispatch(getAllCPCA(alpha || defaultAllAlpha));
+  // await dispatch(getHeteList(count || defaultCount));
+
+  // dispatch({
+  //   type: SET_LEVEL,
+  //   data: HTTP_LEVEL.cpca
+  // })
+  // dispatch(loading(false));
 }

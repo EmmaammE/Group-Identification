@@ -6,7 +6,12 @@ import './style.scss';
 import Gradient from '../../components/ui/Gradient';
 import RangeSlider from '../../components/ui/RangeSlider';
 import Dropdown from '../../components/ui/Dropdown';
-import { initBasicData, setNameAction, setRoundAction } from '../../store/reducers/basic';
+import {
+  initBasicData,
+  setLabelNamesAction,
+  setNameAction,
+  setRoundAction,
+} from '../../store/reducers/basic';
 import { StateType } from '../../types/data';
 import {
   getSamplesAction,
@@ -15,7 +20,7 @@ import {
   onTypeUpdateOrInitAction,
 } from '../../store/reducers/identify';
 import HTTP_LEVEL from '../../utils/level';
-import { getType } from '../../utils/getType';
+import { getType, setDatasetInfo } from '../../utils/getType';
 
 const fakeData = {
   // 联邦模型矢量
@@ -28,7 +33,7 @@ const fakeData = {
 interface Info {
   // 拼接成字符串
   labels: string;
-  dimensions: number | '';
+  dimensions: number | '' | string;
   numberOfClients: number | '';
   communicationRounds: number | '';
   testDataSize: number | '';
@@ -48,6 +53,10 @@ const initInfo: Info = {
 // alternatively, it can be an array of coordinates (second argument should be specified as 'sparse')
 
 const GRADIENT = ['#fff', '#aa815d'];
+const datasetNameHash: any = {
+  mnist: 'MNIST',
+  face: 'Face Mask',
+};
 
 function LeftPanel() {
   // TODO 修改local数据集
@@ -65,6 +74,10 @@ function LeftPanel() {
 
   // client Names
   const [names, setClientNames] = useState<string[]>([]);
+  // datasetNames
+  const [datasets, setDatasets] = useState<string[]>([]);
+  const [datasetIndex, setDatasetIndex] = useState<number>(-1);
+
   const [info, setInfo] = useState<Info>(initInfo);
 
   const initBasic = useCallback(() => dispatch(initBasicData()), [dispatch]);
@@ -78,9 +91,9 @@ function LeftPanel() {
       dispatch(onTypeUpdateOrInitAction(type, r, alpha, count)),
     [dispatch]
   );
+  const setLabelNames = useCallback((n: string[]) => dispatch(setLabelNamesAction(n)), [dispatch]);
 
-  const getSamples = useCallback((type) => dispatch(getSamplesAction(type)), [dispatch]);
-
+  // 修改client
   const onDropdownChange = (i: any) => {
     setIndex(i);
     // console.log('test')
@@ -92,6 +105,54 @@ function LeftPanel() {
     }
   };
 
+  const onDatasetChange = (i: any) => {
+    setDatasetIndex(i);
+
+    fetch('/fl-hetero/datasets/', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        datasetName: datasets[i],
+        // datasetName: datasetNames,
+      }),
+    })
+      .then((res2) => res2.json())
+      .then((res2) => {
+        const {
+          clientNames,
+          communicationRounds,
+          dimensions,
+          labelDescription: labels,
+          labelNames,
+          numberOfClients,
+          testDataSize,
+          trainingDataSize,
+          type,
+        } = res2;
+
+        setClientNames(clientNames);
+
+        setInfo({
+          labels,
+          communicationRounds,
+          dimensions: dimensions.join('x'),
+          numberOfClients,
+          testDataSize,
+          trainingDataSize,
+        });
+
+        setDatasetInfo(
+          type,
+          dimensions.slice(-2).reduce((acc: number, cur: number) => acc * cur, 1)
+        );
+
+        setLabelNames(labelNames);
+        // setLevel(HTTP_LEVEL.datasets+1);
+      });
+  };
   useEffect(() => {
     fetch('/fl-hetero/datasets/')
       .then((res) => res.json())
@@ -99,43 +160,7 @@ function LeftPanel() {
         // console.log(res);
         // 当前只有一个数据集
         const { datasetNames } = res;
-
-        fetch('/fl-hetero/datasets/', {
-          method: 'POST',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            // datasetName: datasetNames,
-            datasetName: datasetNames,
-          }),
-        })
-          .then((res2) => res2.json())
-          .then((res2) => {
-            const {
-              clientNames,
-              communicationRounds,
-              dimensions,
-              labels,
-              numberOfClients,
-              testDataSize,
-              trainingDataSize,
-            } = res2;
-
-            setClientNames(clientNames);
-
-            setInfo({
-              labels,
-              communicationRounds,
-              dimensions,
-              numberOfClients,
-              testDataSize,
-              trainingDataSize,
-            });
-
-            // setLevel(HTTP_LEVEL.datasets+1);
-          });
+        setDatasets(datasetNames);
       });
   }, []);
 
@@ -206,6 +231,14 @@ function LeftPanel() {
           <h3>Model Information</h3>
           {/* <p className='title'>Model Information Panel</p> */}
           <div>
+            <div className="info-row">
+              <span>Name of dataset: </span>
+              <Dropdown
+                items={datasets.map((d: string) => datasetNameHash[d])}
+                setIndex={onDatasetChange}
+                index={datasetIndex}
+              />
+            </div>
             <p>Label: {info.labels} </p>
             <p>#Dimensions: {info.dimensions}</p>
             <p>#Clients: {info.numberOfClients} </p>

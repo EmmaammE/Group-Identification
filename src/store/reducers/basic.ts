@@ -10,6 +10,7 @@ const INIT_BASIC = 'INIT_BASIC';
 const SET_HETERO_POINTS = 'SET_HETERO_POINTS';
 // 在mouseout mouseover标记时更新
 const SET_ANNOPOINTS = 'SET_ANNOPOINTS';
+const SET_LABEL_NAMES = 'SET_LABEL_NAMES';
 
 export const setRoundAction = (index: number) => ({
   type: SET_ROUND,
@@ -39,6 +40,11 @@ export const setPosAction = (x: number, y: number) => ({
 export const setSizeAction = (size: number) => ({
   type: SET_SIZE,
   data: size
+})
+
+export const setLabelNamesAction = (names: string[]) => ({
+  type: SET_LABEL_NAMES,
+  data: names
 })
 
 export const fetchLists = () => (dispatch: any) => {
@@ -85,6 +91,8 @@ export interface BasicData {
   heteroPoints: number[][],
   // 标记的点在原始数据中的序号
   annoPoints: number[],
+  // label对应的实际名字
+  labelNames: string[]
 }
 
 const initState: BasicData = {
@@ -96,7 +104,8 @@ const initState: BasicData = {
   size: 0,
   annoLists: [],
   heteroPoints: [],
-  annoPoints: []
+  annoPoints: [],
+  labelNames: []
 }
 
 const basicReducer = (state = initState, action: any ) => {
@@ -107,6 +116,8 @@ const basicReducer = (state = initState, action: any ) => {
       return {...state, propertyIndex: action.data}
     case SET_NAME:
       return {...state, clientName: action.data}
+    case SET_LABEL_NAMES:
+      return {...state, labelNames: action.data}
     // case SET_UPDATE:
       // return {...state, update: !state.update}
     case SET_POS:

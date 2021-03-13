@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 
 export interface GradientProps {
   colors: string[];
-  legends: string[];
+  legends: string[] | number[];
   width?: string;
   height?: number;
 }

@@ -66,7 +66,7 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
 
   const line = d3
     .line()
-    .curve(d3.curveMonotoneX)
+    // .curve(d3.curveMonotoneX)
     .x((d, i) => xScale(i + 1))
     .y((d: any) => yScale(d));
 
@@ -136,10 +136,10 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
 
     if (list) {
       Object.keys(list).forEach((r) => {
-        const x = xScale(+r);
+        const x = xScale(+r + 1);
         const indexScale = d3
           .scaleLinear()
-          .range([10, heightMap - 10])
+          .range([28, heightMap - 10])
           .domain([0, list[r].length]);
 
         list[r].forEach((anno: any, j: number) => {

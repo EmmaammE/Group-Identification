@@ -5,10 +5,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import { StateType } from '../../types/data';
 import { setPosAction, setPropertyAction } from '../../store/reducers/basic';
 import useWindowSize from '../../utils/useResize';
+import { getDatasetInfo } from '../../utils/getType';
 
 export interface PairRectProps {
   data: number[];
   title: number;
+  color: d3.ScaleLinear<string, number>;
+  channel: number;
 }
 
 interface RectData {
@@ -31,7 +34,6 @@ function getPixelRatio(context: any) {
   return dpr / bsr;
 }
 
-const color = d3.scaleLinear<string>().domain([-1, 0, 1]).range(['#c21317', '#fff', '#1365c2']);
 // const color = d3.scaleLinear<string>().domain([-0.3, 0, 0.3]).range(['#0aa6e9', '#fff', '#ea4d40']);
 
 const rectWidth = 20;
@@ -45,10 +47,20 @@ interface Pro {
   height: number;
 }
 
-const PairRect = ({ data, title }: PairRectProps) => {
-  const columnCount = data.length / rowCount;
+const PairRect = ({ data, title, color, channel }: PairRectProps) => {
+  const { dimension } = getDatasetInfo();
+
+  const columnCount = dimension / rowCount;
   const WIDTH = rectWidth * columnCount;
   const HEIGHT = rectHeight * rowCount;
+
+  // const color = useMemo(() => {
+  //   const extent:number = Math.max(
+  //     Math.abs(Math.min(...data)),
+  //     Math.abs(Math.max(...data))
+  //   )
+  //   return d3.scaleLinear<string>().domain([-extent, 0, extent]).range(['#c21317', '#fff', '#1365c2']);
+  // }, [])
 
   const $svg = useRef(null);
   const $chart = useRef(null);
@@ -115,7 +127,7 @@ const PairRect = ({ data, title }: PairRectProps) => {
 
     ctx.clearRect(0, 0, bound.width, bound.height);
 
-    data.forEach((d, j) => {
+    data.slice(dimension * channel, dimension * (channel + 1)).forEach((d, j) => {
       const x = j % columnCount;
       const y = parseInt(`${j / columnCount}`, 10);
 
@@ -136,6 +148,9 @@ const PairRect = ({ data, title }: PairRectProps) => {
     scale,
     rectWidthMap,
     rectHeightMap,
+    color,
+    dimension,
+    channel,
   ]);
 
   useEffect(() => {
@@ -168,7 +183,7 @@ const PairRect = ({ data, title }: PairRectProps) => {
   return (
     <div className="wrapper">
       <div>
-        <p className="rotate">ccPC{title + 1}</p>
+        <p className="rotate">cPC{title + 1}</p>
       </div>
       <div className="chart-wrapper" ref={$svg}>
         <canvas
