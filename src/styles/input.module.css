@@ -8,6 +8,8 @@
   max-width: 70px;
   background-color: var(--background-color, #fff);
   margin-left: 4px;
+  height: 24px;
+  border-radius: 4px;
 }
 
 .input {
@@ -25,7 +27,6 @@
   background-color: var(--background-color, #fff);
   transition: background-color 70ms cubic-bezier(0.2, 0, 0.38, 0.9),
     outline 70ms cubic-bezier(0.2, 0, 0.38, 0.9);
-  border-radius: 3px;
 }
 
 .icon {
