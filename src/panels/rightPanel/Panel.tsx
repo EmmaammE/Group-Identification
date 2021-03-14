@@ -110,21 +110,24 @@ function RightPanel() {
     [strokePoints]
   );
 
+  const { dimension } = getDatasetInfo();
+
   useEffect(() => {
     let defaultIndex = 0;
     let maxV = Number.MIN_VALUE;
 
-    pcArr[0].forEach((cpc1, i) => {
-      const v = Math.max(cpc1) + Math.max(pcArr[1][i]);
+    const count = channelIndex * dimension;
+    for (let i = 0; i < dimension; i++) {
+      const v = Math.max(pcArr[0][i + count]) + Math.max(pcArr[1][i + count]);
 
       if (maxV < v) {
         maxV = v;
         defaultIndex = i;
       }
-    });
+    }
 
     updatePropertyIndex(defaultIndex);
-  }, [pcArr, updatePropertyIndex]);
+  }, [channelIndex, dimension, pcArr, updatePropertyIndex]);
 
   useEffect(() => {
     // 每次标注列表更新，更新状态
@@ -330,8 +333,6 @@ function RightPanel() {
     });
   }, [blockIndex]);
 
-  const { dimension } = getDatasetInfo();
-
   return (
     <div className="panel" id="RightPanel">
       <h2>Heterogenity Examination</h2>
@@ -374,22 +375,19 @@ function RightPanel() {
                 onClick={() => setChannelIndex(0)}
                 style={{ border: channelIndex === 0 ? '2px solid #aaa' : '2px solid #fff' }}
               >
-                {' '}
-                R{' '}
+                R
               </span>
               <span
                 onClick={() => setChannelIndex(1)}
                 style={{ border: channelIndex === 1 ? '2px solid #aaa' : '2px solid #fff' }}
               >
-                {' '}
-                G{' '}
+                G
               </span>
               <span
                 onClick={() => setChannelIndex(2)}
                 style={{ border: channelIndex === 2 ? '2px solid #aaa' : '2px solid #fff' }}
               >
-                {' '}
-                B{' '}
+                B
               </span>
             </div>
           </div>
@@ -403,7 +401,10 @@ function RightPanel() {
 
         <div className="attr-container r-panel">
           <div className="row">
-            <p>Dimension: pixel ({pos.join(', ')}) </p>
+            <p>
+              Dimension: pixel ({pos.join(', ')})
+              {dimension < pcArr[0].length ? [' - R', ' - G', ' - B'][channelIndex] : ''}
+            </p>
             <div className="info">
               <span>y-scale:</span>
               <Dropdown items={['linear', 'log']} index={+lineIndex} setIndex={setLineIndex} />

@@ -109,7 +109,7 @@ const PairRect = ({ data, title, color, channel }: PairRectProps) => {
 
   const handleResize = useCallback(() => {
     const { offsetWidth, offsetHeight } = ($svg as any).current;
-    const size = Math.min(offsetHeight - 10, offsetWidth);
+    const size = Math.min(offsetHeight - 30, offsetWidth);
     setBound({
       width: size,
       height: size,

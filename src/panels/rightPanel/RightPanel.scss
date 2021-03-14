@@ -199,10 +199,14 @@
       .overlay,
       .pair-canvas {
         position: absolute;
-        bottom: -1px;
+        bottom: 2px;
         left: 20px;
         // border: 1px solid #000;
       }
+    }
+
+    .wrapper:nth-child(1) {
+      margin-right: 5px;
     }
   }
 

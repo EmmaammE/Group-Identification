@@ -35,7 +35,7 @@ const RangeSlider = ({ range, setRange, extent }: RangeSliderProps) => {
       d3
         .brushX()
         .extent([
-          [-2, -2],
+          [-HANDLE_WIDTH / 2 - 2, -2],
           [widthMap, heightMap + 1],
         ])
         .on('start brush end', ({ selection, sourceEvent, type }) => {

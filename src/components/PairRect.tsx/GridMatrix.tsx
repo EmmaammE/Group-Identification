@@ -80,7 +80,7 @@ const GridMatrix = ({
       setHeight(size);
     } else {
       const wGrid = (offsetWidth - padding * (xLabelsArr.length - 1)) / xLabelsArr.length;
-      const hGrid = (offsetHeight - padding * (xLabelsArr.length - 1) - 4) / xLabelsArr.length;
+      const hGrid = (offsetHeight - padding * (xLabelsArr.length - 1)) / xLabelsArr.length;
       const grid = Math.min(wGrid, hGrid);
 
       const w = grid * xLabelsArr.length + padding * (xLabelsArr.length - 1);
@@ -104,8 +104,8 @@ const GridMatrix = ({
     .range([0, svgHeight - margin.t - margin.b - padding * (yLabelsArr.length - 1)])
     .domain([0, 2 * yLabelsArr.length]);
 
-  const width = useMemo(() => indexXScale(2) - indexXScale(0), [indexXScale]);
-  const height = useMemo(() => indexYScale(2) - indexYScale(0), [indexYScale]);
+  const width = useMemo(() => indexXScale(2) - indexXScale(0) - 2, [indexXScale]);
+  const height = useMemo(() => indexYScale(2) - indexYScale(0) - 2, [indexYScale]);
 
   // console.log('size', width, height)
   // 格子的size映射为坐标上相差多少
@@ -551,17 +551,6 @@ const GridMatrix = ({
                             strokeWidth="1px"
                             className="outline"
                           />
-
-                          {hull !== null && (
-                            <path
-                              d={`M${hull.join(' L')} Z`}
-                              fill="none"
-                              strokeWidth={2}
-                              stroke="var(--primary-color)"
-                              transform={`translate(${left}, ${top})`}
-                              pointerEvents="none"
-                            />
-                          )}
                         </g>
                       );
                     })
@@ -578,6 +567,43 @@ const GridMatrix = ({
                 pointerEvents: 'none',
               }}
             />
+
+            <svg
+              viewBox={`-1 -1  ${svgWidth + 2} ${svgHeight}`}
+              width={`${svgWidth + 2}px`}
+              height={`${svgHeight}px`}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                pointerEvents: 'none',
+              }}
+            >
+              <g transform={`translate(${margin.l},${margin.t})`} onClick={clickPoint}>
+                {width > 0 &&
+                  xLabelsArr.map((x, i) =>
+                    yLabelsArr.map((y, j) => {
+                      const left = margin.l + indexXScale(i * 2) + padding * i;
+                      const top = margin.t + indexYScale(j * 2) + padding * j;
+                      // const hull = hullArr[i][j];
+                      return (
+                        <g key={`${i}-${j}`} id={`${i}-${j}`}>
+                          {hull !== null && (
+                            <path
+                              d={`M${hull.join(' L')} Z`}
+                              fill="none"
+                              strokeWidth={2}
+                              stroke="var(--primary-color)"
+                              transform={`translate(${left}, ${top})`}
+                              pointerEvents="none"
+                            />
+                          )}
+                        </g>
+                      );
+                    })
+                  )}
+              </g>
+            </svg>
           </div>
         </div>
 

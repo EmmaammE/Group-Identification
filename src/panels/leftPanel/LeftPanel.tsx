@@ -52,10 +52,15 @@ const initInfo: Info = {
 // inputData is a nested array which can be converted into an ndarray
 // alternatively, it can be an array of coordinates (second argument should be specified as 'sparse')
 
-const GRADIENT = ['#fff', '#aa815d'];
+const GRADIENT = ['#efefef', '#aa815d'];
 const datasetNameHash: any = {
   mnist: 'MNIST',
   face: 'Face Mask',
+};
+
+const labelDescriptionHash: any = {
+  minist: 'The value of the handwritten digit.',
+  face: 'Whether the person is wearing a mask?',
 };
 
 function LeftPanel() {
@@ -125,7 +130,7 @@ function LeftPanel() {
           clientNames,
           communicationRounds,
           dimensions,
-          labelDescription: labels,
+          // labelDescription: labels,
           labelNames,
           numberOfClients,
           testDataSize,
@@ -136,7 +141,7 @@ function LeftPanel() {
         setClientNames(clientNames);
 
         setInfo({
-          labels,
+          labels: labelDescriptionHash[datasets[i]],
           communicationRounds,
           dimensions: dimensions.join('x'),
           numberOfClients,
@@ -208,18 +213,12 @@ function LeftPanel() {
   }, [range, rawWeights]);
 
   const cosineExtent = useMemo(() => {
+    // 从最大到最小
     if (rawWeights) {
-      const extent: any = d3.extent(rawWeights.cosines);
-
-      if (extent) {
-        return [
-          (Math.floor(extent[0] * 100) / 100).toFixed(2),
-          (Math.ceil(extent[1] * 100) / 100).toFixed(2),
-        ];
-      }
+      return [1, (Math.floor(Math.min(...rawWeights.cosines) * 100) / 100).toFixed(2)];
       // return extent
     }
-    return [-1, 1];
+    return [1, -1];
   }, [rawWeights]);
 
   return (

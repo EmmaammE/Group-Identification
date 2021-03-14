@@ -29,7 +29,7 @@ const mergeDomain = (...datum: number[][]) => [
 ];
 
 function Overview({ data, flag, round, colorExtent }: OverviewProps) {
-  const color = d3.scaleLinear<string>().domain(colorExtent).range(['#fff', '#aa815d']);
+  const color = d3.scaleLinear<string>().domain(colorExtent).range(['#efefef', '#aa815d']);
 
   const xScale = useMemo(
     () =>
