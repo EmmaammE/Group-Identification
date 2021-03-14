@@ -75,7 +75,7 @@ export const setAnnoPointsAction = (points: number[]) => ({
   data: points
 })
 export interface BasicData {
-  // 当前分析的round
+  // 当前分析的round(数组下标)
   round: number,
   // 当前选择的属性
   propertyIndex: number,

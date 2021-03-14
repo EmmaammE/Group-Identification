@@ -109,9 +109,9 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
         })
         .on('end', ({ x }) => {
           const d = xScale.invert(x);
-          const fixedValue = Math.max(0, Math.round(d));
-          if (round !== fixedValue) {
-            setRound(fixedValue);
+          const fixedValue = Math.max(1, Math.round(d));
+          if (round !== fixedValue - 1) {
+            setRound(fixedValue - 1);
             setLevel(HTTP_LEVEL.labels);
           }
 
@@ -262,7 +262,7 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
         {tipId !== -1 && (
           <>
             <p>
-              In round {chatPos[tipId].r} (size: {chatPos[tipId].dataIndex.length})
+              In round {chatPos[tipId].r + 1} (size: {chatPos[tipId].dataIndex.length})
             </p>
             <p className="anno">{chatPos[tipId].text}</p>
           </>

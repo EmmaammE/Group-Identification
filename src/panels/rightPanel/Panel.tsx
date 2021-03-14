@@ -511,7 +511,7 @@ function RightPanel() {
 
                     <div style={{ pointerEvents: 'none' }}>
                       <p>
-                        In round {r} (size: {dataIndex.length}){' '}
+                        In round {r + 1} (size: {dataIndex.length}){' '}
                       </p>
                       <p className="anno">{text}</p>
                     </div>
