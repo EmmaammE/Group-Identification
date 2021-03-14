@@ -97,6 +97,7 @@ function RightPanel() {
   const chosePoint = useSelector((state: StateType) => state.identify.chosePoint);
   const setChosePoint = useCallback((i) => dispatch(setChosePointAction(i)), [dispatch]);
 
+  // 做完集合操作以后的点的下标
   const [strokePoints, setStrokePoints] = useState<number[]>([]);
   const [lineIndex, setLineIndex] = useState<number>(0);
   const [channelIndex, setChannelIndex] = useState<number>(0);
@@ -306,6 +307,7 @@ function RightPanel() {
     setStrokeId(id);
   };
 
+  // 选择的注释的点的
   const strokeSet: Set<number> = useMemo(() => {
     if (annoList[strokeId]) {
       return new Set(annoList[strokeId].dataIndex);
