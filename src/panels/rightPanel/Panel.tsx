@@ -370,9 +370,27 @@ function RightPanel() {
                 opacity: dimension < pcArr[0].length ? 1 : 0,
               }}
             >
-              <span onClick={() => setChannelIndex(0)} />
-              <span onClick={() => setChannelIndex(1)} />
-              <span onClick={() => setChannelIndex(2)} />
+              <span
+                onClick={() => setChannelIndex(0)}
+                style={{ border: channelIndex === 0 ? '2px solid #aaa' : '2px solid #fff' }}
+              >
+                {' '}
+                R{' '}
+              </span>
+              <span
+                onClick={() => setChannelIndex(1)}
+                style={{ border: channelIndex === 1 ? '2px solid #aaa' : '2px solid #fff' }}
+              >
+                {' '}
+                G{' '}
+              </span>
+              <span
+                onClick={() => setChannelIndex(2)}
+                style={{ border: channelIndex === 2 ? '2px solid #aaa' : '2px solid #fff' }}
+              >
+                {' '}
+                B{' '}
+              </span>
             </div>
           </div>
           <div className="pair-rects">
@@ -455,18 +473,13 @@ function RightPanel() {
               <PureRect data={samplesByRange[chosePoint] || []} />
             </div>
             <div>
-              <p>
-                Ground-truth label: {chosePoint !== -1 ? labelNames[groundTruth[chosePoint]] : ''}
-              </p>
+              <p>Ground-truth label: </p>
+              <p>&emsp;{chosePoint !== -1 ? labelNames[groundTruth[chosePoint]] : ''}</p>
               <p>Output:</p>
-              <p>
-                Federated learning model:{' '}
-                {chosePoint !== -1 ? labelNames[outputLabels[chosePoint]] : ''}
-              </p>
-              <p>
-                Stand-alone training model:{' '}
-                {chosePoint !== -1 ? labelNames[localLabels[chosePoint]] : ''}
-              </p>
+              <li>Federated learning model:</li>
+              <p>&emsp;{chosePoint !== -1 ? labelNames[outputLabels[chosePoint]] : ''}</p>
+              <li>Stand-alone training model:</li>
+              <p>&emsp;{chosePoint !== -1 ? labelNames[localLabels[chosePoint]] : ''}</p>
             </div>
           </div>
         </div>

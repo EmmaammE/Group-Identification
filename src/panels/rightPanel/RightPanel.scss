@@ -40,18 +40,27 @@
         cursor: pointer;
         margin: 4px;
         // opacity: 0;
+        background-color: var(--background-color);
+        text-align: center;
+        font-size: 13px;
+        line-height: 13px;
+        font-weight: 600;
       }
 
       span:nth-child(1) {
-        background: #f00;
+        color: #e71f19;
       }
 
       span:nth-child(2) {
-        background: #0f0;
+        color: #6ab82d;
       }
 
       span:nth-child(3) {
-        background: #00f;
+        color: #18499d;
+      }
+
+      .span-selected {
+        border: #aaa;
       }
     }
   }
@@ -169,7 +178,7 @@
       writing-mode: vertical-rl;
       text-align: center;
       width: 20px;
-      height: 200px;
+      height: 90px;
       line-height: 15px;
     }
 
