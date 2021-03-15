@@ -1,8 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import * as d3 from 'd3';
 import { useDispatch, useSelector } from 'react-redux';
-import { stat } from 'fs';
-import { transpose, mmultiply } from '../../utils/mm';
 import Heatmap from './Heatmap';
 import { StateType } from '../../types/data';
 import { getHeteList, loading, setChosePointAction } from '../../store/reducers/identify';

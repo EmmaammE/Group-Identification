@@ -24,7 +24,7 @@ import { getDatasetInfo, getType } from '../../utils/getType';
 import REFRESH from '../../assets/refresh.svg';
 import http from '../../utils/http';
 
-const margin = { t: 20, r: 20, b: 35, l: 50 };
+const margin = { t: 20, r: 20, b: 35, l: 55 };
 const WIDTH = 25;
 
 const areEqual = (first: number[], second: number[]) => {
@@ -443,7 +443,7 @@ function RightPanel() {
                   margin={margin}
                   data={lineDatum}
                   title=""
-                  index={lineIndex}
+                  index={+lineIndex}
                   hetData={heteData}
                 />
               )}
@@ -479,9 +479,9 @@ function RightPanel() {
               <p>Ground-truth label: </p>
               <p>&emsp;{chosePoint !== -1 ? labelNames[groundTruth[chosePoint]] : ''}</p>
               <p>Output:</p>
-              <li>Federated learning model:</li>
+              <p className="item">Federated learning model:</p>
               <p>&emsp;{chosePoint !== -1 ? labelNames[outputLabels[chosePoint]] : ''}</p>
-              <li>Stand-alone training model:</li>
+              <p className="item">Stand-alone training model:</p>
               <p>&emsp;{chosePoint !== -1 ? labelNames[localLabels[chosePoint]] : ''}</p>
             </div>
           </div>

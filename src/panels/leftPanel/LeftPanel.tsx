@@ -56,11 +56,13 @@ const GRADIENT = ['#efefef', '#aa815d'];
 const datasetNameHash: any = {
   mnist: 'MNIST',
   face: 'Face Mask',
+  anime: 'Anime',
 };
 
 const labelDescriptionHash: any = {
   mnist: 'The value of the handwritten digit.',
   face: 'Whether the person is wearing a mask?',
+  anime: 'Whether the person is interested in the game genre animes?',
 };
 
 function LeftPanel() {

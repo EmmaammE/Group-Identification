@@ -175,12 +175,12 @@ function MiddlePanel() {
 
   const handleDropDown = useCallback(
     (e: any) => {
-      setLevel(HTTP_LEVEL.sampling);
+      // setLevel(HTTP_LEVEL.sampling);
       setDataIndex(e);
       setType(items[e]);
       onTypeUpdateOrInit(items[e], round, null, null);
     },
-    [onTypeUpdateOrInit, round, setLevel]
+    [onTypeUpdateOrInit, round]
   );
 
   useEffect(() => {

@@ -34,6 +34,8 @@ export interface IdentifyData {
   // 异构标签（0：一致，1：不一致）
   // true: 一致
   "heteroLabels": [],
+  // 采样点的异构标签
+  "samplesHeteroLabels": [],
   "localOutputLabel": [],
   // 联邦模型是否正确（0：错误，1：正确）
   "fedResult": [],
@@ -72,6 +74,7 @@ const initState: any= {
   samples: [],
   localData: [],
   heteroLabels: [],
+  samplesHeteroLabels: [],
   localOutputLabel: [],
   pca: {
     "cpc1": [],
@@ -293,7 +296,7 @@ export const onTypeUpdateOrInitAction = (type: string, round: number, alpha: num
       type: INIT_OR_UPDATE,
       data: {
         samples: data,
-        heteroLabels: res2.consistencyLabel,
+        samplesHeteroLabels: res2.consistencyLabel,
         pca: res3,
         heteroList: res4,
         level: HTTP_LEVEL.cpca,
@@ -347,7 +350,7 @@ export const onRoundAction = (round: number, alpha: number|null, count: number|n
     dispatch({
       type: INIT_OR_UPDATE,
       data: {
-        heteroLabels: res2.consistencyLabel,
+        samplesHeteroLabels: res2.consistencyLabel,
         pca: res3,
         heteroList: res4,
         level: HTTP_LEVEL.cpca,

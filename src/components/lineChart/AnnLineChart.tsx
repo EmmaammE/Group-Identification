@@ -1,12 +1,15 @@
+/* eslint-disable jsx-a11y/no-static-element-interactions */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { useDispatch, useSelector } from 'react-redux';
+import { url } from 'inspector';
 import Triangle from '../markers/Triangle';
 import { setRoundAction, setAnnoPointsAction } from '../../store/reducers/basic';
 import { StateType } from '../../types/data';
 import chat from '../../assets/chat.svg';
 import { setLevelAction } from '../../store/reducers/identify';
 import HTTP_LEVEL from '../../utils/level';
+import message from '../../assets/message-big.svg';
 
 export interface LineChartProps {
   margin: {
@@ -158,18 +161,23 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
   }, [heightMap, list, xScale]);
 
   const handleMouseover = (e: any) => {
-    const { offsetY, offsetX } = e.nativeEvent;
-    setTipPos([offsetX - 20, offsetY - 30]);
-
     const id = +e.target.id;
 
+    const { x, y } = chatPos[id];
+    if (x > WIDTH - 120) {
+      setTipPos([x - 40, y - 20]);
+    } else {
+      setTipPos([x + 20, y - 20]);
+    }
+
     setTipid(id);
-    setAnnoPoints(chatPos[id].datIndex);
+    setAnnoPoints(chatPos[id].dataIndex);
   };
 
   const handleMouseout = () => {
     setTipid(-1);
     setAnnoPoints([]);
+    setTipPos([-100, -100]);
   };
 
   return (
@@ -204,7 +212,7 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
             markerEnd="url(#arrow)"
           />
           <path d={line(data as any) || ''} stroke="#777" fill="none" />
-          <g onMouseOver={handleMouseover} onMouseOut={handleMouseout}>
+          <g onClick={handleMouseover}>
             {chatPos.map((chatItem: any, i: number) => (
               <image
                 xlinkHref={chat}
@@ -217,6 +225,9 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
                 data-tip="hhh"
                 data-for="annTip"
                 cursor="pointer"
+                style={{
+                  opacity: tipId === i ? 0 : 1,
+                }}
               />
             ))}
           </g>
@@ -258,15 +269,33 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
           top: tipPos[1],
           opacity: tipId === -1 ? 0 : 1,
         }}
+        onMouseDown={handleMouseout}
       >
-        {tipId !== -1 && (
-          <>
-            <p>
-              In round {chatPos[tipId].r + 1} (size: {chatPos[tipId].dataIndex.length})
-            </p>
-            <p className="anno">{chatPos[tipId].text}</p>
-          </>
-        )}
+        <svg
+          viewBox="0 0 117.4 59.5"
+          width="120px"
+          height="120px"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M74.3,46.3H23.4c-1.4,0-9.1,2.7-9.1,2.7s3.8-7.3,3.8-8.6v-26c0-5.3,4.6-9.6,10.3-9.6h45.9
+              c5.7,0,10.3,4.3,10.3,9.6v22.2C84.5,42,79.9,46.3,74.3,46.3z"
+            fill="#F7F8F8"
+            stroke="#000"
+          />
+          <foreignObject x="25" y="10" width="55" height="90">
+            <div className="tip-text">
+              {tipId !== -1 && (
+                <div className="scroll-panel">
+                  <p>{chatPos[tipId].text}</p>
+                  <p>Size: {chatPos[tipId].dataIndex.length}</p>
+                  {/* <p>Size: 400</p> */}
+                  {/* <p>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</p> */}
+                </div>
+              )}
+            </div>
+          </foreignObject>
+        </svg>
       </div>
     </>
   );

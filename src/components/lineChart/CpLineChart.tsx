@@ -15,7 +15,7 @@ export interface CpLineChartProps {
   hetData: number[];
 }
 
-const WIDTH = 500;
+const WIDTH = 510;
 const HEIGHT = 210;
 
 type Hash = { [key: number]: number };
@@ -46,6 +46,9 @@ const getMax = (...arr: number[][]) => {
 
   return maxValue;
 };
+
+// const powerOfTen = (d: any)=> d / (10 ** Math.ceil(Math.log(d) / Math.LN10 - 1e-12)) === 1
+
 // 灰色（一致））棕色（不一致）
 const lineColor = ['#b5b6b6', '#aa815d'];
 
@@ -191,7 +194,7 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
 
   const yScales = [
     d3.scaleLinear().range([heightMap, 0]).domain([0, maxValue]).nice(),
-    d3.scaleLog().range([heightMap, 0]).domain([1e-5, maxValue]).nice(),
+    d3.scaleLog().range([heightMap, 0]).domain([1e-4, maxValue]).nice(),
     d3
       .scaleSymlog()
       .domain([0, maxValue])
@@ -217,39 +220,28 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
 
   useEffect(() => {
     const xAxis = d3.axisBottom(xScale).ticks(5);
-    // .tickValues(xScale.domain().filter((d, i) => i % 2));
-    const yAxis = d3.axisLeft(yScale).ticks(5);
+    let yAxis = d3.axisLeft(yScale).ticks(5);
 
+    if (index === 1) {
+      yAxis = yAxis.tickValues([1e-4, 1e-3, 1e-2, 1e-1, 1]);
+    }
     const d3lines = d3.select($lines.current);
 
-    d3lines.select('g.yline').call(
-      d3
-        .axisLeft(yScale)
-        .ticks(5)
-        .tickSize(-widthMap)
-        .tickFormat('' as any) as any
-    );
-    d3lines.select('g.xline').call(
-      d3
-        .axisBottom(xScale)
-        .ticks(5)
-        .tickSize(heightMap)
-        .tickFormat('' as any) as any
-    );
+    d3lines.select('g.yline').call(yAxis.tickSize(-widthMap).tickFormat('' as any) as any);
 
-    d3.select($xaxis.current).call(xAxis.scale(xScale).tickFormat(d3.format('.3s')));
+    d3lines.select('g.xline').call(xAxis.tickSize(heightMap).tickFormat('' as any) as any);
+
+    d3.select($xaxis.current).call(xAxis.tickFormat(d3.format('.3s')));
+
     d3.select($yaxis.current).call(
-      yAxis.scale(yScale).tickFormat((d) => {
-        if (d < 1e-4) {
-          return d3.format('.1p')(d);
-        }
+      yAxis.tickFormat((d) => {
         if (d < 1e-3) {
           return d3.format('.2p')(d);
         }
         return d3.format('.3p')(d);
       })
     );
-  }, [xScale, yScale, widthMap, heightMap]);
+  }, [xScale, yScale, widthMap, heightMap, index]);
 
   // console.log(hetBinCount, binsCount)
 
@@ -261,7 +253,7 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
         </clipPath>
       </defs>
       <g transform={`translate(${margin.l}, ${margin.t})`}>
-        <g transform={`translate(0, ${heightMap})`} className="axes x-axis" ref={$xaxis} />
+        <g transform="translate(0, 8)" className="axes x-axis" ref={$xaxis} />
         <g className="axes y-axis" ref={$yaxis} />
 
         <g ref={$lines} className="axis-lines">

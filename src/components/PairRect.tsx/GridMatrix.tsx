@@ -27,8 +27,11 @@ interface GridMatrixProps {
   setStrokePoints: Function;
 }
 
+// 点的半径
+const R = 3;
+
 const isInCircle = (point: number[], x: number, y: number) =>
-  (point[0] - x) * (point[0] - x) + (point[1] - y) * (point[1] - y) <= 4;
+  (point[0] - x) * (point[0] - x) + (point[1] - y) * (point[1] - y) <= R * R + 2;
 
 // const margin = { t: 50, r: 0, b: 0, l: 60 };
 const margin = { t: 0, r: 0, b: 0, l: 0 };
@@ -124,7 +127,7 @@ const GridMatrix = ({
         [0, 0],
         [width, height],
       ])
-      .duration(700)
+      .duration(300)
       .on('zoom', ({ transform }) => {
         // setTransform(d3.zoomIdentity.translate(0, 0).scale(transform.k));
         setTransform(transform);
@@ -285,7 +288,7 @@ const GridMatrix = ({
             if (pointX === xLabel && pointY === yLabel) {
               let isStroke = 0;
 
-              if (Object.keys(annoPoints).length === 0) {
+              if (annoPoints.size === 0) {
                 // 如果，没有高亮的标记点，计算当前选择的点和异构块中的点的关系
                 let isInHull = false;
                 if (type === 'local') {
@@ -351,20 +354,23 @@ const GridMatrix = ({
   );
 
   useEffect(() => {
-    const arr: any = [];
-    gridPoints.forEach((gridPointsRow) => {
-      gridPointsRow.forEach((pointArr) => {
-        pointArr.forEach((point) => {
-          // console.log(point)
-          if (point[3]) {
-            arr.push(point[4]);
-          }
+    if (annoPoints.size === 0) {
+      // 如果stroke的是注释的点，不更新
+      const arr: any = [];
+      gridPoints.forEach((gridPointsRow) => {
+        gridPointsRow.forEach((pointArr) => {
+          pointArr.forEach((point) => {
+            // console.log(point)
+            if (point[3]) {
+              arr.push(point[4]);
+            }
+          });
         });
       });
-    });
 
-    setStrokePoints(arr);
-  }, [gridPoints, setStrokePoints]);
+      setStrokePoints(arr);
+    }
+  }, [annoPoints, gridPoints, setStrokePoints]);
 
   useEffect(() => {
     if (!$chart.current || !xScale || !yScale) {
@@ -376,7 +382,7 @@ const GridMatrix = ({
     ctx.clearRect(0, 0, svgWidth, svgHeight);
     ctx.lineWidth = 1;
 
-    ctx.strokeStyle = 'rgba(0,0,0, 0.2)';
+    ctx.strokeStyle = 'rgba(0,0,0, 0.5)';
 
     // console.log(pointsInHullArr);
     gridPoints.forEach((gridPointRow, i) => {
@@ -406,15 +412,15 @@ const GridMatrix = ({
           }
 
           if (
-            point[0] > left &&
-            point[0] < left + width &&
-            point[1] > top &&
-            point[1] < top + width
+            point[0] >= left + R &&
+            point[0] <= left + width - R &&
+            point[1] >= top + R &&
+            point[1] <= top + width - R
           ) {
             ctx.moveTo(point[0], point[1]);
             ctx.beginPath();
 
-            ctx.arc(point[0], point[1], point[4] === chosePoint ? 4 : 2, 0, Math.PI * 2);
+            ctx.arc(point[0], point[1], point[4] === chosePoint ? R + 2 : R, 0, Math.PI * 2);
             ctx.closePath();
             ctx.fill();
 
@@ -466,7 +472,7 @@ const GridMatrix = ({
       // console.log(clusterPoints);
       // console.log(gridPoint);
 
-      const offset = 5;
+      const offset = R * 2;
       const searched = search(x0 - offset, y0 - offset, x1 + offset, y1 + offset).filter(
         (point: number[]) => point[2] === xLabelsArr[i] && point[3] === yLabelsArr[j]
       );
@@ -477,11 +483,11 @@ const GridMatrix = ({
 
       const results = searched
         .filter((point: number[]) =>
-          // const pointOffset = [point[0] + left, point[1] + top];
-          // console.log(x0, y0, x1, y1, pointOffset);
           isInCircle([point[0], point[1]], offsetX - left, offsetY - top)
         )
-        .sort((a: number[], b: number[]) => a[3] - b[3]);
+        .sort(
+          (a: number[], b: number[]) => Number(heteroLabels[a[4]]) - Number(heteroLabels[b[4]])
+        );
       // console.log(results)
       if (results.length) {
         setChosePoint(results[0][4]);

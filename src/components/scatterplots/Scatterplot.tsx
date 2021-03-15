@@ -3,6 +3,8 @@ import { useSelector } from 'react-redux';
 import * as d3 from 'd3';
 import { ChartProps } from '../../types/chart';
 import useWindowSize from '../../utils/useResize';
+import { StateType } from '../../types/data';
+import { getType } from '../../utils/getType';
 
 function strokeType(type: string) {
   switch (type) {
@@ -51,7 +53,10 @@ function Scatterplot({
   const [width, setWidth] = useState<number>(0);
   const [height, setHeight] = useState<number>(0);
 
-  const heteroLabels = useSelector((state: any) => state.identify.heteroLabels);
+  // const heteroLabels = useSelector((state: any) => state.identify.heteroLabels);
+  const heteroLabels = useSelector((state: StateType) =>
+    getType() === 'local' ? state.identify.heteroLabels : state.identify.samplesHeteroLabels
+  );
   const topOrder = topArr[onTop];
 
   const handleResize = useCallback(() => {
