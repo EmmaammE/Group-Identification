@@ -38,7 +38,7 @@ const colorScale = d3
   .scaleLinear<string>()
   // .domain([0, 0.5, 1])
   .domain([0, 0.5, 1])
-  .range(['#ffdfb2', '#eee', '#cde8ba']);
+  .range(['#ffdfb2', '#fefeff', '#cde8ba']);
 // 红白蓝
 // .range(['#e60d17', '#fff', '#0b69b6']);
 const GridMatrix = ({
@@ -458,7 +458,7 @@ const GridMatrix = ({
           <div className="input-wrapper">
             <span> Ground-truth labels: </span>
             <Gradient
-              colors={['#ffdfb2', '#eee', '#cde8ba']}
+              colors={['#ffdfb2', '#fefeff', '#cde8ba']}
               legends={['0%', '100%']}
               width="50px"
               height={25}
