@@ -59,7 +59,7 @@ const datasetNameHash: any = {
 };
 
 const labelDescriptionHash: any = {
-  minist: 'The value of the handwritten digit.',
+  mnist: 'The value of the handwritten digit.',
   face: 'Whether the person is wearing a mask?',
 };
 
@@ -177,7 +177,7 @@ function LeftPanel() {
         .then((res) => {
           setRawWeights(res);
           setRange([0, res.serverWeights.length - 1]);
-          setRound(res.serverWeights.length);
+          setRound(res.serverWeights.length - 1);
           setLevel(HTTP_LEVEL.sampling);
         });
     }
@@ -185,10 +185,6 @@ function LeftPanel() {
 
   useEffect(() => {
     if (HTTP_LEVEL.sampling === level && round !== -1) {
-      console.log('init');
-      if (rawWeights) {
-        setRound(rawWeights.serverWeights.length);
-      }
       onTypeUpdateOrInit(getType(), round, null, null);
     }
   }, [level, onTypeUpdateOrInit, rawWeights, round, setRound]);
@@ -215,7 +211,7 @@ function LeftPanel() {
   const cosineExtent = useMemo(() => {
     // 从最大到最小
     if (rawWeights) {
-      return [1, (Math.floor(Math.min(...rawWeights.cosines) * 100) / 100).toFixed(2)];
+      return [1, +(Math.floor(Math.min(...rawWeights.cosines) * 100) / 100).toFixed(2)];
       // return extent
     }
     return [1, -1];

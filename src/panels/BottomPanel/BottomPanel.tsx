@@ -9,9 +9,9 @@ import HTTP_LEVEL from '../../utils/level';
 import './BottomPanel.scss';
 
 const lineChartMargin = {
-  r: 15,
+  r: 10,
   b: 20,
-  l: 30,
+  l: 60,
   t: 15,
 };
 

@@ -19,6 +19,7 @@ interface GridMatrixProps {
   // 不一致点的下标
   heteroIndex: Set<number>;
   heteroLabels: boolean[];
+  // 列表的点
   strokeSet: Set<number>;
   strokeStatus: number;
   chosePoint: number;
@@ -72,6 +73,10 @@ const GridMatrix = ({
   // true是checked
   const [display, toggelDisplat] = useState<boolean>(true);
 
+  const [t, setTransform] = useState<d3.ZoomTransform>(d3.zoomIdentity.translate(0, 0).scale(1));
+
+  const $svg = useRef(null);
+
   const handleResize = useCallback(() => {
     const { offsetWidth, offsetHeight } = ($wrapper as any).current;
     const size = Math.min(offsetWidth, offsetHeight);
@@ -107,29 +112,64 @@ const GridMatrix = ({
   const width = useMemo(() => indexXScale(2) - indexXScale(0) - 2, [indexXScale]);
   const height = useMemo(() => indexYScale(2) - indexYScale(0) - 2, [indexYScale]);
 
+  useEffect(() => {
+    const zoomer: any = d3
+      .zoom()
+      .scaleExtent([1, 100])
+      .translateExtent([
+        [0, 0],
+        [width, height],
+      ])
+      .extent([
+        [0, 0],
+        [width, height],
+      ])
+      .duration(700)
+      .on('zoom', ({ transform }) => {
+        // setTransform(d3.zoomIdentity.translate(0, 0).scale(transform.k));
+        setTransform(transform);
+        // console.log('zoom')
+      });
+
+    d3.select($svg.current).call(zoomer);
+    // .on('dblclick.zoom', () => {
+    //   const transform = d3.zoomIdentity.translate(0, 0).scale(1);
+    //   d3.select($svg.current)
+    //     .transition()
+    //     .duration(200)
+    //     .ease(d3.easeLinear)
+    //     .call((zoomer as any).transform, transform);
+    // });
+  }, [$svg, height, width]);
   // console.log('size', width, height)
   // 格子的size映射为坐标上相差多少
-  const normScale = d3.scaleLinear().range([0, width]).domain([0, 1]);
+  const normScale = t.rescaleX(d3.scaleLinear().range([0, width]).domain([0, 1]));
 
   const xScale = useMemo(
     () =>
-      d3
-        .scaleLinear()
-        .range([0, width])
-        .domain(d3.extent(data, (d) => d[0]) as [number, number])
-        .nice(),
-    [data, width]
+      t.rescaleX(
+        d3
+          .scaleLinear()
+          .range([0, width])
+          .domain(d3.extent(data, (d) => d[0]) as [number, number])
+          .nice()
+      ),
+    [data, t, width]
   );
 
   const yScale = useMemo(
     () =>
-      d3
-        .scaleLinear()
-        .range([0, height])
-        .domain(d3.extent(data, (d) => d[1]) as [number, number])
-        .nice(),
-    [data, height]
+      t.rescaleY(
+        d3
+          .scaleLinear()
+          .range([0, height])
+          .domain(d3.extent(data, (d) => d[1]) as [number, number])
+          .nice()
+      ),
+    [data, height, t]
   );
+
+  // console.log(xScale.domain(), xScale.range())
 
   const points: number[][] = useMemo(
     () =>
@@ -342,6 +382,14 @@ const GridMatrix = ({
     gridPoints.forEach((gridPointRow, i) => {
       // 每一行
       gridPointRow.forEach((gridPoint, j) => {
+        const left = margin.l + indexXScale(i * 2) + padding * i;
+        const top = margin.t + indexYScale(j * 2) + padding * j;
+        // ctx.restore();
+
+        // ctx.rect(left, top,  width, height);
+        // ctx.fill()
+        // ctx.clip();
+
         // 每一格，point的序号已经变了，必须使用point数组中的k
         gridPoint.forEach((point) => {
           let alpha = 0.7;
@@ -357,15 +405,22 @@ const GridMatrix = ({
             // ctx.fillStyle = `rgba(197,92,0,${alpha})`;
           }
 
-          ctx.moveTo(point[0], point[1]);
-          ctx.beginPath();
+          if (
+            point[0] > left &&
+            point[0] < left + width &&
+            point[1] > top &&
+            point[1] < top + width
+          ) {
+            ctx.moveTo(point[0], point[1]);
+            ctx.beginPath();
 
-          ctx.arc(point[0], point[1], point[4] === chosePoint ? 4 : 2, 0, Math.PI * 2);
-          ctx.closePath();
-          ctx.fill();
+            ctx.arc(point[0], point[1], point[4] === chosePoint ? 4 : 2, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.fill();
 
-          if (point[3]) {
-            ctx.stroke();
+            if (point[3]) {
+              ctx.stroke();
+            }
           }
         });
       });
@@ -400,8 +455,6 @@ const GridMatrix = ({
   // console.log(pointsInHull, hullArr)
 
   const clickPoint = (e: any) => {
-    // console.log(e)
-
     const { pos } = e.target.dataset;
     const { offsetX, offsetY } = e.nativeEvent;
     // ${i}-${j}-${rectX}-${rectY}
@@ -511,7 +564,13 @@ const GridMatrix = ({
               width={`${svgWidth + 2}px`}
               height={`${svgHeight}px`}
               cursor="pointer"
+              ref={$svg}
             >
+              <defs>
+                <clipPath id="rect">
+                  <rect x={0} y={0} width={width} height={height} />
+                </clipPath>
+              </defs>
               <g transform={`translate(${margin.l},${margin.t})`} onClick={clickPoint}>
                 {width > 0 &&
                   xLabelsArr.map((x, i) =>
@@ -521,7 +580,12 @@ const GridMatrix = ({
                       // const hull = hullArr[i][j];
 
                       return (
-                        <g key={`${i}-${j}`} id={`${i}-${j}`}>
+                        <g
+                          key={`${i}-${j}`}
+                          id={`${i}-${j}`}
+                          transform={`translate(${left}, ${top})`}
+                          clipPath="url(#rect)"
+                        >
                           {clusterPoints[i].map((cluster: any, rectX: number) => (
                             <g key={`${i}-${j}-${rectX}`} id={`${i}-${rectX}`}>
                               {cluster.map((rect: any, rectY: number) => {
@@ -531,8 +595,8 @@ const GridMatrix = ({
                                     data-pos={`${i}-${j}-${rectX}-${rectY}`}
                                     key={`${x0},${y0},${i}`}
                                     fill={ratio === -1 ? '#fff' : colorScale(ratio)}
-                                    x={x0 + left}
-                                    y={y0 + top}
+                                    x={x0}
+                                    y={y0}
                                     width={x1 - x0}
                                     height={y1 - y0}
                                   />
@@ -540,17 +604,6 @@ const GridMatrix = ({
                               })}
                             </g>
                           ))}
-                          <rect
-                            x={left}
-                            y={top}
-                            width={width}
-                            height={height}
-                            fill="none"
-                            stroke="#777"
-                            strokeDasharray="2 2"
-                            strokeWidth="1px"
-                            className="outline"
-                          />
                         </g>
                       );
                     })
@@ -587,17 +640,31 @@ const GridMatrix = ({
                       const top = margin.t + indexYScale(j * 2) + padding * j;
                       // const hull = hullArr[i][j];
                       return (
-                        <g key={`${i}-${j}`} id={`${i}-${j}`}>
+                        <g
+                          key={`${i}-${j}`}
+                          id={`${i}-${j}`}
+                          clipPath="url(#rect)"
+                          transform={`translate(${left}, ${top})`}
+                        >
                           {hull !== null && (
                             <path
                               d={`M${hull.join(' L')} Z`}
                               fill="none"
                               strokeWidth={2}
                               stroke="var(--primary-color)"
-                              transform={`translate(${left}, ${top})`}
-                              pointerEvents="none"
                             />
                           )}
+                          <rect
+                            x="0"
+                            y="0"
+                            width={width}
+                            height={height}
+                            fill="none"
+                            stroke="#777"
+                            strokeDasharray="2 2"
+                            strokeWidth="1px"
+                            className="outline"
+                          />
                         </g>
                       );
                     })

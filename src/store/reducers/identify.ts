@@ -130,7 +130,7 @@ export const getLabelsAction = (round: number) => async (dispatch: any) => {
   // dispatch(loading);
   try {
     const res = await http('/fl-hetero/labels/', {
-      "round": round-1,
+      "round": round,
     })
      dispatch({
       type: SET_LABELS,
@@ -262,7 +262,7 @@ export const onTypeUpdateOrInitAction = (type: string, round: number, alpha: num
   });
 
   const res2 = await http('/fl-hetero/labels/',  {
-    "round": round-1,
+    "round": round,
   })
 
   const res3 = await http('/fl-hetero/cpca/all/', {
@@ -318,7 +318,7 @@ export const onRoundAction = (round: number, alpha: number|null, count: number|n
   await dispatch(loading(true));
 
   const res2 = await http('/fl-hetero/labels/',  {
-    "round": round-1,
+    "round": round,
   })
 
   const res3 = await http('/fl-hetero/cpca/all/', {
