@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 import { useDispatch, useSelector } from 'react-redux';
 import Heatmap from './Heatmap';
 import { StateType } from '../../types/data';
-import { getHeteList, loading, setChosePointAction } from '../../store/reducers/identify';
+import { getCPCA, loading, setChosePointAction } from '../../store/reducers/service';
 import { setSizeAction, setHeteroPointsAction } from '../../store/reducers/basic';
 import { setIndexAction } from '../../store/reducers/blockIndex';
 import HTTP_LEVEL from '../../utils/level';
@@ -42,7 +42,7 @@ interface HeatmapWrapperProps {
 }
 
 const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
-  const heteroList = useSelector((state: StateType) => state.identify.heteroList.clusterList);
+  const heteroList = useSelector((state: StateType) => state.service.heteroList.clusterList);
   const round = useSelector((state: StateType) => state.basic.round);
 
   const width = WIDTH - MARGIN.left - MARGIN.right;
@@ -52,13 +52,14 @@ const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
   const yScale = d3.scaleLinear().domain(y).range([height, 0]).nice();
 
   const dispatch = useDispatch();
-  const getLists = useCallback((count: number | null) => dispatch(getHeteList(count)), [dispatch]);
 
   const blockIndex = useSelector((state: StateType) => state.blockIndex);
   const setClusterSize = useCallback((s) => dispatch(setSizeAction(s)), [dispatch]);
   const updateBlock = useCallback((i) => dispatch(setIndexAction(i)), [dispatch]);
 
-  const level = useSelector((state: StateType) => state.identify.level);
+  const cpacaAlphaFromStore = useSelector((state: StateType) => state.service.cpca.alpha);
+
+  const level = useSelector((state: StateType) => state.service.level);
   const heteroPoints = useSelector((state: StateType) => state.basic.heteroPoints);
   const setHeteroPoints = useCallback(
     (pointsParam) => dispatch(setHeteroPointsAction(pointsParam)),
@@ -66,7 +67,12 @@ const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
   );
   const setChosePoint = useCallback((i) => dispatch(setChosePointAction(i)), [dispatch]);
 
-  // const loading = useSelector((state: StateType) => state.identify.loading);
+  const updateCPCA = useCallback(
+    (block: number, alpha: number | null) => dispatch(getCPCA(block, alpha)),
+    [dispatch]
+  );
+
+  // const loading = useSelector((state: StateType) => state.service.loading);
 
   const densityData = useMemo(
     () =>
@@ -128,6 +134,15 @@ const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
   // console.log(heteroPointsArr)
   const n = nOfCluster !== null && nOfCluster < 4 ? nOfCluster : 4;
   const ifMultiLine = nOfCluster !== null && nOfCluster > 4;
+
+  const updateBlockHandle = useCallback(
+    (i: number) => {
+      updateBlock(i);
+      updateCPCA(i, cpacaAlphaFromStore);
+    },
+    [cpacaAlphaFromStore, updateBlock, updateCPCA]
+  );
+
   return (
     <div className="pair-rect-wrapper">
       <div
@@ -142,8 +157,8 @@ const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
             key={i}
             role="menuitem"
             tabIndex={0}
-            onClick={() => updateBlock(i)}
-            onKeyDown={() => updateBlock(i)}
+            onClick={() => updateBlockHandle(i)}
+            onKeyDown={() => updateBlockHandle(i)}
           >
             <div className={blockIndex === i ? 'selected' : ''}>
               <Heatmap

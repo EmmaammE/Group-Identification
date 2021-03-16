@@ -7,7 +7,10 @@ const http = async (url: string, param: Object) => {
       'Content-Type': 'application/json',
     },
   })
+  // console.log(res)
+
   const resp = await res.json();
+
   return resp;
 }
 

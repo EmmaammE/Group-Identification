@@ -8,7 +8,7 @@ import MiddlePanel from './panels/middlePanel/MiddlePanel';
 import { StateType } from './types/data';
 
 function App() {
-  const loading = useSelector((state: StateType) => state.identify.loading);
+  const loading = useSelector((state: StateType) => state.service.loading);
 
   console.log('loading', loading);
   return (

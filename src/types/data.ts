@@ -1,6 +1,6 @@
 import { DataType } from "../store/leftpanelAction";
 import { BasicData } from "../store/reducers/basic";
-import { IdentifyData } from "../store/reducers/identify";
+import { IdentifyData } from "../store/reducers/service";
 
 export interface Data {
   pos: number[],
@@ -16,8 +16,7 @@ export interface DataItem {
 }
 
 export interface StateType {
-  leftPanel: DataType,
   blockIndex: number,
-  identify: IdentifyData,
+  service: IdentifyData,
   basic: BasicData
 }

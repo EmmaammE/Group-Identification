@@ -1,6 +1,6 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import * as d3 from 'd3';
 import Scatterplot from '../../components/scatterplots/Scatterplot';
@@ -10,20 +10,14 @@ import inputStyles from '../../styles/input.module.css';
 import Dropdown from '../../components/ui/Dropdown';
 import HeatmapWrapper from '../../components/heatmap/HeatmapWrapper';
 import { StateType } from '../../types/data';
-import { mmultiply, transpose } from '../../utils/mm';
 import {
-  getCPCAResults,
-  getSamplesAction,
-  getLabelsAction,
   setLevelAction,
-  getAllCPCA,
   onTypeUpdateOrInitAction,
   defaultCount,
-  setChosePointAction,
   onRoundAction,
-  getHeteList,
-} from '../../store/reducers/identify';
-import useFetch from '../../utils/useFetch';
+  onListAction,
+  onAllAlphaAction,
+} from '../../store/reducers/service';
 import HTTP_LEVEL from '../../utils/level';
 import ICON from '../../assets/convex.svg';
 import { getType, setType } from '../../utils/getType';
@@ -48,44 +42,57 @@ const chartProps: ChartProps = {
   },
 };
 
-const items = ['local', 'stratified', 'systematic'];
-const defaultCPACA = 5;
+const items = ['local', 'stratified'];
 
 function MiddlePanel() {
   const [dataIndex, setDataIndex] = useState<number>(0);
   // const [param, setParam] = useState<number | null>(null);
-  const param = useSelector((state: StateType) => state.identify.pca.alpha);
+  const allCpcaAlpha = useSelector((state: StateType) => state.service.allCPCA.alpha);
 
   // cluster number 输入时的映射
   const [nOfCluster, setNOfCluster] = useState<number | null>(defaultCount);
   const round = useSelector((state: StateType) => state.basic.round);
+  const blockIndex = useSelector((state: StateType) => state.blockIndex);
 
-  const cpArray = useSelector((state: StateType) => [
-    state.identify.pca.cpc1,
-    state.identify.pca.cpc2,
-  ]);
-  // all cpca
   // const [cpArray, setCpArray] = useState<number[][]>([[], []]);
 
-  const samples = useSelector((state: StateType) =>
-    getType() === 'local' ? state.identify.localData : state.identify.samples
-  );
+  const samples = useSelector((state: StateType) => state.service.samples);
 
   const dispatch = useDispatch();
-  const clusterFromRes = useSelector((state: StateType) => state.identify.heteroList.nrOfClusters);
+  const clusterFromRes = useSelector((state: StateType) => state.service.heteroList.nrOfClusters);
   const setLevel = useCallback((level: number) => dispatch(setLevelAction(level)), [dispatch]);
-  const getCPCA = useCallback((alpha: number | null) => dispatch(getAllCPCA(alpha)), [dispatch]);
-  const getLists = useCallback((count: number | null) => dispatch(getHeteList(count)), [dispatch]);
+  const getAllCPCA = useCallback(
+    (alpha: number | null, count: number | null, clusterId: number, cpcaAlphaP) =>
+      dispatch(onAllAlphaAction(alpha, count, clusterId, cpcaAlphaP)),
+    [dispatch]
+  );
+  const getLists = useCallback(
+    (count: number | null, clusterId: number, cpcaAlphaP) =>
+      dispatch(onListAction(count, clusterId, cpcaAlphaP)),
+    [dispatch]
+  );
 
+  const blockCpcaAlpha = useSelector((state: StateType) => state.service.cpca.alpha);
   const onTypeUpdateOrInit = useCallback(
-    (type: string, r: number, alpha: number | null, count: number | null) =>
-      dispatch(onTypeUpdateOrInitAction(type, r, alpha, count)),
+    (
+      type: string,
+      r: number,
+      alpha: number | null,
+      count: number | null,
+      clusterId: number | null,
+      cpcaAlphaP: number | null
+    ) => dispatch(onTypeUpdateOrInitAction(type, r, alpha, count, clusterId, cpcaAlphaP)),
     [dispatch]
   );
 
   const onRoundChange = useCallback(
-    (r: number, alpha: number | null, count: number | null) =>
-      dispatch(onRoundAction(r, alpha, count)),
+    (
+      r: number,
+      alpha: number | null,
+      count: number | null,
+      clusterId: number | null,
+      cpcaAlphaP: number | null
+    ) => dispatch(onRoundAction(r, alpha, count, clusterId, cpcaAlphaP)),
     [dispatch]
   );
 
@@ -96,91 +103,39 @@ function MiddlePanel() {
     ($inputCount as any).current.value = clusterFromRes;
   }, [clusterFromRes]);
 
-  const nOfConsistent = useSelector(
-    (state: StateType) => state.identify.heteroLabels.filter((d) => d).length
+  const nOfConsistent = useSelector((state: StateType) =>
+    dataIndex === 0
+      ? state.service.heteroLabels.filter((d) => d).length
+      : state.service.samplesHeteroLabels.filter((d) => d).length
   );
-  const level = useSelector((state: StateType) => state.identify.level);
-
-  // // 当选择local时，从store的local加载数据。否则从samplesData加载数据
-  // const [data, setRequest]: any = useFetch('');
+  const level = useSelector((state: StateType) => state.service.level);
 
   const [topStatus, setTopStatus] = useState<number>(1);
 
   // alpha变化
   const handleParamChange = useCallback(
     (e: any) => {
-      setLevel(HTTP_LEVEL.pca);
-      getCPCA(+e.target.value);
+      // setLevel(HTTP_LEVEL.pca);
+      getAllCPCA(+e.target.value, nOfCluster, blockIndex, allCpcaAlpha);
     },
-    [getCPCA, setLevel]
+    [allCpcaAlpha, blockIndex, getAllCPCA, nOfCluster]
   );
 
   const freshParam = useCallback(() => {
-    getCPCA(null);
-  }, [getCPCA]);
+    getAllCPCA(null, nOfCluster, blockIndex, allCpcaAlpha);
+  }, [allCpcaAlpha, blockIndex, getAllCPCA, nOfCluster]);
 
-  // useEffect(() => {
-  //   if (param === null) {
-  //     setParam(paramFromRes);
-  //   }
-  // }, [param, paramFromRes]);
-
-  const points = useMemo(() => {
-    try {
-      // console.log(cpArray)
-      if (cpArray[0].length !== 0) {
-        const cpT = transpose(cpArray); // 784*2
-
-        if (samples.length !== 0) {
-          // console.log(data)
-          return mmultiply(samples, cpT);
-        }
-      }
-      return [[]];
-      // console.log(samples, cpT)
-    } catch (err) {
-      console.log(err);
-    }
-
-    return [[]];
-  }, [cpArray, samples]);
-
-  const x = d3.extent(points, (d) => d[0]) as any;
-  const y = d3.extent(points, (d) => d[1]) as any;
-
-  // const onAlphaChange = useCallback(async () => {
-  // const res = await http('/fl-hetero/cpca/all/', {alpha: param});
-  // setCpArray([res.cpc1, res.cpc2]);
-
-  // setParam(res.alpha);
-  // }, [param])
-
-  // const onTypeChange = useCallback(async () => {
-  //   // 当请求数据变化
-  //   await getSamples(items[dataIndex]);
-  //   await getLabels(round);
-  //   onAlphaChange();
-  // }, [dataIndex, getLabels, getSamples, onAlphaChange, round])
-
-  // const onRoundChange = useCallback(async (r) => {
-  //   await getLabels(r);
-  //   onAlphaChange();
-  // }, [getLabels, onAlphaChange])
-
-  // useEffect(() => {
-  //   if(HTTP_LEVEL.labels === level) {
-  //     getLabels(round);
-  //   }
-  // }, [round, getLabels, level])
+  const x = d3.extent(samples, (d) => d[0]) as any;
+  const y = d3.extent(samples, (d) => d[1]) as any;
 
   const handleDropDown = useCallback(
     (e: any) => {
       // setLevel(HTTP_LEVEL.sampling);
       setDataIndex(e);
       setType(items[e]);
-      onTypeUpdateOrInit(items[e], round, null, null);
+      onTypeUpdateOrInit(items[e], round, allCpcaAlpha, nOfCluster, blockIndex, blockCpcaAlpha);
     },
-    [onTypeUpdateOrInit, round]
+    [allCpcaAlpha, blockCpcaAlpha, blockIndex, nOfCluster, onTypeUpdateOrInit, round]
   );
 
   useEffect(() => {
@@ -189,9 +144,9 @@ function MiddlePanel() {
 
   useEffect(() => {
     if (level === HTTP_LEVEL.labels) {
-      onRoundChange(round, param, nOfCluster);
+      onRoundChange(round, allCpcaAlpha, nOfCluster, blockIndex, blockCpcaAlpha);
     }
-  }, [round, level, onRoundChange, param, nOfCluster]);
+  }, [round, level, onRoundChange, allCpcaAlpha, nOfCluster, blockIndex, blockCpcaAlpha]);
 
   const onInputNumber = (e: any) => {
     const reg = new RegExp('^[0-9]*$');
@@ -199,21 +154,21 @@ function MiddlePanel() {
     if (e.target.value.match(reg)) {
       setNOfCluster(+e.target.value);
       setLevel(HTTP_LEVEL.cpca);
-      getLists(+e.target.value);
+      getLists(+e.target.value, blockIndex, blockCpcaAlpha);
     } else {
       setNOfCluster(null);
     }
   };
 
   const freshCount = useCallback(() => {
-    getLists(null);
+    getLists(null, blockIndex, blockCpcaAlpha);
     setLevel(HTTP_LEVEL.cpca);
-  }, [getLists, setLevel]);
+  }, [blockCpcaAlpha, blockIndex, getLists, setLevel]);
 
   const $inputAlpha = useRef(null);
   useEffect(() => {
-    ($inputAlpha as any).current.value = param?.toFixed(2);
-  }, [param]);
+    ($inputAlpha as any).current.value = allCpcaAlpha?.toFixed(2);
+  }, [allCpcaAlpha]);
 
   return (
     <div id="MiddlePanel" className="panel">
@@ -235,7 +190,7 @@ function MiddlePanel() {
                 <input
                   className={inputStyles.input}
                   type="text"
-                  defaultValue={param?.toFixed(2) || ''}
+                  defaultValue={allCpcaAlpha?.toFixed(2) || ''}
                   onBlur={handleParamChange}
                   ref={$inputAlpha}
                 />
@@ -257,7 +212,7 @@ function MiddlePanel() {
               {topStatus === 0 && <span>-shown on the top</span>}
             </div>
           </div>
-          <Scatterplot chartConfig={chartProps} points={points} x={x} y={y} onTop={topStatus} />
+          <Scatterplot chartConfig={chartProps} points={samples} x={x} y={y} onTop={topStatus} />
         </div>
 
         <div>
@@ -304,7 +259,7 @@ function MiddlePanel() {
               </div>
             </div>
           </div>
-          <HeatmapWrapper points={points} x={x} y={y} nOfCluster={nOfCluster} />
+          <HeatmapWrapper points={samples} x={x} y={y} nOfCluster={nOfCluster} />
         </div>
       </div>
     </div>

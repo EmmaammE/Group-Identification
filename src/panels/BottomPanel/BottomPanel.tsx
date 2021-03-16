@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import AnnoLineChart from '../../components/lineChart/AnnLineChart';
 import Dropdown from '../../components/ui/Dropdown';
 import { fetchLists, setUpdateAction } from '../../store/reducers/basic';
-import { setLevelAction } from '../../store/reducers/identify';
+import { setLevelAction } from '../../store/reducers/service';
 import { StateType } from '../../types/data';
 import HTTP_LEVEL from '../../utils/level';
 import './BottomPanel.scss';
@@ -47,7 +47,7 @@ const BottomPanel = () => {
 
   const getList = useCallback(() => dispatch(fetchLists()), [dispatch]);
   const setLevel = useCallback((level: number) => dispatch(setLevelAction(level)), [dispatch]);
-  const level = useSelector((state: StateType) => state.identify.level);
+  const level = useSelector((state: StateType) => state.service.level);
 
   useEffect(() => {
     if (clientName) {

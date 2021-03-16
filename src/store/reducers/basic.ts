@@ -97,7 +97,7 @@ export interface BasicData {
 
 const initState: BasicData = {
   round: 0,
-  propertyIndex: 0,
+  propertyIndex: -1,
   clientName: '',
   pos: [0,0],
   // 选中的cluster的size

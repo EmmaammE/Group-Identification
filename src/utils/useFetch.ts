@@ -1,36 +1,23 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import {toggleLoading} from '../store/reducers/identify';
+import http from './http';
 
-const useFetch = (type: string) => {
+const useFetch = (url: string, param: any) => {
   const [data, setData] = useState<number[]>([]);
-  const [request, setRequest] = useState<string>(type);
+  const [request, setRequest] = useState<any>(param);
 
-  const dispatch = useDispatch();
-  const setLoading = useCallback(() => dispatch(toggleLoading()), [dispatch])
- 
   useEffect(() => {
     let ignore = false;
 
     async function fetchData() {
-      if(request === '') {
+      if(request === null) {
         return;
       }
 
-      setLoading();
-
-      const response = await fetch('/fl-hetero/sampling/', {
-        method: 'POST',
-        body: JSON.stringify({
-          samplingType: request
-          // samplingType: 'samples'
-        })
-      })
-
-      const res = await response.json();
+      const res = await http(url, request);
+      
       if(!ignore) {
         setData(res.data);
-        setLoading();
       }
     }
 
@@ -39,12 +26,12 @@ const useFetch = (type: string) => {
     return () => {
       ignore = true;
     }
-  }, [request, setLoading])
+  }, [param, request, url])
 
-  return [
+  return {
     data,
     setRequest
-  ]
+  }
 }
 
 export default useFetch;

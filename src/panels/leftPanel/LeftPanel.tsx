@@ -14,11 +14,10 @@ import {
 } from '../../store/reducers/basic';
 import { StateType } from '../../types/data';
 import {
-  getSamplesAction,
   initIdentityAction,
   setLevelAction,
   onTypeUpdateOrInitAction,
-} from '../../store/reducers/identify';
+} from '../../store/reducers/service';
 import HTTP_LEVEL from '../../utils/level';
 import { getType, setDatasetInfo } from '../../utils/getType';
 
@@ -65,6 +64,22 @@ const labelDescriptionHash: any = {
   anime: 'Whether the person is interested in the game genre animes?',
 };
 
+const labelNames: any = {
+  mnist: [
+    'digit-0',
+    'digit-1',
+    'digit-2',
+    'digit-3',
+    'digit-4',
+    'digit-5',
+    'digit-6',
+    'digit-7',
+    'digit-8',
+    'digit-9',
+  ],
+  face: ['With mask', 'With no mask'],
+};
+
 function LeftPanel() {
   // TODO 修改local数据集
   const [index, setIndex] = useState(-1);
@@ -91,11 +106,11 @@ function LeftPanel() {
   const initIdentity = useCallback(() => dispatch(initIdentityAction()), [dispatch]);
 
   const setLevel = useCallback((level: number) => dispatch(setLevelAction(level)), [dispatch]);
-  const level = useSelector((state: StateType) => state.identify.level);
+  const level = useSelector((state: StateType) => state.service.level);
   const setRound = useCallback((i) => dispatch(setRoundAction(i)), [dispatch]);
   const onTypeUpdateOrInit = useCallback(
-    (type: string, r: number, alpha: number | null, count: number | null) =>
-      dispatch(onTypeUpdateOrInitAction(type, r, alpha, count)),
+    (type: string, r: number) =>
+      dispatch(onTypeUpdateOrInitAction(type, r, null, null, null, null)),
     [dispatch]
   );
   const setLabelNames = useCallback((n: string[]) => dispatch(setLabelNamesAction(n)), [dispatch]);
@@ -133,7 +148,6 @@ function LeftPanel() {
           communicationRounds,
           dimensions,
           // labelDescription: labels,
-          labelNames,
           numberOfClients,
           testDataSize,
           trainingDataSize,
@@ -156,7 +170,7 @@ function LeftPanel() {
           dimensions.slice(-2).reduce((acc: number, cur: number) => acc * cur, 1)
         );
 
-        setLabelNames(labelNames);
+        setLabelNames(labelNames[datasets[i]]);
         // setLevel(HTTP_LEVEL.datasets+1);
       });
   };
@@ -187,7 +201,7 @@ function LeftPanel() {
 
   useEffect(() => {
     if (HTTP_LEVEL.sampling === level && round !== -1) {
-      onTypeUpdateOrInit(getType(), round, null, null);
+      onTypeUpdateOrInit(getType(), round);
     }
   }, [level, onTypeUpdateOrInit, rawWeights, round, setRound]);
 

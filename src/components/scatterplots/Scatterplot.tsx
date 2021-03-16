@@ -53,9 +53,17 @@ function Scatterplot({
   const [width, setWidth] = useState<number>(0);
   const [height, setHeight] = useState<number>(0);
 
-  // const heteroLabels = useSelector((state: any) => state.identify.heteroLabels);
+  const blockIndex: number = useSelector((state: StateType) => state.blockIndex);
+  const heteroList = useSelector((state: StateType) => state.service.heteroList.clusterList);
+
+  const strokeSet = useMemo(
+    () => (heteroList[blockIndex] ? new Set(heteroList[blockIndex].heteroIndex) : new Set()),
+    [blockIndex, heteroList]
+  );
+
+  // const heteroLabels = useSelector((state: any) => state.service.heteroLabels);
   const heteroLabels = useSelector((state: StateType) =>
-    getType() === 'local' ? state.identify.heteroLabels : state.identify.samplesHeteroLabels
+    getType() === 'local' ? state.service.heteroLabels : state.service.samplesHeteroLabels
   );
   const topOrder = topArr[onTop];
 
@@ -85,6 +93,8 @@ function Scatterplot({
       // console.log('drawPoint', pointsMap)
       ctx.save();
 
+      ctx.strokeStyle = 'rgba(0,0,0, 0.5)';
+
       topOrder.forEach((label) => {
         // 先画一致的点（灰色）再画不一致的
         ctx.fillStyle = pointColor(label);
@@ -97,13 +107,17 @@ function Scatterplot({
             ctx.arc(sX(point[0]), sY(point[1]), 2, 0, Math.PI * 2);
             ctx.closePath();
             ctx.fill();
+
+            if (strokeSet.has(i)) {
+              ctx.stroke();
+            }
           }
         });
       });
 
       ctx.restore();
     },
-    [heteroLabels, points, topOrder]
+    [heteroLabels, points, strokeSet, topOrder]
   );
 
   const drawLines = useCallback(

@@ -7,7 +7,7 @@ import Triangle from '../markers/Triangle';
 import { setRoundAction, setAnnoPointsAction } from '../../store/reducers/basic';
 import { StateType } from '../../types/data';
 import chat from '../../assets/chat.svg';
-import { setLevelAction } from '../../store/reducers/identify';
+import { setLevelAction } from '../../store/reducers/service';
 import HTTP_LEVEL from '../../utils/level';
 import message from '../../assets/message-big.svg';
 

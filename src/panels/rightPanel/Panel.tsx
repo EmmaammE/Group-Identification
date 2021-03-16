@@ -17,12 +17,18 @@ import Gradient from '../../components/ui/Gradient';
 import inputStyles from '../../styles/input.module.css';
 import { fetchLists, setPropertyAction, setUpdateAction } from '../../store/reducers/basic';
 import Icon from '../../components/ui/JoinIcon';
-import { setLevelAction, setChosePointAction, defaultAlpha } from '../../store/reducers/identify';
+import {
+  setLevelAction,
+  setChosePointAction,
+  defaultAlpha,
+  getCPCA,
+} from '../../store/reducers/service';
 import HTTP_LEVEL from '../../utils/level';
 import PureRect from '../../components/PairRect.tsx/PureRect';
 import { getDatasetInfo, getType } from '../../utils/getType';
 import REFRESH from '../../assets/refresh.svg';
 import http from '../../utils/http';
+import useFetch from '../../utils/useFetch';
 
 const margin = { t: 20, r: 20, b: 35, l: 55 };
 const WIDTH = 25;
@@ -44,16 +50,14 @@ const areEqual = (first: number[], second: number[]) => {
 };
 
 function RightPanel() {
-  const index: number = useSelector((state: any) => state.blockIndex);
-  const heteroList = useSelector((state: StateType) => state.identify.heteroList.clusterList);
-  const localData = useSelector((state: StateType) => state.identify.localData);
-  const heteroLabels = useSelector((state: any) => state.identify.heteroLabels);
-  const outputLabels = useSelector((state: any) => state.identify.outputLabels);
-  const groundTruth = useSelector((state: any) => state.identify.groundTruth);
+  const index: number = useSelector((state: StateType) => state.blockIndex);
+  const heteroList = useSelector((state: StateType) => state.service.heteroList.clusterList);
+  const localData = useSelector((state: StateType) => state.service.localData);
+  const heteroLabels = useSelector((state: StateType) => state.service.heteroLabels);
+  const outputLabels = useSelector((state: StateType) => state.service.outputLabels);
+  const groundTruth = useSelector((state: StateType) => state.service.groundTruth);
 
-  const localLabels = useSelector((state: StateType) => state.identify.localOutputLabel);
-
-  const blockIndex = useSelector((state: StateType) => state.blockIndex);
+  const localLabels = useSelector((state: StateType) => state.service.localOutputLabel);
 
   const propertyIndex = useSelector((state: StateType) => state.basic.propertyIndex);
   const labelNames = useSelector((state: StateType) => state.basic.labelNames);
@@ -65,13 +69,12 @@ function RightPanel() {
 
   const [heteData, setHeteData] = useState<any>(null);
 
-  const [pcArr, setcPCA] = useState([[], []]);
+  // const [pcArr, setcPCA] = useState([[], []]);
+  const pcArr = useSelector((state: StateType) => state.service.cpca.tensor);
 
   const [annoText, setAnnoText] = useState<string>('');
 
   const round = useSelector((state: StateType) => state.basic.round);
-
-  const cpT = useMemo(() => (pcArr[0].length > 0 ? transpose(pcArr) : [[], []]), [pcArr]);
 
   const pos = useSelector((state: StateType) => state.basic.pos);
 
@@ -81,12 +84,13 @@ function RightPanel() {
   const annoList = useSelector((state: StateType) => state.basic.annoLists);
   const [chosedAnnList, setChoseAnnList] = useState<Set<number>>(new Set());
 
-  const [param, setParam] = useState<number | null>(defaultAlpha);
+  const [param, setParam] = useState<number>(defaultAlpha);
+  const cpacaAlphaFromStore = useSelector((state: StateType) => state.service.cpca.alpha);
 
   const [annoListStatus, setAnnoListStatus] = useState<number[]>([]);
 
   const setLevel = useCallback((level: number) => dispatch(setLevelAction(level)), [dispatch]);
-  const level = useSelector((state: StateType) => state.identify.level);
+  const level = useSelector((state: StateType) => state.service.level);
 
   const [strokeStatus, setStrokeStatus] = useState(0);
   const [strokeId, setStrokeId] = useState(-1);
@@ -94,13 +98,38 @@ function RightPanel() {
   const updatePropertyIndex = useCallback((i) => dispatch(setPropertyAction(i)), [dispatch]);
 
   // const [chosePoint, setChosePoint] = useState<number>(-1);
-  const chosePoint = useSelector((state: StateType) => state.identify.chosePoint);
+  const chosePoint = useSelector((state: StateType) => state.service.chosePoint);
   const setChosePoint = useCallback((i) => dispatch(setChosePointAction(i)), [dispatch]);
+  const updateCPCA = useCallback(
+    (block: number, alpha: number | null) => dispatch(getCPCA(block, alpha)),
+    [dispatch]
+  );
 
   // 做完集合操作以后的点的下标
   const [strokePoints, setStrokePoints] = useState<number[]>([]);
   const [lineIndex, setLineIndex] = useState<number>(0);
   const [channelIndex, setChannelIndex] = useState<number>(0);
+
+  // { dimIndex: number}
+  const { data: attribute, setRequest: setAttribte } = useFetch('/fl-hetero/attribute/', null);
+  // { "dataIndex": number,  }
+  const { data: instance, setRequest: setInstance } = useFetch('/fl-hetero/instance/', null);
+
+  useEffect(() => {
+    if (propertyIndex !== -1) {
+      setAttribte({
+        dimIndex: propertyIndex,
+      });
+    }
+  }, [propertyIndex, setAttribte]);
+
+  useEffect(() => {
+    if (chosePoint !== -1) {
+      setInstance({
+        dataIndex: chosePoint,
+      });
+    }
+  }, [chosePoint, setInstance]);
 
   const setPoints = useCallback(
     (p: any) => {
@@ -114,7 +143,11 @@ function RightPanel() {
   const { dimension } = getDatasetInfo();
 
   useEffect(() => {
-    let defaultIndex = 0;
+    setParam(cpacaAlphaFromStore || defaultAlpha);
+  }, [cpacaAlphaFromStore]);
+
+  useEffect(() => {
+    let defaultIndex = -1;
     let maxV = Number.MIN_VALUE;
 
     const count = channelIndex * dimension;
@@ -159,49 +192,6 @@ function RightPanel() {
       .nice();
   }, [pcArr]);
 
-  useEffect(() => {
-    if (round === 0) {
-      setcPCA([[], []]);
-    }
-  }, [round]);
-
-  useEffect(() => {
-    console.log('cpca', level);
-    if (round !== 0 && level === HTTP_LEVEL.cpca) {
-      // TODO
-      fetch('/fl-hetero/cpca/cluster/', {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: param
-          ? JSON.stringify({
-              clusterID: blockIndex,
-              alpha: +param, // 默认30
-            })
-          : JSON.stringify({
-              clusterID: blockIndex,
-            }),
-        // body: JSON.stringify({
-        //       clusterID: blockIndex,
-        //       alpha: +param, // 默认30
-        //     })
-      })
-        .then((res) => res.json())
-        .then((res) => {
-          setParam(res.alpha);
-          setcPCA([res.cpc1, res.cpc2]);
-          setLevel(level + 1);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-    }
-  }, [blockIndex, level, param, round, setLevel]);
-
-  // console.log(pcArr)
-
   const addAnn = () => {
     fetch('/fl-hetero/annotation/', {
       method: 'POST',
@@ -224,56 +214,27 @@ function RightPanel() {
     setAnnoText(e.target.value);
   };
 
-  const datum = useMemo(() => {
-    if (localData.length === 0 || cpT.length === 0) {
-      return [[]];
-    }
-    return mmultiply(
-      localData.filter((d: any) => d.length !== 0),
-      cpT
-    );
-  }, [cpT, localData]);
-
-  const samplesByRange = useMemo(() => {
-    if (localData.length > 0) {
-      const extent = d3.extent(localData.flat()) as any;
-      // TODO
-      const scale = d3.scaleLinear().domain(extent).range([0, 255]);
-      return localData.map((samplesItem: number[]) => samplesItem.map((item) => scale(item)));
-    }
-    return [];
-  }, [localData]);
-
   const lineDatum = useMemo(() => {
     // 一致的点，不一致的点
     const temp: number[][] = [[], []];
     const tempHeteData: number[] = [];
 
-    samplesByRange.forEach((d: number[], j: number) => {
+    for (let i = 0; i < dimension; i++) {
+      const d = attribute[i + dimension * channelIndex];
       // 如果不一致
-      if (heteroLabels[j] === false) {
-        temp[1].push(d[propertyIndex]);
+      if (heteroLabels[i] === false) {
+        temp[1].push(d);
       } else {
-        temp[0].push(d[propertyIndex]);
+        temp[0].push(d);
       }
-      tempHeteData.push(d[propertyIndex]);
-    });
+      tempHeteData.push(d);
 
-    setHeteData(tempHeteData);
+      setHeteData(tempHeteData);
+    }
 
     return temp;
-  }, [heteroLabels, propertyIndex, samplesByRange]);
+  }, [attribute, channelIndex, dimension, heteroLabels]);
 
-  // const handleHover = useCallback(
-  //   (e: any) => {
-  //     const { id } = e.target.dataset;
-
-  //     if (annoList[id]) {
-  //       setChoseAnnList(new Set(annoList[id].dataIndex));
-  //     }
-  //   },
-  //   [annoList]
-  // );
   const handleHover = useCallback(
     (id: number) => {
       if (annoList[id]) {
@@ -287,16 +248,6 @@ function RightPanel() {
     setChoseAnnList(new Set());
   }, []);
 
-  // const handleChange = (e: any) => {
-  //   const { id } = e.target.dataset;
-  //   const tmp = [...annoListStatus];
-  //   const updateStatus = (annoListStatus[id] + 1) % 3;
-  //   tmp[id] = updateStatus;
-
-  //   setAnnoListStatus(tmp);
-  //   setStrokeStatus(updateStatus);
-  //   setStrokeId(id);
-  // };
   const handleChange = (id: number) => {
     const tmp = [...annoListStatus];
     const updateStatus = (annoListStatus[id] + 1) % 3;
@@ -317,23 +268,17 @@ function RightPanel() {
 
   const handleParamChange = useCallback(
     (e: any) => {
-      setParam(+e.target.value);
+      updateCPCA(index, +e.target.value);
       setLevel(HTTP_LEVEL.cpca);
     },
-    [setLevel]
+    [index, setLevel, updateCPCA]
   );
 
   const $inputAlpha = useRef(null);
 
   const freshCount = useCallback(() => {
-    http('/fl-hetero/cpca/cluster/', {
-      clusterID: blockIndex,
-    }).then((res) => {
-      setParam(res.alpha);
-      setcPCA([res.cpc1, res.cpc2]);
-      ($inputAlpha as any).current.value = res.alpha.toFixed(2);
-    });
-  }, [blockIndex]);
+    updateCPCA(index, null);
+  }, [index, updateCPCA]);
 
   return (
     <div className="panel" id="RightPanel">
@@ -348,7 +293,7 @@ function RightPanel() {
                   <input
                     className={inputStyles.input}
                     type="text"
-                    defaultValue={param?.toFixed(2) || ''}
+                    defaultValue={param?.toFixed(2)}
                     onBlur={handleParamChange}
                     ref={$inputAlpha}
                   />
@@ -453,7 +398,7 @@ function RightPanel() {
 
         <div className="grid-wrapper r-panel">
           <GridMatrix
-            data={datum}
+            data={localData}
             xLabels={groundTruth}
             yLabels={outputLabels}
             highlight={chosedAnnList}
@@ -473,7 +418,7 @@ function RightPanel() {
             <div id="data-wrapper">
               <p>Data:</p>
               {/* <PureRect data={chosePoint !== -1 ? samplesByRange[chosePoint] : []} /> */}
-              <PureRect data={samplesByRange[chosePoint] || []} />
+              <PureRect data={instance || []} />
             </div>
             <div>
               <p>Ground-truth label: </p>

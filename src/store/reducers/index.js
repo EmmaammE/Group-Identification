@@ -1,12 +1,13 @@
 import { combineReducers } from 'redux';
 import basicReducer from './basic';
 import blockIndexReducer from './blockIndex';
-import identifyReducer from './identify';
-import leftPanelReducer from './leftPanelReducer';
+// import identifyReducer from './identify';
+import serviceReducer from './service';
+// import leftPanelReducer from './leftPanelReducer';
 
 export default combineReducers({
-  leftPanel: leftPanelReducer,
+  // leftPanel: leftPanelReducer,
   blockIndex: blockIndexReducer,
-  identify: identifyReducer,
+  service: serviceReducer,
   basic: basicReducer,
 });
