@@ -50,11 +50,9 @@ function MiddlePanel() {
   const allCpcaAlpha = useSelector((state: StateType) => state.service.allCPCA.alpha);
 
   // cluster number 输入时的映射
-  const [nOfCluster, setNOfCluster] = useState<number | null>(defaultCount);
+  // const [nOfCluster, setNOfCluster] = useState<number | null>(defaultCount);
   const round = useSelector((state: StateType) => state.basic.round);
   const blockIndex = useSelector((state: StateType) => state.blockIndex);
-
-  // const [cpArray, setCpArray] = useState<number[][]>([[], []]);
 
   const samples = useSelector((state: StateType) => state.service.samples);
 
@@ -99,7 +97,6 @@ function MiddlePanel() {
   const $inputCount = useRef(null);
 
   useEffect(() => {
-    setNOfCluster(clusterFromRes);
     ($inputCount as any).current.value = clusterFromRes;
   }, [clusterFromRes]);
 
@@ -116,14 +113,17 @@ function MiddlePanel() {
   const handleParamChange = useCallback(
     (e: any) => {
       // setLevel(HTTP_LEVEL.pca);
-      getAllCPCA(+e.target.value, nOfCluster, blockIndex, allCpcaAlpha);
+      const value = +e.target.value;
+      if (allCpcaAlpha !== value) {
+        getAllCPCA(value, clusterFromRes, blockIndex, allCpcaAlpha);
+      }
     },
-    [allCpcaAlpha, blockIndex, getAllCPCA, nOfCluster]
+    [allCpcaAlpha, blockIndex, getAllCPCA, clusterFromRes]
   );
 
   const freshParam = useCallback(() => {
-    getAllCPCA(null, nOfCluster, blockIndex, allCpcaAlpha);
-  }, [allCpcaAlpha, blockIndex, getAllCPCA, nOfCluster]);
+    getAllCPCA(null, clusterFromRes, blockIndex, allCpcaAlpha);
+  }, [allCpcaAlpha, blockIndex, getAllCPCA, clusterFromRes]);
 
   const x = d3.extent(samples, (d) => d[0]) as any;
   const y = d3.extent(samples, (d) => d[1]) as any;
@@ -133,9 +133,9 @@ function MiddlePanel() {
       // setLevel(HTTP_LEVEL.sampling);
       setDataIndex(e);
       setType(items[e]);
-      onTypeUpdateOrInit(items[e], round, allCpcaAlpha, nOfCluster, blockIndex, blockCpcaAlpha);
+      onTypeUpdateOrInit(items[e], round, allCpcaAlpha, clusterFromRes, blockIndex, blockCpcaAlpha);
     },
-    [allCpcaAlpha, blockCpcaAlpha, blockIndex, nOfCluster, onTypeUpdateOrInit, round]
+    [allCpcaAlpha, blockCpcaAlpha, blockIndex, clusterFromRes, onTypeUpdateOrInit, round]
   );
 
   useEffect(() => {
@@ -144,19 +144,23 @@ function MiddlePanel() {
 
   useEffect(() => {
     if (level === HTTP_LEVEL.labels) {
-      onRoundChange(round, allCpcaAlpha, nOfCluster, blockIndex, blockCpcaAlpha);
+      onRoundChange(round, allCpcaAlpha, clusterFromRes, blockIndex, blockCpcaAlpha);
     }
-  }, [round, level, onRoundChange, allCpcaAlpha, nOfCluster, blockIndex, blockCpcaAlpha]);
+  }, [round, level, onRoundChange, allCpcaAlpha, clusterFromRes, blockIndex, blockCpcaAlpha]);
 
   const onInputNumber = (e: any) => {
     const reg = new RegExp('^[0-9]*$');
+    const { value } = e.target;
 
-    if (e.target.value.match(reg)) {
-      setNOfCluster(+e.target.value);
+    if (value.match(reg)) {
+      // setNOfCluster(+value);
       setLevel(HTTP_LEVEL.cpca);
-      getLists(+e.target.value, blockIndex, blockCpcaAlpha);
+      if (+value !== clusterFromRes) {
+        getLists(+value, blockIndex, blockCpcaAlpha);
+      }
     } else {
-      setNOfCluster(null);
+      // setNOfCluster(null);
+      ($inputCount as any).current.value = '';
     }
   };
 
@@ -225,7 +229,7 @@ function MiddlePanel() {
                   <input
                     className={inputStyles.input}
                     type="text"
-                    defaultValue={nOfCluster || ''}
+                    defaultValue={clusterFromRes}
                     onBlur={onInputNumber}
                     ref={$inputCount}
                   />
@@ -259,7 +263,7 @@ function MiddlePanel() {
               </div>
             </div>
           </div>
-          <HeatmapWrapper points={samples} x={x} y={y} nOfCluster={nOfCluster} />
+          <HeatmapWrapper points={samples} x={x} y={y} nOfCluster={clusterFromRes} />
         </div>
       </div>
     </div>

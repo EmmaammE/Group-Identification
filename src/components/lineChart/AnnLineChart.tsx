@@ -142,7 +142,7 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
         const x = xScale(+r + 1);
         const indexScale = d3
           .scaleLinear()
-          .range([28, heightMap - 10])
+          .range([heightMap - 45, 40])
           .domain([0, list[r].length]);
 
         list[r].forEach((anno: any, j: number) => {
@@ -165,9 +165,9 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
 
     const { x, y } = chatPos[id];
     if (x > WIDTH - 120) {
-      setTipPos([x - 40, y - 20]);
+      setTipPos([x - 50, y - 5]);
     } else {
-      setTipPos([x + 20, y - 20]);
+      setTipPos([x + 20, y - 5]);
     }
 
     setTipid(id);
@@ -177,7 +177,7 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
   const handleMouseout = () => {
     setTipid(-1);
     setAnnoPoints([]);
-    setTipPos([-100, -100]);
+    setTipPos([-150, -150]);
   };
 
   return (
@@ -271,29 +271,26 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
         }}
         onMouseDown={handleMouseout}
       >
-        <svg
-          viewBox="0 0 117.4 59.5"
-          width="120px"
-          height="120px"
-          xmlns="http://www.w3.org/2000/svg"
-        >
+        <svg viewBox="0 0 180 80" width="180px" height="90px" xmlns="http://www.w3.org/2000/svg">
           <path
             d="M74.3,46.3H23.4c-1.4,0-9.1,2.7-9.1,2.7s3.8-7.3,3.8-8.6v-26c0-5.3,4.6-9.6,10.3-9.6h45.9
               c5.7,0,10.3,4.3,10.3,9.6v22.2C84.5,42,79.9,46.3,74.3,46.3z"
             fill="#F7F8F8"
             stroke="#000"
+            transform="scale(1.25)"
           />
-          <foreignObject x="25" y="10" width="55" height="90">
-            <div className="tip-text">
-              {tipId !== -1 && (
+          <foreignObject x="25" y="10" width="78" height="80">
+            {tipId !== -1 && (
+              <div className="tip-text">
+                <p>Size: {chatPos[tipId].dataIndex.length}</p>
+
                 <div className="scroll-panel">
                   <p>{chatPos[tipId].text}</p>
-                  <p>Size: {chatPos[tipId].dataIndex.length}</p>
                   {/* <p>Size: 400</p> */}
                   {/* <p>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</p> */}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </foreignObject>
         </svg>
       </div>

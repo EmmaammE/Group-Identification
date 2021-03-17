@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import useWindowSize from '../../utils/useResize';
 import { getDatasetInfo } from '../../utils/getType';
@@ -10,11 +10,15 @@ interface PureRectProps {
 const rectWidth = 20;
 const rectHeight = 20;
 
-const rowCount = 28;
+// const rowCount = 28;
 
 const PureRect = ({ data }: PureRectProps) => {
+  const { type, dimension } = getDatasetInfo();
+
   // const columnCount = data.length / rowCount;
-  const columnCount = 784 / rowCount;
+  const rowCount = Math.sqrt(dimension);
+
+  const columnCount = Math.ceil(dimension / rowCount);
   const WIDTH = rectWidth * columnCount;
   const HEIGHT = rectHeight * rowCount;
 
@@ -49,7 +53,6 @@ const PureRect = ({ data }: PureRectProps) => {
 
     ctx.clearRect(0, 0, bound.width, bound.height);
 
-    const { type, dimension } = getDatasetInfo();
     if (type === 'image') {
       if (data.length > dimension) {
         // 多通道

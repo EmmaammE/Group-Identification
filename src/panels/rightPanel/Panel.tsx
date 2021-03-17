@@ -143,10 +143,6 @@ function RightPanel() {
   const { dimension } = getDatasetInfo();
 
   useEffect(() => {
-    setParam(cpacaAlphaFromStore || defaultAlpha);
-  }, [cpacaAlphaFromStore]);
-
-  useEffect(() => {
     let defaultIndex = -1;
     let maxV = Number.MIN_VALUE;
 
@@ -268,10 +264,13 @@ function RightPanel() {
 
   const handleParamChange = useCallback(
     (e: any) => {
-      updateCPCA(index, +e.target.value);
-      setLevel(HTTP_LEVEL.cpca);
+      const value = +e.target.value;
+      if (value !== cpacaAlphaFromStore) {
+        updateCPCA(index, +e.target.value);
+        setLevel(HTTP_LEVEL.cpca);
+      }
     },
-    [index, setLevel, updateCPCA]
+    [cpacaAlphaFromStore, index, setLevel, updateCPCA]
   );
 
   const $inputAlpha = useRef(null);
@@ -279,6 +278,26 @@ function RightPanel() {
   const freshCount = useCallback(() => {
     updateCPCA(index, null);
   }, [index, updateCPCA]);
+
+  useEffect(() => {
+    setParam(cpacaAlphaFromStore);
+    ($inputAlpha as any).current.value = cpacaAlphaFromStore.toFixed(2);
+  }, [cpacaAlphaFromStore]);
+
+  const { truth, output, client } = useMemo(() => {
+    if (chosePoint === -1) {
+      return {
+        truth: '',
+        output: '',
+        client: '',
+      };
+    }
+    return {
+      truth: labelNames[groundTruth[chosePoint]],
+      output: labelNames[outputLabels[chosePoint]],
+      client: labelNames[localLabels[chosePoint]],
+    };
+  }, [chosePoint, groundTruth, labelNames, localLabels, outputLabels]);
 
   return (
     <div className="panel" id="RightPanel">
@@ -422,12 +441,16 @@ function RightPanel() {
             </div>
             <div>
               <p>Ground-truth label: </p>
-              <p>&emsp;{chosePoint !== -1 ? labelNames[groundTruth[chosePoint]] : ''}</p>
+              <p>&emsp;{truth}</p>
               <p>Output:</p>
-              <p className="item">Federated learning model:</p>
-              <p>&emsp;{chosePoint !== -1 ? labelNames[outputLabels[chosePoint]] : ''}</p>
-              <p className="item">Stand-alone training model:</p>
-              <p>&emsp;{chosePoint !== -1 ? labelNames[localLabels[chosePoint]] : ''}</p>
+              <p className={['item', output === truth ? 'item-tick' : 'item-cross'].join(' ')}>
+                Federated learning model:
+              </p>
+              <p>&emsp;{output}</p>
+              <p className={['item', client === truth ? 'item-tick' : 'item-cross'].join(' ')}>
+                Stand-alone training model:
+              </p>
+              <p>&emsp;{client}</p>
             </div>
           </div>
         </div>
@@ -436,6 +459,8 @@ function RightPanel() {
           <p className="title">Control Panel</p>
           <div className="lists">
             <div className="list-content">
+              <p>#Selected records: {strokePoints.length}</p>
+
               <p>Overlap lists:</p>
               <div className="list-area">
                 {annoList.map(({ round: r, text, dataIndex }, i) => (

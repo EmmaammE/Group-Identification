@@ -56,12 +56,14 @@ const datasetNameHash: any = {
   mnist: 'MNIST',
   face: 'Face Mask',
   anime: 'Anime',
+  cifar10: 'CIFAR-10',
 };
 
 const labelDescriptionHash: any = {
   mnist: 'The value of the handwritten digit.',
   face: 'Whether the person is wearing a mask?',
   anime: 'Whether the person is interested in the game genre animes?',
+  cifar10: '.........',
 };
 
 const labelNames: any = {
@@ -78,6 +80,7 @@ const labelNames: any = {
     'digit-9',
   ],
   face: ['With mask', 'With no mask'],
+  cifar10: ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck'],
 };
 
 function LeftPanel() {

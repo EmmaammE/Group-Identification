@@ -39,7 +39,6 @@ function getPixelRatio(context: any) {
 const rectWidth = 20;
 const rectHeight = 20;
 
-const rowCount = 28;
 interface Pro {
   x: number;
   y: number;
@@ -50,7 +49,10 @@ interface Pro {
 const PairRect = ({ data, title, color, channel }: PairRectProps) => {
   const { dimension } = getDatasetInfo();
 
-  const columnCount = dimension / rowCount;
+  // const columnCount = data.length / rowCount;
+  const rowCount = Math.sqrt(dimension);
+
+  const columnCount = Math.ceil(dimension / rowCount);
   const WIDTH = rectWidth * columnCount;
   const HEIGHT = rectHeight * rowCount;
 

@@ -43,14 +43,19 @@
     width: 50px;
     cursor: pointer;
 
+    // p {
+    //   transform: scale(0.75);
+    //   line-height: 0.75em;
+    // }
+
     .scroll-panel {
       overflow: auto;
-      height: 30px;
+      height: 28px;
     }
 
     .tip-text {
       height: 100%;
-      word-break: break-all;
+      word-break: break-word;
       font-size: 12px;
     }
   }

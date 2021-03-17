@@ -9,7 +9,7 @@ import HTTP_LEVEL from '../../utils/level';
 import './BottomPanel.scss';
 
 const lineChartMargin = {
-  r: 10,
+  r: 20,
   b: 20,
   l: 60,
   t: 15,
@@ -64,7 +64,6 @@ const BottomPanel = () => {
       })
         .then((res) => res.json())
         .then((res) => {
-          console.log(HTTP_LEVEL.client);
           setDatum({
             Loss: res.loss,
             Accuracy: res.valAcc,

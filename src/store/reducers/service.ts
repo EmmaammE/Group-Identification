@@ -34,18 +34,18 @@ export interface IdentifyData {
       "heteroIndex": number[], // 分块内不一致数据点的下标
       "heteroRate": number, // 不一致点在块中所占的比例
     }>,
-    nrOfClusters: number|null
+    nrOfClusters: number
   },
   // 所有点的cpca
   "allCPCA": {
     "cpc1": [],
     "cpc2": [],
-    'alpha': number|null
+    'alpha': number
   },
   // 分块的cpca
   "cpca": {
     "tensor": [[], []]
-    "alpha": number|null
+    "alpha": number
   },
   "loading": boolean,
   "level": number,
@@ -381,29 +381,40 @@ export const onAllAlphaAction = ( alpha: number|null, count: number|null,  clust
 export const onListAction = (count: number|null, clusterId:number|null, cpcaAlphaP: number|null) => async (dispatch: any) => {
   await dispatch(loading(true));
   
-  const res4 = await http('/fl-hetero/cluster/', {
-    "nrOfClusters": count
-  })
+  try {
+    const res4 = await http('/fl-hetero/cluster/', {
+      "nrOfClusters": count
+    })
+  
+    const {alpha: cpcaAlpha, cPC1, cPC2, projectedData: localData} = await http('/fl-hetero/cpca/cluster/', {
+      "clusterID": clusterId || 0,
+      "alpha": cpcaAlphaP
+    })
+  
+    dispatch({
+      type: INIT_OR_UPDATE,
+      data: {
+        heteroList: res4,
+        localData,
+        cpca: {
+          "tensor": [
+            cPC1,
+            cPC2,
+          ],
+          "alpha": cpcaAlpha
+        },
+        level: HTTP_LEVEL.cpca,
+        loading: false
+      }
+    })
+  } catch(err) {
+    dispatch({
+      type: INIT_OR_UPDATE,
+      data: {
+        loading: false
+      }
+    })
 
-  const {alpha: cpcaAlpha, cPC1, cPC2, projectedData: localData} = await http('/fl-hetero/cpca/cluster/', {
-    "clusterID": clusterId || 0,
-    "alpha": cpcaAlphaP
-  })
-
-  dispatch({
-    type: INIT_OR_UPDATE,
-    data: {
-      heteroList: res4,
-      localData,
-      cpca: {
-        "tensor": [
-          cPC1,
-          cPC2,
-        ],
-        "alpha": cpcaAlpha
-      },
-      level: HTTP_LEVEL.cpca,
-      loading: false
-    }
-  })
+    alert('error')
+  }
 }

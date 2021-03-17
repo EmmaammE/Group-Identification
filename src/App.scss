@@ -98,7 +98,7 @@
 
     .content {
       padding: 0 15px;
-      height: $height - $line-height;
+      height: $height - $line-height - 0.5vh;
     }
 
     // 分割线

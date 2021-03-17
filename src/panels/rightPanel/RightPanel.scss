@@ -296,7 +296,7 @@
         }
 
         .anno {
-          word-break: break-all;
+          word-break: break-word;
         }
       }
 
@@ -315,6 +315,7 @@
     .btn-area {
       display: flex;
       justify-content: flex-end;
+      margin-bottom: 5px;
     }
   }
 
@@ -344,15 +345,27 @@
       text-indent: 1em;
 
       &::before {
-        content: '';
+        // content: '✘';
         position: absolute;
         width: 12px;
         height: 12px;
         display: inline-block;
-        background: #ccc;
-        border-radius: 50%;
-        left: 0;
-        top: 5px;
+        font-size: 16px;
+        left: -1em;
+      }
+
+      &.item-tick {
+        &::before {
+          content: '✔';
+          color: #69914b;
+        }
+      }
+
+      &.item-cross {
+        &::before {
+          content: '✘';
+          color: #c06e6e;
+        }
       }
     }
   }

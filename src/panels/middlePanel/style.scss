@@ -109,17 +109,22 @@
   }
 
   .pair-rect-wrapper {
-    overflow: auto;
     height: 22vh;
     width: 400px;
-    margin-top: 5px;
+    // margin-top: 5px;
+    padding: 5px 0;
+    box-sizing: border-box;
 
     .scroll-glyphs {
       display: grid;
+      // padding: 8px 0;
       // padding: 10px;
       // grid-template-columns: repeat(2, 25%);
-      grid-gap: 3%;
-      width: 390px;
+      grid-gap: 10px;
+      overflow: auto;
+      max-height: calc(22vh - 8px);
+      height: 100%;
+      box-sizing: border-box;
     }
 
     .pair-rect {

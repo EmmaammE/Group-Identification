@@ -45,6 +45,12 @@ const colorScale = d3
   .range(['#ffdfb2', '#eee', '#cde8ba']);
 // 红白蓝
 // .range(['#e60d17', '#fff', '#0b69b6']);
+
+const mergeDomain = (
+  [minA, maxA]: [number, number] | [undefined, undefined],
+  [minB, maxB]: [number, number] | [undefined, undefined]
+) => [Math.min(minA || 0, minB || 0), Math.max(maxA || 0, maxB || 0)];
+
 const GridMatrix = ({
   data,
   xLabels,
@@ -148,28 +154,36 @@ const GridMatrix = ({
   // 格子的size映射为坐标上相差多少
   const normScale = t.rescaleX(d3.scaleLinear().range([0, width]).domain([0, 1]));
 
-  const xScale = useMemo(
+  const xDomain: any = useMemo(
     () =>
-      t.rescaleX(
-        d3
-          .scaleLinear()
-          .range([0, width])
-          .domain(d3.extent(data, (d) => d[0]) as [number, number])
-          .nice()
-      ),
-    [data, t, width]
+      heteroPointsFromStore.length === 0
+        ? d3.extent(data, (d) => d[0])
+        : mergeDomain(
+            d3.extent(data, (d) => d[0]),
+            d3.extent(heteroPointsFromStore, (d) => d[0]) as any
+          ),
+    [data, heteroPointsFromStore]
+  );
+
+  const yDomain: any = useMemo(
+    () =>
+      heteroPointsFromStore.length === 0
+        ? d3.extent(data, (d) => d[1])
+        : mergeDomain(
+            d3.extent(data, (d) => d[1]),
+            d3.extent(heteroPointsFromStore, (d) => d[1]) as any
+          ),
+    [heteroPointsFromStore, data]
+  );
+
+  const xScale = useMemo(
+    () => t.rescaleX(d3.scaleLinear().range([0, width]).domain(xDomain).nice()),
+    [t, width, xDomain]
   );
 
   const yScale = useMemo(
-    () =>
-      t.rescaleY(
-        d3
-          .scaleLinear()
-          .range([0, height])
-          .domain(d3.extent(data, (d) => d[1]) as [number, number])
-          .nice()
-      ),
-    [data, height, t]
+    () => t.rescaleY(d3.scaleLinear().range([0, height]).domain(yDomain).nice()),
+    [height, t, yDomain]
   );
 
   // console.log(xScale.domain(), xScale.range())
@@ -287,16 +301,16 @@ const GridMatrix = ({
 
             if (pointX === xLabel && pointY === yLabel) {
               let isStroke = 0;
+              let isInHull = false;
+
+              if (type === 'local') {
+                isInHull = heteroIndex.has(k);
+              } else {
+                isInHull = hull !== null && d3.polygonContains(hull, point as any);
+              }
 
               if (annoPoints.size === 0) {
                 // 如果，没有高亮的标记点，计算当前选择的点和异构块中的点的关系
-                let isInHull = false;
-                if (type === 'local') {
-                  isInHull = heteroIndex.has(k);
-                } else {
-                  isInHull = hull !== null && d3.polygonContains(hull, point as any);
-                }
-
                 switch (strokeStatus) {
                   case 0:
                     if (isInHull) {
@@ -324,9 +338,9 @@ const GridMatrix = ({
 
               if (heteroLabels[k] === false) {
                 // 不一致
-                pointsArr1.push([posX, posY, 1, isStroke, k]);
+                pointsArr1.push([posX, posY, 1, isStroke, k, Number(isInHull)]);
               } else {
-                pointsArr0.push([posX, posY, 0, isStroke, k]);
+                pointsArr0.push([posX, posY, 0, isStroke, k, Number(isInHull)]);
               }
             }
             // pointsArr0.push([posX, posY, heteroLabels[k] === false ? 1:0, 0, k]);
@@ -351,6 +365,30 @@ const GridMatrix = ({
       yLabels,
       yLabelsArr,
     ]
+  );
+
+  const pointsCount = useMemo(
+    () =>
+      gridPoints.map((gridPointsColumn) =>
+        gridPointsColumn.map((gridPoint) => {
+          let convexCount = 0;
+          let blockCount = 0;
+          gridPoint.forEach((point) => {
+            if (point[5] === 1 && point[2] === 1) {
+              convexCount++;
+            }
+            if (point[2] === 1) {
+              blockCount++;
+            }
+          });
+
+          return {
+            convexCount,
+            blockCount,
+          };
+        })
+      ),
+    [gridPoints]
   );
 
   useEffect(() => {
@@ -644,6 +682,7 @@ const GridMatrix = ({
                     yLabelsArr.map((y, j) => {
                       const left = margin.l + indexXScale(i * 2) + padding * i;
                       const top = margin.t + indexYScale(j * 2) + padding * j;
+                      const { convexCount, blockCount } = pointsCount[i][j];
                       // const hull = hullArr[i][j];
                       return (
                         <g
@@ -660,6 +699,9 @@ const GridMatrix = ({
                               stroke="var(--primary-color)"
                             />
                           )}
+                          <text x="4" y="14" fontSize="14">
+                            {convexCount} / {blockCount}
+                          </text>
                           <rect
                             x="0"
                             y="0"
