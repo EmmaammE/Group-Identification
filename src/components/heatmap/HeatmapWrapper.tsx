@@ -133,7 +133,7 @@ const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
 
   // console.log(heteroPointsArr)
   const n = nOfCluster !== null && nOfCluster < 4 ? nOfCluster : 4;
-  const multiLine = nOfCluster !== null ? n / nOfCluster : 1;
+  const ifMultiLine = nOfCluster !== null && nOfCluster > 4;
 
   const updateBlockHandle = useCallback(
     (i: number) => {
@@ -148,9 +148,9 @@ const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
       <div
         className="scroll-glyphs"
         style={{
-          gridTemplateColumns: `repeat(${n}, ${`${((multiLine > 1 ? 100 : 103) - n * 3) / n}%`})`,
-          paddingRight: multiLine > 1 ? '0' : '8px',
-          overflow: multiLine > 2 ? 'auto' : 'visible',
+          gridTemplateColumns: `repeat(${n}, ${`${((ifMultiLine ? 100 : 103) - n * 3) / n}%`})`,
+          paddingRight: ifMultiLine ? '0' : '8px',
+          overflow: nOfCluster !== null && nOfCluster > 8 ? 'auto' : 'visible',
         }}
       >
         {heteroList.map((heteroItem, i) => (

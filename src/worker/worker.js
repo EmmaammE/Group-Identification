@@ -1,18 +1,29 @@
 /* eslint-disable import/prefer-default-export */
-import CPCA from '../assets/cpca.json';
-import LABEL from '../assets/labels.json';
 
-async function handle() {
-  const datum = CPCA[0].map((d, i) => ({
-    id: i,
-    label: LABEL[i],
-    PC1: d[0],
-    PC2: d[1],
-  }));
+import http from '../utils/http';
 
-  return datum;
+let allRes = null;
+let blockRes = null;
+
+export async function handle(type, id) {
+  if (type === 'all') {
+    allRes = http('/fl-hetero/cpca/all/', {
+      alpha: null,
+    });
+  } else if (type === 'block') {
+    blockRes = http('/fl-hetero/cpca/cluster/', {
+      alpha: null,
+      clusterID: id,
+    });
+  }
 }
 
-export function processData() {
-  return handle();
+export async function getStatus(type) {
+  if (type === 'all') {
+    return allRes;
+  }
+  if (type === 'block') {
+    return blockRes;
+  }
+  return Promise.resolve();
 }

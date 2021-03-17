@@ -9,7 +9,6 @@ import { StateType } from '../../types/data';
 import chat from '../../assets/chat.svg';
 import { setLevelAction } from '../../store/reducers/service';
 import HTTP_LEVEL from '../../utils/level';
-import message from '../../assets/message-big.svg';
 
 export interface LineChartProps {
   margin: {
@@ -165,9 +164,9 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
 
     const { x, y } = chatPos[id];
     if (x > WIDTH - 120) {
-      setTipPos([x - 50, y - 5]);
+      setTipPos([x - 150, y - 50]);
     } else {
-      setTipPos([x + 20, y - 5]);
+      setTipPos([x + 10, y - 50]);
     }
 
     setTipid(id);
@@ -177,7 +176,7 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
   const handleMouseout = () => {
     setTipid(-1);
     setAnnoPoints([]);
-    setTipPos([-150, -150]);
+    setTipPos([-400, 400]);
   };
 
   return (
@@ -220,8 +219,8 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
                 id={`${i}`}
                 x={chatItem.x}
                 y={chatItem.y}
-                height="20"
-                width="20"
+                height="25"
+                width="25"
                 data-tip="hhh"
                 data-for="annTip"
                 cursor="pointer"
@@ -271,23 +270,26 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
         }}
         onMouseDown={handleMouseout}
       >
-        <svg viewBox="0 0 180 80" width="180px" height="90px" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 300 120" width="300px" height="120px" xmlns="http://www.w3.org/2000/svg">
           <path
             d="M74.3,46.3H23.4c-1.4,0-9.1,2.7-9.1,2.7s3.8-7.3,3.8-8.6v-26c0-5.3,4.6-9.6,10.3-9.6h45.9
               c5.7,0,10.3,4.3,10.3,9.6v22.2C84.5,42,79.9,46.3,74.3,46.3z"
             fill="#F7F8F8"
             stroke="#000"
-            transform="scale(1.25)"
+            strokeWidth="0.5"
+            transform="scale(2.3)"
           />
-          <foreignObject x="25" y="10" width="78" height="80">
+          <foreignObject x="50" y="20" width="140" height="120">
             {tipId !== -1 && (
               <div className="tip-text">
                 <p>Size: {chatPos[tipId].dataIndex.length}</p>
 
                 <div className="scroll-panel">
                   <p>{chatPos[tipId].text}</p>
-                  {/* <p>Size: 400</p> */}
-                  {/* <p>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</p> */}
+                  {/* <p>
+                    Some yellow masks are classifiedincorrectly by the federatedlearning model. <br/>There is also a "banana  mask."
+                  </p> */}
+                  {/* <p> lncorrect labels with "flag masks."</p> */}
                 </div>
               </div>
             )}

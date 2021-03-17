@@ -5,7 +5,9 @@ declare module 'comlink-loader!*' {
 
     // Add any custom functions to this class.
     // Make note that the return type needs to be wrapped in a promise.
-    processData(): Promise<number>;
+    handle(type: string, id: number|undefined): any;
+    
+    getStatus(type: string): any;
   }
 
   export = WebpackWorker;

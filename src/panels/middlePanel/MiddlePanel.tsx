@@ -17,6 +17,7 @@ import {
   onRoundAction,
   onListAction,
   onAllAlphaAction,
+  instance,
 } from '../../store/reducers/service';
 import HTTP_LEVEL from '../../utils/level';
 import ICON from '../../assets/convex.svg';
@@ -122,6 +123,13 @@ function MiddlePanel() {
   );
 
   const freshParam = useCallback(() => {
+    // const result = instance.getStatus('all');
+
+    // result.then((res: any) => {
+    //   console.log(res)
+    // })
+
+    // console.log(result, 'result')
     getAllCPCA(null, clusterFromRes, blockIndex, allCpcaAlpha);
   }, [allCpcaAlpha, blockIndex, getAllCPCA, clusterFromRes]);
 
@@ -133,6 +141,7 @@ function MiddlePanel() {
       // setLevel(HTTP_LEVEL.sampling);
       setDataIndex(e);
       setType(items[e]);
+      // 测试worker
       onTypeUpdateOrInit(items[e], round, allCpcaAlpha, clusterFromRes, blockIndex, blockCpcaAlpha);
     },
     [allCpcaAlpha, blockCpcaAlpha, blockIndex, clusterFromRes, onTypeUpdateOrInit, round]

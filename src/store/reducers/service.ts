@@ -1,6 +1,7 @@
 import { getType } from "../../utils/getType";
 import http from "../../utils/http";
 import HTTP_LEVEL from "../../utils/level";
+import Worker from '../../worker';
 
 const SET_CHOOSE_POINT = 'SET_CHOSE_POINT';
 const INIT_OR_UPDATE = 'INIT_OR_UPDATE_TYPE';
@@ -12,6 +13,8 @@ const SET_PCA = 'SET_PCA';
 export const defaultCount = 8;
 export const defaultAlpha = 10;
 export const defaultAllAlpha = 10;
+
+export const instance = new Worker();
 
 export interface IdentifyData {
   // 原始数据在分块cpca投影下的坐标
@@ -131,10 +134,12 @@ export const getHeteList = (count: number|null) => async (dispatch: any) => {
 
 export const getCPCA = (block: number, alpha: number|null) => async (dispatch: any) => {
   try {
-    const {alpha: cpcaAlpha, cPC1, cPC2, projectedData: localData} = await http('/fl-hetero/cpca/cluster/', {
-      clusterID: block,
-      alpha, // 默认30
-    });
+    const {alpha: cpcaAlpha, cPC1, cPC2, projectedData: localData} = alpha === null 
+    ? await instance.getStatus('block') 
+    : await http('/fl-hetero/cpca/cluster/', {
+      "clusterID":block || 0,
+      "alpha": alpha || defaultAlpha
+    })
     dispatch({
       type: INIT_OR_UPDATE,
       data: {
@@ -191,7 +196,6 @@ export const onTypeUpdateOrInitAction = (type: string, round: number, alpha: num
     samplingType: type,
   });
 
-
   const res2 = await http('/fl-hetero/labels/',  {
     "round": round,
   })
@@ -199,6 +203,8 @@ export const onTypeUpdateOrInitAction = (type: string, round: number, alpha: num
   const {alpha: resAlpha,  projectedData} = await http('/fl-hetero/cpca/all/', {
     alpha: alpha || defaultAllAlpha
   })
+
+  instance.handle('all', undefined);
 
   const res4 = await http('/fl-hetero/cluster/', {
     "nrOfClusters": count || defaultCount
@@ -208,6 +214,8 @@ export const onTypeUpdateOrInitAction = (type: string, round: number, alpha: num
     "clusterID": clusterId || 0,
     "alpha": cpcaAlphaP || defaultAlpha
   })
+
+  instance.handle('block', clusterId || 0);
 
   if(type === 'local') {
     dispatch({
@@ -340,19 +348,23 @@ export const onRoundAction = (round: number, alpha: number|null, count: number|n
 
 export const onAllAlphaAction = ( alpha: number|null, count: number|null,  clusterId:number|null, cpcaAlphaP: number|null) => async (dispatch: any) => {
   await dispatch(loading(true));
-  
-  const {alpha: resAlpha,  projectedData} = await http('/fl-hetero/cpca/all/', {
-    alpha
-  })
+
+  const {alpha: resAlpha, projectedData} = alpha === null
+    ? await instance.getStatus('all')
+    : await http('/fl-hetero/cpca/all/', {
+      alpha
+    })
 
   const res4 = await http('/fl-hetero/cluster/', {
     "nrOfClusters": count || defaultCount
   })
 
-  const {alpha: cpcaAlpha, cPC1, cPC2, projectedData: localData} = await http('/fl-hetero/cpca/cluster/', {
-    "clusterID": clusterId || 0,
-    "alpha": cpcaAlphaP || defaultAlpha
-  })
+  const {alpha: cpcaAlpha, cPC1, cPC2, projectedData: localData} = cpcaAlphaP === null 
+    ? await instance.getStatus('block') 
+    : await http('/fl-hetero/cpca/cluster/', {
+      "clusterID": clusterId || 0,
+      "alpha": cpcaAlphaP || defaultAlpha
+    })
 
   dispatch({
     type: INIT_OR_UPDATE,
@@ -386,10 +398,12 @@ export const onListAction = (count: number|null, clusterId:number|null, cpcaAlph
       "nrOfClusters": count
     })
   
-    const {alpha: cpcaAlpha, cPC1, cPC2, projectedData: localData} = await http('/fl-hetero/cpca/cluster/', {
-      "clusterID": clusterId || 0,
-      "alpha": cpcaAlphaP
-    })
+    const {alpha: cpcaAlpha, cPC1, cPC2, projectedData: localData} = cpcaAlphaP === null 
+      ? await instance.getStatus('block') 
+      : await http('/fl-hetero/cpca/cluster/', {
+        "clusterID": clusterId || 0,
+        "alpha": cpcaAlphaP || defaultAlpha
+      })
   
     dispatch({
       type: INIT_OR_UPDATE,
