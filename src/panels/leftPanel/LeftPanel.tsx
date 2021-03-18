@@ -177,6 +177,11 @@ function LeftPanel() {
         // setLevel(HTTP_LEVEL.datasets+1);
       });
   };
+
+  useEffect(() => {
+    setLabelNames(labelNames[datasets[datasetIndex]]);
+  }, [datasetIndex, datasets, index, setLabelNames]);
+
   useEffect(() => {
     fetch('/fl-hetero/datasets/')
       .then((res) => res.json())

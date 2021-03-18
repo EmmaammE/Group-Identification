@@ -10,7 +10,7 @@ interface DropdownProps {
 const Dropdown = ({ items, index, setIndex }: DropdownProps) => {
   const handleChange = (e: any) => {
     // console.log(e.target.value, 'change dropdown');
-    setIndex(e.target.value);
+    setIndex(+e.target.value);
   };
   return (
     <div className="select-dropdown">

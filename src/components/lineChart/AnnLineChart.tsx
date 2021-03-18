@@ -279,7 +279,7 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
             strokeWidth="0.5"
             transform="scale(2.3)"
           />
-          <foreignObject x="50" y="20" width="140" height="120">
+          <foreignObject x="50" y="18" width="135" height="82">
             {tipId !== -1 && (
               <div className="tip-text">
                 <p>Size: {chatPos[tipId].dataIndex.length}</p>
@@ -287,7 +287,7 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
                 <div className="scroll-panel">
                   <p>{chatPos[tipId].text}</p>
                   {/* <p>
-                    Some yellow masks are classifiedincorrectly by the federatedlearning model. <br/>There is also a "banana  mask."
+                    Some yellow masks are classifiedincorrectly by the federatedlearning model. There is also a "banana  mask."
                   </p> */}
                   {/* <p> lncorrect labels with "flag masks."</p> */}
                 </div>
