@@ -134,12 +134,15 @@ export const getHeteList = (count: number|null) => async (dispatch: any) => {
 
 export const getCPCA = (block: number, alpha: number|null) => async (dispatch: any) => {
   try {
+    await dispatch(loading(true));
+    
     const {alpha: cpcaAlpha, cPC1, cPC2, projectedData: localData} = alpha === null 
     ? await instance.getStatus('block') 
     : await http('/fl-hetero/cpca/cluster/', {
       "clusterID":block || 0,
       "alpha": alpha || defaultAlpha
     })
+
     dispatch({
       type: INIT_OR_UPDATE,
       data: {
@@ -151,6 +154,7 @@ export const getCPCA = (block: number, alpha: number|null) => async (dispatch: a
           ],
           "alpha": cpcaAlpha
         },
+        loading: false
       }
     })
   } catch(err) {

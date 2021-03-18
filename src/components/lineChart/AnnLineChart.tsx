@@ -42,7 +42,7 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
 
   const $lines = useRef(null);
 
-  const xScale = d3.scaleLinear().range([0, widthMap]).domain([0, data.length]).nice();
+  const xScale = d3.scaleLinear().range([0, widthMap]).domain([0, data.length]);
   const [pos, setPos] = useState<number>(0);
   const setLevel = useCallback((level: number) => dispatch(setLevelAction(level)), [dispatch]);
   const [tipPos, setTipPos] = useState<number[]>([0, 0]);

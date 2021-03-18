@@ -51,6 +51,11 @@ const mergeDomain = (
   [minB, maxB]: [number, number] | [undefined, undefined]
 ) => [Math.min(minA || 0, minB || 0), Math.max(maxA || 0, maxB || 0)];
 
+const order = (item: number, arr: number[]) => {
+  const v = arr.indexOf(item);
+  return v === -1 ? arr.length : v;
+};
+
 const GridMatrix = ({
   data,
   xLabels,
@@ -71,7 +76,10 @@ const GridMatrix = ({
   const [svgHeight, setHeight] = useState(425);
 
   const xLabelsArr = useMemo(() => Array.from(new Set(xLabels)).sort(), [xLabels]);
-  const yLabelsArr = useMemo(() => Array.from(new Set(yLabels)).sort(), [yLabels]);
+  const yLabelsArr = useMemo(
+    () => Array.from(new Set(yLabels)).sort((a, b) => order(a, xLabelsArr) - order(b, xLabelsArr)),
+    [yLabels, xLabelsArr]
+  );
 
   const heteroPointsFromStore = useSelector((state: StateType) => state.basic.heteroPoints);
   const labelNames = useSelector((state: StateType) => state.basic.labelNames);
