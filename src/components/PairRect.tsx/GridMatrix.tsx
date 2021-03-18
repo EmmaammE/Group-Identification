@@ -262,7 +262,8 @@ const GridMatrix = ({
           const y1 = grids[j + 1];
           const searched = search(x0, y0, x1, y1);
           // const positive = searched.filter((d:any)=> d[2] === d[3]);
-          const positive = searched.filter((d: any) => xlabel === d[3]);
+          // ground truth label占的比例
+          const positive = searched.filter((d: any) => xlabel === d[2]);
 
           // console.log(positive)
           row.push({
