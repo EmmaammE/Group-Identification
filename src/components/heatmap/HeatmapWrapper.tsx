@@ -8,6 +8,7 @@ import { setSizeAction, setHeteroPointsAction } from '../../store/reducers/basic
 import { setIndexAction } from '../../store/reducers/blockIndex';
 import HTTP_LEVEL from '../../utils/level';
 import usePrevious from '../../utils/usePrevious';
+import { getType } from '../../utils/getType';
 
 export const WIDTH = 60;
 export const HEIGHT = 60;
@@ -43,7 +44,6 @@ interface HeatmapWrapperProps {
 
 const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
   const heteroList = useSelector((state: StateType) => state.service.heteroList.clusterList);
-  const round = useSelector((state: StateType) => state.basic.round);
 
   const width = WIDTH - MARGIN.left - MARGIN.right;
   const height = HEIGHT - MARGIN.bottom - MARGIN.right;
@@ -58,9 +58,11 @@ const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
   const updateBlock = useCallback((i) => dispatch(setIndexAction(i)), [dispatch]);
 
   const cpacaAlphaFromStore = useSelector((state: StateType) => state.service.cpca.alpha);
-
-  const level = useSelector((state: StateType) => state.service.level);
+  const serverLabels = useSelector((state: StateType) => state.service.outputLabels);
+  const groudTruth = useSelector((state: StateType) => state.service.groundTruth);
   const heteroPoints = useSelector((state: StateType) => state.basic.heteroPoints);
+  const annoPoints = useSelector((state: StateType) => new Set(state.basic.annoPoints));
+
   const setHeteroPoints = useCallback(
     (pointsParam) => dispatch(setHeteroPointsAction(pointsParam)),
     [dispatch]
@@ -110,6 +112,27 @@ const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
     [heteroList, points, xScale, yScale]
   );
 
+  const fedHeteroPointsAcc = useMemo(
+    () =>
+      getType() === 'local'
+        ? heteroList.map(({ heteroIndex }) => {
+            const correct = heteroIndex.filter((d) => serverLabels[d] === groudTruth[d]);
+
+            // console.log(correct.length)
+            return correct.length / heteroIndex.length;
+          })
+        : [],
+    [groudTruth, heteroList, serverLabels]
+  );
+
+  const intersectionWithAnnpoints = useMemo(
+    () =>
+      getType() === 'local'
+        ? heteroList.map(({ heteroIndex }) => heteroIndex.filter((d) => annoPoints.has(d)))
+        : [],
+    [annoPoints, heteroList]
+  );
+
   useEffect(() => {
     if (heteroList[blockIndex] && heteroList[blockIndex].heteroIndex) {
       const d = heteroList[blockIndex].heteroIndex.map((index) => points[index] || []);
@@ -153,25 +176,36 @@ const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
           overflow: nOfCluster !== null && nOfCluster > 8 ? 'auto' : 'visible',
         }}
       >
-        {heteroList.map((heteroItem, i) => (
-          <div
-            className="pair-rect"
-            key={i}
-            role="menuitem"
-            tabIndex={0}
-            onClick={() => updateBlockHandle(i)}
-            onKeyDown={() => updateBlockHandle(i)}
-          >
-            <div className={blockIndex === i ? 'selected' : ''}>
-              <Heatmap
-                densityData={densityData}
-                linear={linear}
-                heteroPoints={heteroPointsArr[i]}
-              />
+        {heteroList.map((heteroItem, i) => {
+          const size = intersectionWithAnnpoints[i] ? intersectionWithAnnpoints[i].length : 0;
+          return (
+            <div
+              className="pair-rect"
+              key={i}
+              role="menuitem"
+              tabIndex={0}
+              onClick={() => updateBlockHandle(i)}
+              onKeyDown={() => updateBlockHandle(i)}
+            >
+              <div
+                className={[blockIndex === i ? 'selected' : '', size > 0 ? 'hovered' : ''].join(
+                  ' '
+                )}
+              >
+                <Heatmap
+                  densityData={densityData}
+                  linear={linear}
+                  heteroPoints={heteroPointsArr[i]}
+                />
+              </div>
+              <p style={{ marginTop: '-2px' }}>
+                Size: {heteroItem.heteroSize}
+                <span>{size > 0 ? ` (${size})` : ''}</span>
+              </p>
+              <p>Accuray: {d3.format('.2p')(fedHeteroPointsAcc[i])}</p>
             </div>
-            <p>Size: {heteroItem.heteroSize}</p>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

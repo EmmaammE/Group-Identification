@@ -87,6 +87,8 @@ const PureRect = ({ data }: PureRectProps) => {
     yScale,
     rectWidthMap,
     rectHeightMap,
+    type,
+    dimension,
   ]);
 
   return (

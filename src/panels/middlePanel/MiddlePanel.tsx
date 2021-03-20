@@ -123,13 +123,7 @@ function MiddlePanel() {
   );
 
   const freshParam = useCallback(() => {
-    // const result = instance.getStatus('all');
-
-    // result.then((res: any) => {
-    //   console.log(res)
-    // })
-
-    // console.log(result, 'result')
+    // console.log('result')
     getAllCPCA(null, clusterFromRes, blockIndex, allCpcaAlpha);
   }, [allCpcaAlpha, blockIndex, getAllCPCA, clusterFromRes]);
 

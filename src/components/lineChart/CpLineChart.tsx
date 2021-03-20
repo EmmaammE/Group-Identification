@@ -52,6 +52,8 @@ const getMax = (...arr: number[][]) => {
 // 灰色（一致））棕色（不一致）
 const lineColor = ['#b5b6b6', '#aa815d'];
 
+const minLogValue = 1e-4;
+
 const getDomain = (a: number, b: number, type: string) => {
   if (a === undefined && b === undefined) return 0;
   if (a === undefined) return b;
@@ -71,7 +73,7 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
   const [hetBinCount, setHetBinCount] = useState<any>(null);
 
   useEffect(() => {
-    if (rawData[0].length > 0) {
+    if (rawData[0].length > 0 || rawData[1].length > 0) {
       const hashArr = rawData.map((d) => count(d));
       setData(hashArr);
     }
@@ -107,7 +109,7 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
     [dataKeys, widthMap]
   );
 
-  const minValue = [0, 1e-4, 0][index];
+  const minValue = [0, minLogValue, 0][index];
 
   useEffect(() => {
     if (data === null || Object.keys(hetData).length === 0) {
@@ -124,6 +126,9 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
     const hetHash = count(hetData);
 
     // console.log(hetHash, countBins)
+
+    // 转换为百分比
+    const size = hetData.length;
 
     bins.forEach((bin: any) => {
       const value = (bin.x0 + bin.x1) / 2;
@@ -155,17 +160,15 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
 
       countBins.forEach((countBin) => {
         if (countBin[value] === undefined) {
-          countBin[value] = minValue;
+          countBin[value] = minValue * size;
         }
       });
 
       if (hetBin[value] === undefined) {
-        hetBin[value] = minValue;
+        hetBin[value] = minValue * size;
       }
     });
 
-    // 转换为百分比
-    const size = hetData.length;
     countBins.forEach((hash) => {
       Object.keys(hash).forEach((key) => {
         hash[+key] /= size;
@@ -194,7 +197,7 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
 
   const yScales = [
     d3.scaleLinear().range([heightMap, 0]).domain([0, maxValue]).nice(),
-    d3.scaleLog().range([heightMap, 0]).domain([1e-4, maxValue]).nice(),
+    d3.scaleLog().range([heightMap, 0]).domain([minLogValue, maxValue]).nice(),
     d3
       .scaleSymlog()
       .domain([0, maxValue])

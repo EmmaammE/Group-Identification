@@ -108,6 +108,7 @@ function RightPanel() {
   // 做完集合操作以后的点的下标
   const [strokePoints, setStrokePoints] = useState<number[]>([]);
   const [lineIndex, setLineIndex] = useState<number>(0);
+  const [typeIndex, setTypeIndex] = useState<number>(0);
   const [channelIndex, setChannelIndex] = useState<number>(0);
 
   // { dimIndex: number}
@@ -115,13 +116,15 @@ function RightPanel() {
   // { "dataIndex": number,  }
   const { data: instance, setRequest: setInstance } = useFetch('/fl-hetero/instance/', null);
 
+  const { dimension } = getDatasetInfo();
+
   useEffect(() => {
     if (propertyIndex !== -1) {
       setAttribte({
-        dimIndex: propertyIndex,
+        dimIndex: propertyIndex + dimension * channelIndex,
       });
     }
-  }, [propertyIndex, setAttribte]);
+  }, [channelIndex, dimension, propertyIndex, setAttribte]);
 
   useEffect(() => {
     if (chosePoint !== -1) {
@@ -139,8 +142,6 @@ function RightPanel() {
     },
     [strokePoints]
   );
-
-  const { dimension } = getDatasetInfo();
 
   useEffect(() => {
     let defaultIndex = -1;
@@ -199,7 +200,7 @@ function RightPanel() {
         dataIndex: strokePoints,
         text: annoText,
       }),
-    }).then((res) => {
+    }).then(() => {
       // console.log(res);
       getList();
       setAnnoText('');
@@ -215,21 +216,38 @@ function RightPanel() {
     const temp: number[][] = [[], []];
     const tempHeteData: number[] = [];
 
-    for (let i = 0; i < dimension; i++) {
-      const d = attribute[i + dimension * channelIndex];
-      // 如果不一致
-      if (heteroLabels[i] === false) {
-        temp[1].push(d);
-      } else {
-        temp[0].push(d);
-      }
-      tempHeteData.push(d);
+    if (typeIndex === 0) {
+      // 块内的点
+      if (heteroList[index]) {
+        heteroList[index].heteroIndex.forEach((heteroIndex) => {
+          const d = attribute[heteroIndex];
+          // 如果不一致
+          if (heteroLabels[heteroIndex] === false) {
+            temp[1].push(d);
+          } else {
+            temp[0].push(d);
+          }
+          tempHeteData.push(d);
 
-      setHeteData(tempHeteData);
+          setHeteData(tempHeteData);
+        });
+      }
+    } else {
+      attribute.forEach((d, i) => {
+        // 如果不一致
+        if (heteroLabels[i] === false) {
+          temp[1].push(d);
+        } else {
+          temp[0].push(d);
+        }
+        tempHeteData.push(d);
+
+        setHeteData(tempHeteData);
+      });
     }
 
     return temp;
-  }, [attribute, channelIndex, dimension, heteroLabels]);
+  }, [attribute, heteroLabels, heteroList, index, typeIndex]);
 
   const handleHover = useCallback(
     (id: number) => {
@@ -371,9 +389,15 @@ function RightPanel() {
               Dimension: pixel ({pos.join(', ')})
               {dimension < pcArr[0].length ? [' - R', ' - G', ' - B'][channelIndex] : ''}
             </p>
+
+            <div className="info">
+              <span>Scope:</span>
+              <Dropdown items={['Cluster', 'All']} index={typeIndex} setIndex={setTypeIndex} />
+            </div>
+
             <div className="info">
               <span>y-scale:</span>
-              <Dropdown items={['linear', 'log']} index={+lineIndex} setIndex={setLineIndex} />
+              <Dropdown items={['Linear', 'Log']} index={+lineIndex} setIndex={setLineIndex} />
             </div>
           </div>
 
@@ -392,10 +416,10 @@ function RightPanel() {
               </text>
             </svg>
 
-            <svg height="22px" viewBox="0 0 48 20">
+            <svg height="22px" viewBox="0 0 60 20">
               <line x1="0" y1="10" x2={WIDTH} y2="10" stroke="#ea4d40" />
               <text x={WIDTH + 3} y="15">
-                All
+                Total
               </text>
             </svg>
           </div>

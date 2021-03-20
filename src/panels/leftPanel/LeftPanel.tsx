@@ -243,7 +243,7 @@ function LeftPanel() {
 
   return (
     <div id="LeftPanel" className="panel">
-      <h2>Federated Learning Observation</h2>
+      <h2>FL Process Observation</h2>
 
       <div className="content">
         <div className="info-container">

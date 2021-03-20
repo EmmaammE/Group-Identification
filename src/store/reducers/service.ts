@@ -200,7 +200,7 @@ export const onTypeUpdateOrInitAction = (type: string, round: number, alpha: num
     samplingType: type,
   });
 
-  const res2 = await http('/fl-hetero/labels/',  {
+  const {groundTruthLabel, outputLabel, consistencyLabel, localOutputLabel}= await http('/fl-hetero/labels/',  {
     "round": round,
   })
 
@@ -221,16 +221,26 @@ export const onTypeUpdateOrInitAction = (type: string, round: number, alpha: num
 
   instance.handle('block', clusterId || 0);
 
+  // truth: labelNames[groundTruth[chosePoint]],
+  // output: labelNames[outputLabels[chosePoint]],
+  // client: labelNames[localLabels[chosePoint]],
+  // 联邦
+  // const correctServerOutput = outputLabel.filter((label: any, i: number) => label === groundTruthLabel[i]).length;
+  // // local
+  // const correctLocalOutput = localOutputLabel.filter((label: any, i: number) => label === groundTruthLabel[i]).length;
+
+  // console.log(correctServerOutput, correctLocalOutput, groundTruthLabel.length);
+
   if(type === 'local') {
     dispatch({
       type: INIT_OR_UPDATE,
       data: {
         localData,
         samples: projectedData,
-        groundTruth: res2.groundTruthLabel,
-        outputLabels: res2.outputLabel,
-        heteroLabels: res2.consistencyLabel,
-        localOutputLabel: res2.localOutputLabel,
+        groundTruth: groundTruthLabel,
+        outputLabels: outputLabel,
+        heteroLabels: consistencyLabel,
+        localOutputLabel,
         heteroList: res4,
         allCPCA: {
           cpc1: [],
@@ -254,7 +264,7 @@ export const onTypeUpdateOrInitAction = (type: string, round: number, alpha: num
       data: {
         localData,
         samples: projectedData,
-        samplesHeteroLabels: res2.consistencyLabel,
+        samplesHeteroLabels: consistencyLabel,
         heteroList: res4,
         allCPCA: {
           cpc1: [],
