@@ -176,8 +176,7 @@ const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
           overflow: nOfCluster !== null && nOfCluster > 8 ? 'auto' : 'visible',
         }}
       >
-        {heteroList.map((heteroItem, i) => {
-          if (heteroItem.heteroSize > 100) return null;
+        {heteroList.slice(0, 100).map((heteroItem, i) => {
           const size = intersectionWithAnnpoints[i] ? intersectionWithAnnpoints[i].length : 0;
           return (
             <div
