@@ -43,7 +43,7 @@ const chartProps: ChartProps = {
   },
 };
 
-const items = ['local', 'stratified'];
+const items = ['local', 'stratified', 'systematic'];
 
 function MiddlePanel() {
   const [dataIndex, setDataIndex] = useState<number>(0);

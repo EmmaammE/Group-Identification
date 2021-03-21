@@ -68,7 +68,7 @@ const PairRect = ({ data, title, color, channel }: PairRectProps) => {
   const $chart = useRef(null);
   const $rect = useRef(null);
 
-  const [bound, setBound] = useState<any>({ width: 200, height: 200 });
+  const [bound, setBound] = useState<any>({ width: 400, height: 400 });
   const [scale, setScale] = useState<number>(1);
   const dispatch = useDispatch();
 
@@ -92,7 +92,7 @@ const PairRect = ({ data, title, color, channel }: PairRectProps) => {
       height: rectHeightMap,
       id: `${propertyIndex % columnCount},${parseInt(`${propertyIndex / rowCount}`, 10)}`,
     }),
-    [columnCount, propertyIndex, rectHeightMap, rectWidthMap]
+    [columnCount, propertyIndex, rectHeightMap, rectWidthMap, rowCount]
   );
 
   const [hoverPro, setHoverPro] = useState<RectData | null>(null);
@@ -180,7 +180,7 @@ const PairRect = ({ data, title, color, channel }: PairRectProps) => {
       .on('mouseout', () => {
         setHoverPro(null);
       });
-  }, [columnCount, rectHeightMap, rectWidthMap, updatePos, updatePropertyIndex, yScale]);
+  }, [columnCount, rectHeightMap, rectWidthMap, rowCount, updatePos, updatePropertyIndex, yScale]);
 
   return (
     <div className="wrapper">
@@ -195,6 +195,8 @@ const PairRect = ({ data, title, color, channel }: PairRectProps) => {
           height={`${bound.height}px`}
           style={{
             border: '1px dashed #777',
+            // width: '200px',
+            // height: '200px'
           }}
         />
 

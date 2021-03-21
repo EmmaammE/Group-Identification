@@ -80,7 +80,7 @@ const labelNames: any = {
     'digit-9',
   ],
   face: ['With mask', 'With no mask'],
-  cifar10: ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck'],
+  cifar10: ['plane', 'car', 'ship', 'truck'],
 };
 
 function LeftPanel() {

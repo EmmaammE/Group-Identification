@@ -104,6 +104,7 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
             'max'
           ),
         ])
+        // .domain([0,255])
         .range([0, widthMap])
         .nice(),
     [dataKeys, widthMap]
