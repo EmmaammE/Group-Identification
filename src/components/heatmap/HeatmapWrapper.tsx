@@ -155,7 +155,7 @@ const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
   ]);
 
   // console.log(heteroPointsArr)
-  const n = nOfCluster !== null && nOfCluster < 4 ? nOfCluster : 4;
+  const n = nOfCluster !== null && nOfCluster < 4 ? Math.max(2, nOfCluster) : 4;
   const ifMultiLine = nOfCluster !== null && nOfCluster > 4;
 
   const updateBlockHandle = useCallback(

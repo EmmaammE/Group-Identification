@@ -15,7 +15,7 @@ const lineChartMargin = {
   t: 15,
 };
 
-const items = ['Loss', 'Accuracy'];
+const items = ['Loss', 'Accuracy', 'Total Accuracy'];
 
 const BottomPanel = () => {
   const clientName = useSelector((state: StateType) => state.basic.clientName);
@@ -67,6 +67,7 @@ const BottomPanel = () => {
           setDatum({
             Loss: res.loss,
             Accuracy: res.valAcc,
+            'Total Accuracy': res.totAcc,
           });
           setLevel(HTTP_LEVEL.client + 1);
         });
