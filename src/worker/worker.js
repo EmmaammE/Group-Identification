@@ -13,7 +13,7 @@ export async function handle(type, id) {
   } else if (type === 'block') {
     blockRes = http('/fl-hetero/cpca/cluster/', {
       alpha: null,
-      clusterID: id,
+      dataIndex: id,
     });
   }
 }

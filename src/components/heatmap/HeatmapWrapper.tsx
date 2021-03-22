@@ -70,7 +70,7 @@ const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
   const setChosePoint = useCallback((i) => dispatch(setChosePointAction(i)), [dispatch]);
 
   const updateCPCA = useCallback(
-    (block: number, alpha: number | null) => dispatch(getCPCA(block, alpha)),
+    (dataIndex: number[], alpha: number | null) => dispatch(getCPCA(dataIndex, alpha)),
     [dispatch]
   );
 
@@ -161,9 +161,9 @@ const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
   const updateBlockHandle = useCallback(
     (i: number) => {
       updateBlock(i);
-      updateCPCA(i, cpacaAlphaFromStore);
+      updateCPCA(heteroList[i].heteroIndex, cpacaAlphaFromStore);
     },
-    [cpacaAlphaFromStore, updateBlock, updateCPCA]
+    [cpacaAlphaFromStore, heteroList, updateBlock, updateCPCA]
   );
 
   return (

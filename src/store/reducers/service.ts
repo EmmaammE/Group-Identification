@@ -132,14 +132,14 @@ export const getHeteList = (count: number|null) => async (dispatch: any) => {
   }
 }
 
-export const getCPCA = (block: number, alpha: number|null) => async (dispatch: any) => {
+export const getCPCA = (dataIndex: number[], alpha: number|null) => async (dispatch: any) => {
   try {
     await dispatch(loading(true));
     
     const {alpha: cpcaAlpha, cPC1, cPC2, projectedData: localData} = alpha === null 
     ? await instance.getStatus('block') 
     : await http('/fl-hetero/cpca/cluster/', {
-      "clusterID":block || 0,
+      "dataIndex":dataIndex,
       "alpha": alpha || defaultAlpha
     })
 
@@ -193,7 +193,7 @@ const identifyReducer = (state = initState, action: any) => {
 
 export default identifyReducer;
 
-export const onTypeUpdateOrInitAction = (type: string, round: number, alpha: number|null, count: number|null, clusterId:number|null, cpcaAlphaP: number|null) => async (dispatch: any) => {
+export const onTypeUpdateOrInitAction = (type: string, round: number, alpha: number|null, count: number|null, dataIndex:number[]|null, cpcaAlphaP: number|null) => async (dispatch: any) => {
   await dispatch(loading(true));
   
   const res1 = await http('/fl-hetero/sampling/', {
@@ -214,12 +214,13 @@ export const onTypeUpdateOrInitAction = (type: string, round: number, alpha: num
     "nrOfClusters": count || defaultCount
   })
 
+  const dataIndexP = dataIndex || res4.clusterList[0].heteroIndex;
   const {alpha: cpcaAlpha, cPC1, cPC2, projectedData: localData} = await http('/fl-hetero/cpca/cluster/', {
-    "clusterID": clusterId || 0,
+    "dataIndex": dataIndexP,
     "alpha": cpcaAlphaP || defaultAlpha
   })
 
-  instance.handle('block', clusterId || 0);
+  instance.handle('block', dataIndexP || 0);
 
   // truth: labelNames[groundTruth[chosePoint]],
   // output: labelNames[outputLabels[chosePoint]],
@@ -285,7 +286,7 @@ export const onTypeUpdateOrInitAction = (type: string, round: number, alpha: num
   }
 }
 
-export const onRoundAction = (round: number, alpha: number|null, count: number|null,  clusterId:number|null, cpcaAlphaP: number|null) => async (dispatch: any) => {
+export const onRoundAction = (round: number, alpha: number|null, count: number|null,  dataIndex:number[]|null, cpcaAlphaP: number|null) => async (dispatch: any) => {
   await dispatch(loading(true));
 
   const res2 = await http('/fl-hetero/labels/',  {
@@ -300,8 +301,9 @@ export const onRoundAction = (round: number, alpha: number|null, count: number|n
     "nrOfClusters": count || defaultCount
   })
 
+  const dataIndexP = dataIndex || res4.clusterList[0].heteroIndex;
   const {alpha: cpcaAlpha, cPC1, cPC2, projectedData: localData} = await http('/fl-hetero/cpca/cluster/', {
-    "clusterID": clusterId || 0,
+    "dataIndex": dataIndexP,
     "alpha": cpcaAlphaP || defaultAlpha
   })
 
@@ -360,7 +362,7 @@ export const onRoundAction = (round: number, alpha: number|null, count: number|n
 }
 
 
-export const onAllAlphaAction = ( alpha: number|null, count: number|null,  clusterId:number|null, cpcaAlphaP: number|null) => async (dispatch: any) => {
+export const onAllAlphaAction = ( alpha: number|null, count: number|null,  dataIndex:number[]|null, cpcaAlphaP: number|null) => async (dispatch: any) => {
   await dispatch(loading(true));
 
   const {alpha: resAlpha, projectedData} = alpha === null
@@ -373,10 +375,12 @@ export const onAllAlphaAction = ( alpha: number|null, count: number|null,  clust
     "nrOfClusters": count || defaultCount
   })
 
+  const dataIndexP = dataIndex || res4.clusterList[0].heteroIndex;
+
   const {alpha: cpcaAlpha, cPC1, cPC2, projectedData: localData} = cpcaAlphaP === null 
     ? await instance.getStatus('block') 
     : await http('/fl-hetero/cpca/cluster/', {
-      "clusterID": clusterId || 0,
+      "dataIndex": dataIndexP,
       "alpha": cpcaAlphaP || defaultAlpha
     })
 
@@ -404,18 +408,20 @@ export const onAllAlphaAction = ( alpha: number|null, count: number|null,  clust
   })
 }
 
-export const onListAction = (count: number|null, clusterId:number|null, cpcaAlphaP: number|null) => async (dispatch: any) => {
+export const onListAction = (count: number|null, dataIndex:number[]|null, cpcaAlphaP: number|null) => async (dispatch: any) => {
   await dispatch(loading(true));
   
   try {
     const res4 = await http('/fl-hetero/cluster/', {
       "nrOfClusters": count
     })
+
+    const dataIndexP = dataIndex || res4.clusterList[0].heteroIndex;
   
     const {alpha: cpcaAlpha, cPC1, cPC2, projectedData: localData} = cpcaAlphaP === null 
       ? await instance.getStatus('block') 
       : await http('/fl-hetero/cpca/cluster/', {
-        "clusterID": clusterId || 0,
+        "dataIndex": dataIndexP,
         "alpha": cpcaAlphaP || defaultAlpha
       })
   

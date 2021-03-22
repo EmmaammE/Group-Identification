@@ -1,13 +1,14 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 import * as d3 from 'd3';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import inputStyles from '../../styles/input.module.css';
 import useWindowSize from '../../utils/useResize';
 import Gradient from '../ui/Gradient';
 import ICON from '../../assets/convex.svg';
 import { getType } from '../../utils/getType';
 import { StateType } from '../../types/data';
+import { getCPCA } from '../../store/reducers/service';
 
 interface GridMatrixProps {
   // 一个二维数组，表示点的投影坐标
@@ -83,6 +84,7 @@ const GridMatrix = ({
 
   const heteroPointsFromStore = useSelector((state: StateType) => state.basic.heteroPoints);
   const labelNames = useSelector((state: StateType) => state.basic.labelNames);
+  const blockIndex: number = useSelector((state: StateType) => state.blockIndex);
 
   const annoPoints = useSelector((state: StateType) => new Set(state.basic.annoPoints));
   // 格子的大小
@@ -90,7 +92,30 @@ const GridMatrix = ({
   // true是checked
   const [display, toggelDisplat] = useState<boolean>(true);
 
-  const [t, setTransform] = useState<d3.ZoomTransform>(d3.zoomIdentity.translate(0, 0).scale(1));
+  // const [t, setTransform] = useState<d3.ZoomTransform>(d3.zoomIdentity.translate(0, 0).scale(1));
+  const [t, setTransform] = useState<d3.ZoomTransform[]>(
+    Array.from({ length: xLabelsArr.length * yLabelsArr.length }, () => d3.zoomIdentity)
+  );
+
+  const [clickGrid, setClickGrid] = useState([-1, -1, 0]);
+  const [hoverGrid, setHoverGrid] = useState([-1, -1, 0]);
+
+  const dispatch = useDispatch();
+  const updateCPCA = useCallback(
+    (dataIndex: number[], alpha: number | null) => dispatch(getCPCA(dataIndex, alpha)),
+    [dispatch]
+  );
+  const cpacaAlphaFromStore = useSelector((state: StateType) => state.service.cpca.alpha);
+
+  useEffect(() => {
+    setTransform(
+      Array.from({ length: xLabelsArr.length * yLabelsArr.length }, () => d3.zoomIdentity)
+    );
+  }, [xLabelsArr.length, yLabelsArr.length]);
+
+  useEffect(() => {
+    setClickGrid([-1, -1, 0]);
+  }, [blockIndex]);
 
   const $svg = useRef(null);
 
@@ -129,38 +154,9 @@ const GridMatrix = ({
   const width = useMemo(() => indexXScale(2) - indexXScale(0) - 2, [indexXScale]);
   const height = useMemo(() => indexYScale(2) - indexYScale(0) - 2, [indexYScale]);
 
-  useEffect(() => {
-    const zoomer: any = d3
-      .zoom()
-      .scaleExtent([1, 100])
-      .translateExtent([
-        [0, 0],
-        [width, height],
-      ])
-      .extent([
-        [0, 0],
-        [width, height],
-      ])
-      .duration(300)
-      .on('zoom', ({ transform }) => {
-        // setTransform(d3.zoomIdentity.translate(0, 0).scale(transform.k));
-        setTransform(transform);
-        // console.log('zoom')
-      });
-
-    d3.select($svg.current).call(zoomer);
-    // .on('dblclick.zoom', () => {
-    //   const transform = d3.zoomIdentity.translate(0, 0).scale(1);
-    //   d3.select($svg.current)
-    //     .transition()
-    //     .duration(200)
-    //     .ease(d3.easeLinear)
-    //     .call((zoomer as any).transform, transform);
-    // });
-  }, [$svg, height, width]);
   // console.log('size', width, height)
   // 格子的size映射为坐标上相差多少
-  const normScale = t.rescaleX(d3.scaleLinear().range([0, width]).domain([0, 1]));
+  const normScale = d3.scaleLinear().range([0, width]).domain([0, 1]);
 
   const xDomain: any = useMemo(
     () =>
@@ -184,17 +180,15 @@ const GridMatrix = ({
     [heteroPointsFromStore, data]
   );
 
-  const xScale = useMemo(
-    () => t.rescaleX(d3.scaleLinear().range([0, width]).domain(xDomain).nice()),
-    [t, width, xDomain]
-  );
+  const xScale = useMemo(() => d3.scaleLinear().range([0, width]).domain(xDomain).nice(), [
+    width,
+    xDomain,
+  ]);
 
-  const yScale = useMemo(
-    () => t.rescaleY(d3.scaleLinear().range([0, height]).domain(yDomain).nice()),
-    [height, t, yDomain]
-  );
-
-  // console.log(xScale.domain(), xScale.range())
+  const yScale = useMemo(() => d3.scaleLinear().range([0, height]).domain(yDomain).nice(), [
+    height,
+    yDomain,
+  ]);
 
   const points: number[][] = useMemo(
     () =>
@@ -288,21 +282,48 @@ const GridMatrix = ({
   // console.log(heteroPoints)
   const hull = useMemo(() => d3.polygonHull(heteroPoints), [heteroPoints]);
 
+  useEffect(() => {
+    const zoomerFactory = () =>
+      d3
+        .zoom()
+        .scaleExtent([1, 10])
+        .extent([
+          [0, 0],
+          [svgWidth, svgHeight],
+        ])
+        .duration(300)
+        .on('zoom', ({ transform }) => {
+          if (transform.k === 1) {
+            setTransform(t.map(() => d3.zoomIdentity));
+          } else {
+            setTransform(t.map(() => transform));
+          }
+        });
+
+    d3.select($svg.current)
+      .selectAll('.cluster')
+      .each(function callZoom() {
+        d3.select(this).call(zoomerFactory() as any);
+      });
+    // .on('dblclick.zoom', () => {
+    //   const transform = d3.zoomIdentity.translate(0, 0).scale(1);
+    //   d3.select($svg.current)
+    //     .transition()
+    //     .duration(200)
+    //     .ease(d3.easeLinear)
+    //     .call((zoomer as any).transform, transform);
+    // });
+  }, [$svg, height, svgHeight, svgWidth, t, width, xScale, yScale]);
+  // console.log(xScale.domain(), xScale.range())
   const gridPoints = useMemo(
     () =>
       xLabelsArr.map((xLabel, i) =>
         yLabelsArr.map((yLabel, j) => {
-          const left = margin.l + indexXScale(i * 2) + padding * i;
-          const top = margin.t + indexYScale(j * 2) + padding * j;
-
           const pointsArr0: number[][] = [];
           const pointsArr1: number[][] = [];
 
           points.forEach((point, k) => {
             // 绘制点
-            const posX = point[0] + left;
-            const posY = point[1] + top;
-
             // const pointX = point[2];
             // const pointY = point[3];
             const pointX = xLabels[k];
@@ -347,9 +368,9 @@ const GridMatrix = ({
 
               if (heteroLabels[k] === false) {
                 // 不一致
-                pointsArr1.push([posX, posY, 1, isStroke, k, Number(isInHull)]);
+                pointsArr1.push([point[0], point[1], 1, isStroke, k, Number(isInHull)]);
               } else {
-                pointsArr0.push([posX, posY, 0, isStroke, k, Number(isInHull)]);
+                pointsArr0.push([point[0], point[1], 0, isStroke, k, Number(isInHull)]);
               }
             }
             // pointsArr0.push([posX, posY, heteroLabels[k] === false ? 1:0, 0, k]);
@@ -363,8 +384,6 @@ const GridMatrix = ({
       heteroIndex,
       heteroLabels,
       hull,
-      indexXScale,
-      indexYScale,
       points,
       strokeSet,
       strokeStatus,
@@ -374,6 +393,17 @@ const GridMatrix = ({
       yLabels,
       yLabelsArr,
     ]
+  );
+
+  const clickHandle = useCallback(
+    (i: number, j: number) => {
+      setClickGrid([i, j, 1]);
+      updateCPCA(
+        gridPoints[i][j].map((point) => point[5]),
+        cpacaAlphaFromStore
+      );
+    },
+    [cpacaAlphaFromStore, gridPoints, updateCPCA]
   );
 
   const pointsCount = useMemo(
@@ -444,6 +474,8 @@ const GridMatrix = ({
         // ctx.clip();
 
         // 每一格，point的序号已经变了，必须使用point数组中的k
+        const tmpT = t[i * yLabelsArr.length + j] || d3.zoomIdentity;
+
         gridPoint.forEach((point) => {
           let alpha = 0.7;
 
@@ -458,16 +490,16 @@ const GridMatrix = ({
             // ctx.fillStyle = `rgba(197,92,0,${alpha})`;
           }
 
-          if (
-            point[0] >= left + R &&
-            point[0] <= left + width - R &&
-            point[1] >= top + R &&
-            point[1] <= top + width - R
-          ) {
-            ctx.moveTo(point[0], point[1]);
+          const [posX, posY] = tmpT.apply([point[0], point[1]] as any);
+          const x = posX + left;
+          const y = posY + top;
+
+          if (x >= left + R && x <= left + width - R && y >= top + R && y <= top + width - R) {
+            // ctx.moveTo(point[0], point[1]);
+            ctx.moveTo(x, y);
             ctx.beginPath();
 
-            ctx.arc(point[0], point[1], point[4] === chosePoint ? R + 2 : R, 0, Math.PI * 2);
+            ctx.arc(x, y, point[4] === chosePoint ? R + 2 : R, 0, Math.PI * 2);
             ctx.closePath();
             ctx.fill();
 
@@ -496,6 +528,7 @@ const GridMatrix = ({
     yLabelsArr,
     yScale,
     chosePoint,
+    t,
   ]);
 
   const handleGridSizeChange = (e: any) => {
@@ -624,13 +657,12 @@ const GridMatrix = ({
                   <rect x={0} y={0} width={width} height={height} />
                 </clipPath>
               </defs>
-              <g transform={`translate(${margin.l},${margin.t})`} onClick={clickPoint}>
+              <g transform={`translate(${margin.l},${margin.t})`}>
                 {width > 0 &&
                   xLabelsArr.map((x, i) =>
                     yLabelsArr.map((y, j) => {
                       const left = margin.l + indexXScale(i * 2) + padding * i;
                       const top = margin.t + indexYScale(j * 2) + padding * j;
-                      // const hull = hullArr[i][j];
 
                       return (
                         <g
@@ -638,25 +670,64 @@ const GridMatrix = ({
                           id={`${i}-${j}`}
                           transform={`translate(${left}, ${top})`}
                           clipPath="url(#rect)"
+                          className="cluster"
                         >
-                          {clusterPoints[i].map((cluster: any, rectX: number) => (
-                            <g key={`${i}-${j}-${rectX}`} id={`${i}-${rectX}`}>
-                              {cluster.map((rect: any, rectY: number) => {
-                                const { x0, x1, y0, y1, ratio } = rect;
-                                return (
-                                  <rect
-                                    data-pos={`${i}-${j}-${rectX}-${rectY}`}
-                                    key={`${x0},${y0},${i}`}
-                                    fill={ratio === -1 ? '#fff' : colorScale(ratio)}
-                                    x={x0}
-                                    y={y0}
-                                    width={x1 - x0}
-                                    height={y1 - y0}
-                                  />
-                                );
-                              })}
-                            </g>
-                          ))}
+                          <g
+                            transform={
+                              t[i * yLabelsArr.length + j] &&
+                              t[i * yLabelsArr.length + j].toString()
+                            }
+                            onClick={clickPoint}
+                          >
+                            {clusterPoints[i].map((cluster: any, rectX: number) => (
+                              <g key={`${i}-${j}-${rectX}`} id={`${i}-${rectX}`}>
+                                {cluster.map((rect: any, rectY: number) => {
+                                  const { x0, x1, y0, y1, ratio } = rect;
+                                  return (
+                                    <rect
+                                      data-pos={`${i}-${j}-${rectX}-${rectY}`}
+                                      key={`${x0},${y0},${i}`}
+                                      fill={ratio === -1 ? '#fff' : colorScale(ratio)}
+                                      x={x0}
+                                      y={y0}
+                                      width={x1 - x0}
+                                      height={y1 - y0}
+                                    />
+                                  );
+                                })}
+                              </g>
+                            ))}
+                          </g>
+
+                          <rect
+                            x="0"
+                            y="0"
+                            width={width}
+                            height={height}
+                            fill="none"
+                            stroke="#777"
+                            strokeDasharray="2 2"
+                            strokeWidth="1px"
+                          />
+
+                          <rect
+                            x="0"
+                            y="0"
+                            width={width}
+                            height={height}
+                            fill="none"
+                            stroke="#333"
+                            opacity={i === clickGrid[0] && j === clickGrid[1] ? clickGrid[2] : 0}
+                            strokeWidth="4px"
+                            className="outline"
+                            onClick={() => clickHandle(i, j)}
+                            onMouseEnter={() => {
+                              if (hoverGrid[2] === 0) setClickGrid([i, j, 0.5]);
+                            }}
+                            onMouseOut={() => {
+                              if (hoverGrid[2] === 0.5) setClickGrid([-1, -1, 0]);
+                            }}
+                          />
                         </g>
                       );
                     })
@@ -685,7 +756,7 @@ const GridMatrix = ({
                 pointerEvents: 'none',
               }}
             >
-              <g transform={`translate(${margin.l},${margin.t})`} onClick={clickPoint}>
+              <g transform={`translate(${margin.l},${margin.t})`}>
                 {width > 0 &&
                   xLabelsArr.map((x, i) =>
                     yLabelsArr.map((y, j) => {
@@ -704,24 +775,20 @@ const GridMatrix = ({
                             <path
                               d={`M${hull.join(' L')} Z`}
                               fill="none"
-                              strokeWidth={2}
+                              strokeWidth={
+                                2 /
+                                (t[i * yLabelsArr.length + j] ? t[i * yLabelsArr.length + j].k : 1)
+                              }
                               stroke="var(--primary-color)"
+                              transform={
+                                t[i * yLabelsArr.length + j] &&
+                                t[i * yLabelsArr.length + j].toString()
+                              }
                             />
                           )}
                           <text x="4" y="14" fontSize="14">
                             {convexCount} / {blockCount}
                           </text>
-                          <rect
-                            x="0"
-                            y="0"
-                            width={width}
-                            height={height}
-                            fill="none"
-                            stroke="#777"
-                            strokeDasharray="2 2"
-                            strokeWidth="1px"
-                            className="outline"
-                          />
                         </g>
                       );
                     })

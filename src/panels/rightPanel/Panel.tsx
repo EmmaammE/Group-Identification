@@ -101,7 +101,7 @@ function RightPanel() {
   const chosePoint = useSelector((state: StateType) => state.service.chosePoint);
   const setChosePoint = useCallback((i) => dispatch(setChosePointAction(i)), [dispatch]);
   const updateCPCA = useCallback(
-    (block: number, alpha: number | null) => dispatch(getCPCA(block, alpha)),
+    (dataIndex: number[], alpha: number | null) => dispatch(getCPCA(dataIndex, alpha)),
     [dispatch]
   );
 
@@ -216,7 +216,7 @@ function RightPanel() {
     const temp: number[][] = [[], []];
     const tempHeteData: number[] = [];
 
-    if (typeIndex === 0) {
+    if (typeIndex === 1) {
       // 块内的点
       if (heteroList[index]) {
         heteroList[index].heteroIndex.forEach((heteroIndex) => {
@@ -275,27 +275,39 @@ function RightPanel() {
   // 选择的注释的点的
   const strokeSet: Set<number> = useMemo(() => {
     if (annoList[strokeId]) {
-      return new Set(annoList[strokeId].dataIndex);
+      let set = new Set<number>(annoList[strokeId].dataIndex);
+      annoListStatus.forEach((d, i) => {
+        if (d !== 0 && i !== strokeId) {
+          if (d === 1) {
+            set = new Set([...Array.from(set), ...annoList[i].dataIndex]);
+          } else if (d === 2) {
+            annoList[i].dataIndex.forEach((j: number) => {
+              set.add(j);
+            });
+          }
+        }
+      });
+      return set;
     }
     return new Set<number>();
-  }, [annoList, strokeId]);
+  }, [annoList, strokeId, annoListStatus]);
 
   const handleParamChange = useCallback(
     (e: any) => {
       const value = +e.target.value;
       if (value !== cpacaAlphaFromStore) {
-        updateCPCA(index, +e.target.value);
+        updateCPCA(heteroList[value].heteroIndex, +e.target.value);
         setLevel(HTTP_LEVEL.cpca);
       }
     },
-    [cpacaAlphaFromStore, index, setLevel, updateCPCA]
+    [cpacaAlphaFromStore, heteroList, setLevel, updateCPCA]
   );
 
   const $inputAlpha = useRef(null);
 
   const freshCount = useCallback(() => {
-    updateCPCA(index, null);
-  }, [index, updateCPCA]);
+    updateCPCA(heteroList[index].heteroIndex, null);
+  }, [heteroList, index, updateCPCA]);
 
   useEffect(() => {
     setParam(cpacaAlphaFromStore);
@@ -392,7 +404,7 @@ function RightPanel() {
 
             <div className="info">
               <span>Scope:</span>
-              <Dropdown items={['Cluster', 'All']} index={typeIndex} setIndex={setTypeIndex} />
+              <Dropdown items={['All', 'Cluster']} index={typeIndex} setIndex={setTypeIndex} />
             </div>
 
             <div className="info">
@@ -417,7 +429,7 @@ function RightPanel() {
             </svg>
 
             <svg height="22px" viewBox="0 0 60 20">
-              <line x1="0" y1="10" x2={WIDTH} y2="10" stroke="#ea4d40" />
+              <line x1="0" y1="10" x2={WIDTH} y2="10" stroke="#c04548" />
               <text x={WIDTH + 3} y="15">
                 Total
               </text>
@@ -433,6 +445,7 @@ function RightPanel() {
                   title=""
                   index={+lineIndex}
                   hetData={heteData}
+                  typeIndex={typeIndex}
                 />
               )}
             </div>

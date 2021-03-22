@@ -13,6 +13,7 @@ export interface CpLineChartProps {
   title: string;
   index: number;
   hetData: number[];
+  typeIndex: number;
 }
 
 const WIDTH = 510;
@@ -62,7 +63,14 @@ const getDomain = (a: number, b: number, type: string) => {
   return (Math as any)[type](a, b);
 };
 
-const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineChartProps) => {
+const CpLineChart = ({
+  margin,
+  data: rawData,
+  title,
+  index,
+  hetData,
+  typeIndex,
+}: CpLineChartProps) => {
   const widthMap: number = WIDTH - margin.l - margin.r;
   const heightMap: number = HEIGHT - margin.t - margin.b;
 
@@ -286,47 +294,6 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
         <text transform={`translate(${widthMap - 30},${heightMap + margin.t + margin.b - 15})`}>
           Value
         </text>
-        {binsCount.map(
-          (datum: any, i: number) =>
-            datum && (
-              <path
-                key={i}
-                d={line(datum)((Object.keys(datum) as any).sort((a: any, b: any) => +a - +b)) || ''}
-                stroke={lineColor[i]}
-                fill="none"
-                // clipPath="url(#cut-off)"
-                // opacity="0.7"
-                clipPath="url(#cut)"
-              />
-            )
-        )}
-        {binsCount.map((datum: any, i: number) => (
-          <g key={`c-${i}`}>
-            {datum !== null &&
-              Object.keys(datum).map((key, j) => (
-                <circle
-                  key={`c-${i}-${j}`}
-                  cx={xScale(+key)}
-                  cy={yScale(datum[key as any])}
-                  r={2}
-                  stroke={lineColor[i]}
-                  fill="#fff"
-                  id={datum[key]}
-                  // opacity="0.7"
-                />
-              ))}
-          </g>
-        ))}
-
-        {/* <rect 
-        x='0'
-        y='0'
-        width={WIDTH}
-        height={HEIGHT}
-        clipPath="url(#cut)"
-        fill='#000'
-      /> */}
-
         {hetBinCount && (
           <g>
             <path
@@ -351,6 +318,48 @@ const CpLineChart = ({ margin, data: rawData, title, index, hetData }: CpLineCha
             ))}
           </g>
         )}
+        {binsCount.map(
+          (datum: any, i: number) =>
+            datum &&
+            (typeIndex !== 1 || i === 1) && (
+              <path
+                key={i}
+                d={line(datum)((Object.keys(datum) as any).sort((a: any, b: any) => +a - +b)) || ''}
+                stroke={lineColor[i]}
+                fill="none"
+                // clipPath="url(#cut-off)"
+                // opacity="0.7"
+                clipPath="url(#cut)"
+              />
+            )
+        )}
+        {binsCount.map((datum: any, i: number) => (
+          <g key={`c-${i}`}>
+            {datum !== null &&
+              (typeIndex !== 1 || i === 1) &&
+              Object.keys(datum).map((key, j) => (
+                <circle
+                  key={`c-${i}-${j}`}
+                  cx={xScale(+key)}
+                  cy={yScale(datum[key as any])}
+                  r={2}
+                  stroke={lineColor[i]}
+                  fill="#fff"
+                  id={datum[key]}
+                  // opacity="0.7"
+                />
+              ))}
+          </g>
+        ))}
+
+        {/* <rect 
+        x='0'
+        y='0'
+        width={WIDTH}
+        height={HEIGHT}
+        clipPath="url(#cut)"
+        fill='#000'
+      /> */}
       </g>
     </svg>
   );

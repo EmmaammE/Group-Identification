@@ -46,7 +46,7 @@ const chartProps: ChartProps = {
 const items = ['local', 'stratified', 'systematic'];
 
 function MiddlePanel() {
-  const [dataIndex, setDataIndex] = useState<number>(0);
+  const [dataTypeIndex, setDataIndex] = useState<number>(0);
   // const [param, setParam] = useState<number | null>(null);
   const allCpcaAlpha = useSelector((state: StateType) => state.service.allCPCA.alpha);
 
@@ -56,18 +56,19 @@ function MiddlePanel() {
   const blockIndex = useSelector((state: StateType) => state.blockIndex);
 
   const samples = useSelector((state: StateType) => state.service.samples);
+  const heteroList = useSelector((state: StateType) => state.service.heteroList.clusterList);
 
   const dispatch = useDispatch();
   const clusterFromRes = useSelector((state: StateType) => state.service.heteroList.nrOfClusters);
   const setLevel = useCallback((level: number) => dispatch(setLevelAction(level)), [dispatch]);
   const getAllCPCA = useCallback(
-    (alpha: number | null, count: number | null, clusterId: number, cpcaAlphaP) =>
-      dispatch(onAllAlphaAction(alpha, count, clusterId, cpcaAlphaP)),
+    (alpha: number | null, count: number | null, dataIndex: number[], cpcaAlphaP) =>
+      dispatch(onAllAlphaAction(alpha, count, dataIndex, cpcaAlphaP)),
     [dispatch]
   );
   const getLists = useCallback(
-    (count: number | null, clusterId: number, cpcaAlphaP) =>
-      dispatch(onListAction(count, clusterId, cpcaAlphaP)),
+    (count: number | null, dataIndex: number[], cpcaAlphaP) =>
+      dispatch(onListAction(count, dataIndex, cpcaAlphaP)),
     [dispatch]
   );
 
@@ -78,9 +79,9 @@ function MiddlePanel() {
       r: number,
       alpha: number | null,
       count: number | null,
-      clusterId: number | null,
+      dataIndex: number[] | null,
       cpcaAlphaP: number | null
-    ) => dispatch(onTypeUpdateOrInitAction(type, r, alpha, count, clusterId, cpcaAlphaP)),
+    ) => dispatch(onTypeUpdateOrInitAction(type, r, alpha, count, dataIndex, cpcaAlphaP)),
     [dispatch]
   );
 
@@ -89,9 +90,9 @@ function MiddlePanel() {
       r: number,
       alpha: number | null,
       count: number | null,
-      clusterId: number | null,
+      dataIndex: number[] | null,
       cpcaAlphaP: number | null
-    ) => dispatch(onRoundAction(r, alpha, count, clusterId, cpcaAlphaP)),
+    ) => dispatch(onRoundAction(r, alpha, count, dataIndex, cpcaAlphaP)),
     [dispatch]
   );
 
@@ -102,7 +103,7 @@ function MiddlePanel() {
   }, [clusterFromRes]);
 
   const nOfConsistent = useSelector((state: StateType) =>
-    dataIndex === 0
+    dataTypeIndex === 0
       ? state.service.heteroLabels.filter((d) => d).length
       : state.service.samplesHeteroLabels.filter((d) => d).length
   );
@@ -116,16 +117,16 @@ function MiddlePanel() {
       // setLevel(HTTP_LEVEL.pca);
       const value = +e.target.value;
       if (allCpcaAlpha !== value) {
-        getAllCPCA(value, clusterFromRes, blockIndex, allCpcaAlpha);
+        getAllCPCA(value, clusterFromRes, heteroList[blockIndex].heteroIndex, allCpcaAlpha);
       }
     },
-    [allCpcaAlpha, blockIndex, getAllCPCA, clusterFromRes]
+    [allCpcaAlpha, getAllCPCA, clusterFromRes, heteroList, blockIndex]
   );
 
   const freshParam = useCallback(() => {
     // console.log('result')
-    getAllCPCA(null, clusterFromRes, blockIndex, allCpcaAlpha);
-  }, [allCpcaAlpha, blockIndex, getAllCPCA, clusterFromRes]);
+    getAllCPCA(null, clusterFromRes, heteroList[blockIndex].heteroIndex, allCpcaAlpha);
+  }, [getAllCPCA, clusterFromRes, heteroList, blockIndex, allCpcaAlpha]);
 
   const x = d3.extent(samples, (d) => d[0]) as any;
   const y = d3.extent(samples, (d) => d[1]) as any;
@@ -136,20 +137,50 @@ function MiddlePanel() {
       setDataIndex(e);
       setType(items[e]);
       // 测试worker
-      onTypeUpdateOrInit(items[e], round, allCpcaAlpha, clusterFromRes, blockIndex, blockCpcaAlpha);
+      onTypeUpdateOrInit(
+        items[e],
+        round,
+        allCpcaAlpha,
+        clusterFromRes,
+        heteroList[blockIndex].heteroIndex,
+        blockCpcaAlpha
+      );
     },
-    [allCpcaAlpha, blockCpcaAlpha, blockIndex, clusterFromRes, onTypeUpdateOrInit, round]
+    [
+      allCpcaAlpha,
+      blockCpcaAlpha,
+      blockIndex,
+      clusterFromRes,
+      heteroList,
+      onTypeUpdateOrInit,
+      round,
+    ]
   );
 
   useEffect(() => {
-    setType(items[dataIndex]);
+    setType(items[dataTypeIndex]);
   }, []);
 
   useEffect(() => {
     if (level === HTTP_LEVEL.labels) {
-      onRoundChange(round, allCpcaAlpha, clusterFromRes, blockIndex, blockCpcaAlpha);
+      onRoundChange(
+        round,
+        allCpcaAlpha,
+        clusterFromRes,
+        heteroList[blockIndex].heteroIndex,
+        blockCpcaAlpha
+      );
     }
-  }, [round, level, onRoundChange, allCpcaAlpha, clusterFromRes, blockIndex, blockCpcaAlpha]);
+  }, [
+    round,
+    level,
+    onRoundChange,
+    allCpcaAlpha,
+    clusterFromRes,
+    blockIndex,
+    blockCpcaAlpha,
+    heteroList,
+  ]);
 
   const onInputNumber = (e: any) => {
     const reg = new RegExp('^[0-9]*$');
@@ -159,7 +190,7 @@ function MiddlePanel() {
       // setNOfCluster(+value);
       setLevel(HTTP_LEVEL.cpca);
       if (+value !== clusterFromRes) {
-        getLists(+value, blockIndex, blockCpcaAlpha);
+        getLists(+value, heteroList[blockIndex].heteroIndex, blockCpcaAlpha);
       }
     } else {
       // setNOfCluster(null);
@@ -168,9 +199,9 @@ function MiddlePanel() {
   };
 
   const freshCount = useCallback(() => {
-    getLists(null, blockIndex, blockCpcaAlpha);
+    getLists(null, heteroList[blockIndex].heteroIndex, blockCpcaAlpha);
     setLevel(HTTP_LEVEL.cpca);
-  }, [blockCpcaAlpha, blockIndex, getLists, setLevel]);
+  }, [blockCpcaAlpha, blockIndex, getLists, heteroList, setLevel]);
 
   const $inputAlpha = useRef(null);
   useEffect(() => {
@@ -188,7 +219,7 @@ function MiddlePanel() {
           <div className="row">
             <div className="info-row">
               <p>Inputs: </p>
-              <Dropdown items={items} index={dataIndex} setIndex={handleDropDown} />
+              <Dropdown items={items} index={dataTypeIndex} setIndex={handleDropDown} />
             </div>
 
             <div className="row">
