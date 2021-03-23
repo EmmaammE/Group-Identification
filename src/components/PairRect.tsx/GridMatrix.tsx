@@ -1,3 +1,4 @@
+/* eslint-disable no-nested-ternary */
 /* eslint-disable jsx-a11y/label-has-associated-control */
 import * as d3 from 'd3';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -286,7 +287,7 @@ const GridMatrix = ({
     const zoomerFactory = () =>
       d3
         .zoom()
-        .scaleExtent([1, 10])
+        .scaleExtent([1, 15])
         .extent([
           [0, 0],
           [svgWidth, svgHeight],
@@ -397,6 +398,7 @@ const GridMatrix = ({
 
   const clickHandle = useCallback(
     (i: number, j: number) => {
+      // console.log('clickHandle')
       setClickGrid([i, j, 1]);
       updateCPCA(
         gridPoints[i][j].map((point) => point[5]),
@@ -449,14 +451,18 @@ const GridMatrix = ({
     }
   }, [annoPoints, gridPoints, setStrokePoints]);
 
+  const $hideChart = useRef(null);
+
   useEffect(() => {
     if (!$chart.current || !xScale || !yScale) {
       return;
     }
 
     const ctx = ($chart.current as any).getContext('2d');
+    const hiddenCtx = ($hideChart.current as any).getContext('2d');
 
     ctx.clearRect(0, 0, svgWidth, svgHeight);
+    hiddenCtx.clearRect(0, 0, svgWidth, svgHeight);
     ctx.lineWidth = 1;
 
     ctx.strokeStyle = 'rgba(0,0,0, 0.5)';
@@ -506,6 +512,20 @@ const GridMatrix = ({
             if (point[3]) {
               ctx.stroke();
             }
+
+            hiddenCtx.moveTo(x, y);
+            let color = point[4];
+            const b = color % 256;
+            const g = parseInt(`${(color /= 256)}`, 10) % 256;
+            const r = parseInt(`${(color /= 256)}`, 10) % 256;
+            hiddenCtx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+
+            // console.log(r,g,b);
+            // hiddenCtx.fillStyle = colorString;
+            hiddenCtx.beginPath();
+            hiddenCtx.arc(x, y, R, 0, Math.PI * 2);
+            hiddenCtx.closePath();
+            hiddenCtx.fill();
           }
         });
       });
@@ -541,38 +561,11 @@ const GridMatrix = ({
   // console.log(pointsInHull, hullArr)
 
   const clickPoint = (e: any) => {
-    const { pos } = e.target.dataset;
     const { offsetX, offsetY } = e.nativeEvent;
-    // ${i}-${j}-${rectX}-${rectY}
-    if (pos) {
-      const [i, j, rectX, rectY] = pos.split('-');
-      const gridPoint = clusterPoints[i][rectX][rectY];
-
-      const { x0, y0, x1, y1 } = gridPoint;
-      // console.log(clusterPoints);
-      // console.log(gridPoint);
-
-      const offset = R * 2;
-      const searched = search(x0 - offset, y0 - offset, x1 + offset, y1 + offset).filter(
-        (point: number[]) => point[2] === xLabelsArr[i] && point[3] === yLabelsArr[j]
-      );
-      // console.log(searched)
-
-      const left = margin.l + indexXScale(i * 2) + padding * i;
-      const top = margin.t + indexYScale(j * 2) + padding * j;
-
-      const results = searched
-        .filter((point: number[]) =>
-          isInCircle([point[0], point[1]], offsetX - left, offsetY - top)
-        )
-        .sort(
-          (a: number[], b: number[]) => Number(heteroLabels[a[4]]) - Number(heteroLabels[b[4]])
-        );
-      // console.log(results)
-      if (results.length) {
-        setChosePoint(results[0][4]);
-      }
-    }
+    const hiddenCtx = ($hideChart.current as any).getContext('2d');
+    const [r, g, b] = hiddenCtx.getImageData(offsetX, offsetY, 1, 1).data;
+    const value = r * 256 * 256 + g * 256 + b;
+    setChosePoint(value);
   };
 
   return (
@@ -710,22 +703,25 @@ const GridMatrix = ({
                             strokeWidth="1px"
                           />
 
-                          <rect
-                            x="0"
-                            y="0"
-                            width={width}
-                            height={height}
+                          <path
+                            d={`M0,0 L${width},0 L${width},${height} L0,${height} L0,0Z`}
                             fill="none"
                             stroke="#333"
-                            opacity={i === clickGrid[0] && j === clickGrid[1] ? clickGrid[2] : 0}
+                            opacity={
+                              i === hoverGrid[0] && j === hoverGrid[1]
+                                ? 0.5
+                                : i === clickGrid[0] && j === clickGrid[1]
+                                ? 1
+                                : 0
+                            }
                             strokeWidth="4px"
                             className="outline"
                             onClick={() => clickHandle(i, j)}
-                            onMouseEnter={() => {
-                              if (hoverGrid[2] === 0) setClickGrid([i, j, 0.5]);
+                            onMouseMove={() => {
+                              setHoverGrid([i, j, 0.5]);
                             }}
                             onMouseOut={() => {
-                              if (hoverGrid[2] === 0.5) setClickGrid([-1, -1, 0]);
+                              setHoverGrid([-1, -1, 0]);
                             }}
                           />
                         </g>
@@ -741,6 +737,17 @@ const GridMatrix = ({
               height={`${svgHeight}px`}
               style={{
                 opacity: display ? 1 : 0,
+                pointerEvents: 'none',
+              }}
+            />
+
+            <canvas
+              ref={$hideChart}
+              width={`${svgWidth}px`}
+              height={`${svgHeight}px`}
+              style={{
+                // display: 'none',
+                opacity: 0,
                 pointerEvents: 'none',
               }}
             />

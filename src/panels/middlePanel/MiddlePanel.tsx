@@ -136,25 +136,10 @@ function MiddlePanel() {
       // setLevel(HTTP_LEVEL.sampling);
       setDataIndex(e);
       setType(items[e]);
-      // 测试worker
-      onTypeUpdateOrInit(
-        items[e],
-        round,
-        allCpcaAlpha,
-        clusterFromRes,
-        heteroList[blockIndex].heteroIndex,
-        blockCpcaAlpha
-      );
+
+      onTypeUpdateOrInit(items[e], round, allCpcaAlpha, clusterFromRes, null, blockCpcaAlpha);
     },
-    [
-      allCpcaAlpha,
-      blockCpcaAlpha,
-      blockIndex,
-      clusterFromRes,
-      heteroList,
-      onTypeUpdateOrInit,
-      round,
-    ]
+    [allCpcaAlpha, blockCpcaAlpha, clusterFromRes, onTypeUpdateOrInit, round]
   );
 
   useEffect(() => {

@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 import { useDispatch, useSelector } from 'react-redux';
 import Heatmap from './Heatmap';
 import { StateType } from '../../types/data';
-import { getCPCA, loading, setChosePointAction } from '../../store/reducers/service';
+import { getCPCA, instance, loading, setChosePointAction } from '../../store/reducers/service';
 import { setSizeAction, setHeteroPointsAction } from '../../store/reducers/basic';
 import { setIndexAction } from '../../store/reducers/blockIndex';
 import HTTP_LEVEL from '../../utils/level';
@@ -162,6 +162,7 @@ const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
     (i: number) => {
       updateBlock(i);
       updateCPCA(heteroList[i].heteroIndex, cpacaAlphaFromStore);
+      instance.handle('block', heteroList[i].heteroIndex);
     },
     [cpacaAlphaFromStore, heteroList, updateBlock, updateCPCA]
   );
@@ -202,9 +203,10 @@ const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
                 Size: {heteroItem.heteroSize}
                 <span>{size > 0 ? ` (${size})` : ''}</span>
               </p>
-              {fedHeteroPointsAcc[i] !== undefined && (
-                <p>Accuray: {d3.format('.2p')(fedHeteroPointsAcc[i])}</p>
-              )}
+              <p>
+                {fedHeteroPointsAcc[i] !== undefined &&
+                  `Accuracy: ${d3.format('.2p')(fedHeteroPointsAcc[i])}`}
+              </p>
             </div>
           );
         })}

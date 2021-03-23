@@ -220,7 +220,7 @@ export const onTypeUpdateOrInitAction = (type: string, round: number, alpha: num
     "alpha": cpcaAlphaP || defaultAlpha
   })
 
-  instance.handle('block', dataIndexP || 0);
+  instance.handle('block', dataIndexP);
 
   // truth: labelNames[groundTruth[chosePoint]],
   // output: labelNames[outputLabels[chosePoint]],
@@ -377,12 +377,12 @@ export const onAllAlphaAction = ( alpha: number|null, count: number|null,  dataI
 
   const dataIndexP = dataIndex || res4.clusterList[0].heteroIndex;
 
-  const {alpha: cpcaAlpha, cPC1, cPC2, projectedData: localData} = cpcaAlphaP === null 
-    ? await instance.getStatus('block') 
-    : await http('/fl-hetero/cpca/cluster/', {
+  const {alpha: cpcaAlpha, cPC1, cPC2, projectedData: localData} = await http('/fl-hetero/cpca/cluster/', {
       "dataIndex": dataIndexP,
       "alpha": cpcaAlphaP || defaultAlpha
     })
+
+  instance.handle('block', dataIndexP);
 
   dispatch({
     type: INIT_OR_UPDATE,
@@ -418,13 +418,13 @@ export const onListAction = (count: number|null, dataIndex:number[]|null, cpcaAl
 
     const dataIndexP = dataIndex || res4.clusterList[0].heteroIndex;
   
-    const {alpha: cpcaAlpha, cPC1, cPC2, projectedData: localData} = cpcaAlphaP === null 
-      ? await instance.getStatus('block') 
-      : await http('/fl-hetero/cpca/cluster/', {
+    const {alpha: cpcaAlpha, cPC1, cPC2, projectedData: localData} = await http('/fl-hetero/cpca/cluster/', {
         "dataIndex": dataIndexP,
         "alpha": cpcaAlphaP || defaultAlpha
       })
-  
+
+    instance.handle('block', dataIndexP);
+
     dispatch({
       type: INIT_OR_UPDATE,
       data: {
