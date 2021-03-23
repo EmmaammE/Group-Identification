@@ -296,11 +296,11 @@ function RightPanel() {
     (e: any) => {
       const value = +e.target.value;
       if (value !== cpacaAlphaFromStore) {
-        updateCPCA(heteroList[value].heteroIndex, +e.target.value);
+        updateCPCA(heteroList[index].heteroIndex, value);
         setLevel(HTTP_LEVEL.cpca);
       }
     },
-    [cpacaAlphaFromStore, heteroList, setLevel, updateCPCA]
+    [cpacaAlphaFromStore, heteroList, index, setLevel, updateCPCA]
   );
 
   const $inputAlpha = useRef(null);
