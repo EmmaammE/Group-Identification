@@ -162,7 +162,7 @@ const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
     (i: number) => {
       updateBlock(i);
       updateCPCA(heteroList[i].heteroIndex, cpacaAlphaFromStore);
-      instance.handle('block', heteroList[i].heteroIndex);
+      // instance.handle('block', heteroList[i].heteroIndex);
     },
     [cpacaAlphaFromStore, heteroList, updateBlock, updateCPCA]
   );

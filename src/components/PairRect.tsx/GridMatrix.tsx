@@ -27,6 +27,8 @@ interface GridMatrixProps {
   chosePoint: number;
   setChosePoint: Function;
   setStrokePoints: Function;
+  // 设置选择格子之后，格子点的坐标
+  setBlockIndex: Function;
 }
 
 // 点的半径
@@ -70,6 +72,7 @@ const GridMatrix = ({
   chosePoint,
   setChosePoint,
   setStrokePoints,
+  setBlockIndex,
 }: GridMatrixProps) => {
   const $chart = useRef(null);
   const $wrapper = useRef(null);
@@ -116,7 +119,8 @@ const GridMatrix = ({
 
   useEffect(() => {
     setClickGrid([-1, -1, 0]);
-  }, [blockIndex]);
+    setBlockIndex([]);
+  }, [blockIndex, setBlockIndex]);
 
   const $svg = useRef(null);
 
@@ -316,6 +320,8 @@ const GridMatrix = ({
     // });
   }, [$svg, height, svgHeight, svgWidth, t, width, xScale, yScale]);
   // console.log(xScale.domain(), xScale.range())
+
+  // x, y, 是否一致，是否描边，id, 是否在闭包
   const gridPoints = useMemo(
     () =>
       xLabelsArr.map((xLabel, i) =>
@@ -408,13 +414,13 @@ const GridMatrix = ({
     (i: number, j: number) => {
       // console.log('clickHandle')
       setClickGrid([i, j, 1]);
-      updateCPCA(
-        gridPoints[i][j].map((point) => point[5]),
-        cpacaAlphaFromStore
-      );
-      setStrokePoints(gridPoints[i][j]);
+
+      const pointsId = gridPoints[i][j].map((point) => point[4]);
+      updateCPCA(pointsId, cpacaAlphaFromStore);
+      setBlockIndex(pointsId);
+      // setStrokePoints(gridPoints[i][j]);
     },
-    [cpacaAlphaFromStore, gridPoints, setStrokePoints, updateCPCA]
+    [cpacaAlphaFromStore, gridPoints, setBlockIndex, updateCPCA]
   );
 
   const pointsCount = useMemo(

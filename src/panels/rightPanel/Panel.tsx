@@ -105,6 +105,9 @@ function RightPanel() {
     [dispatch]
   );
 
+  // 点击格子之后，请求cpca的点的坐标
+  const [blockIndex, setBlockIndex] = useState<number[]>([]);
+
   // 做完集合操作以后的点的下标
   const [strokePoints, setStrokePoints] = useState<number[]>([]);
   const [lineIndex, setLineIndex] = useState<number>(0);
@@ -296,11 +299,15 @@ function RightPanel() {
     (e: any) => {
       const value = +e.target.value;
       if (value !== cpacaAlphaFromStore) {
-        updateCPCA(heteroList[index].heteroIndex, value);
+        if (blockIndex.length > 0) {
+          updateCPCA(blockIndex, value);
+        } else {
+          updateCPCA(heteroList[index].heteroIndex, value);
+        }
         setLevel(HTTP_LEVEL.cpca);
       }
     },
-    [cpacaAlphaFromStore, heteroList, index, setLevel, updateCPCA]
+    [blockIndex, cpacaAlphaFromStore, heteroList, index, setLevel, updateCPCA]
   );
 
   const $inputAlpha = useRef(null);
@@ -465,6 +472,7 @@ function RightPanel() {
             chosePoint={chosePoint}
             setChosePoint={setChosePoint}
             setStrokePoints={setPoints}
+            setBlockIndex={setBlockIndex}
           />
         </div>
 
