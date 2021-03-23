@@ -323,6 +323,9 @@ const GridMatrix = ({
           const pointsArr0: number[][] = [];
           const pointsArr1: number[][] = [];
 
+          // 如果点击了格子
+          const gridFlag = clickGrid[0] === i && clickGrid[1] === j;
+
           points.forEach((point, k) => {
             // 绘制点
             // const pointX = point[2];
@@ -340,7 +343,11 @@ const GridMatrix = ({
                 isInHull = hull !== null && d3.polygonContains(hull, point as any);
               }
 
-              if (annoPoints.size === 0) {
+              if (clickGrid[2] !== 0) {
+                if (heteroLabels[k] === false && gridFlag) {
+                  isStroke = 1;
+                }
+              } else if (annoPoints.size === 0) {
                 // 如果，没有高亮的标记点，计算当前选择的点和异构块中的点的关系
                 switch (strokeStatus) {
                   case 0:
@@ -377,11 +384,12 @@ const GridMatrix = ({
             // pointsArr0.push([posX, posY, heteroLabels[k] === false ? 1:0, 0, k]);
           });
 
-          return pointsArr0.concat(pointsArr1);
+          return pointsArr0.concat(pointsArr1).sort((a, b) => a[3] - b[3]);
         })
       ),
     [
       annoPoints,
+      clickGrid,
       heteroIndex,
       heteroLabels,
       hull,
@@ -404,8 +412,9 @@ const GridMatrix = ({
         gridPoints[i][j].map((point) => point[5]),
         cpacaAlphaFromStore
       );
+      setStrokePoints(gridPoints[i][j]);
     },
-    [cpacaAlphaFromStore, gridPoints, updateCPCA]
+    [cpacaAlphaFromStore, gridPoints, setStrokePoints, updateCPCA]
   );
 
   const pointsCount = useMemo(
