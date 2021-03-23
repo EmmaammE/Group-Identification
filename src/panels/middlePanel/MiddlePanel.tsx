@@ -62,13 +62,13 @@ function MiddlePanel() {
   const clusterFromRes = useSelector((state: StateType) => state.service.heteroList.nrOfClusters);
   const setLevel = useCallback((level: number) => dispatch(setLevelAction(level)), [dispatch]);
   const getAllCPCA = useCallback(
-    (alpha: number | null, count: number | null, dataIndex: number[], cpcaAlphaP) =>
-      dispatch(onAllAlphaAction(alpha, count, dataIndex, cpcaAlphaP)),
+    (alpha: number | null, count: number | null, blockId: number, cpcaAlphaP) =>
+      dispatch(onAllAlphaAction(alpha, count, blockId, cpcaAlphaP)),
     [dispatch]
   );
   const getLists = useCallback(
-    (count: number | null, dataIndex: number[], cpcaAlphaP) =>
-      dispatch(onListAction(count, dataIndex, cpcaAlphaP)),
+    (count: number | null, blockId: number, cpcaAlphaP) =>
+      dispatch(onListAction(count, blockId, cpcaAlphaP)),
     [dispatch]
   );
 
@@ -79,9 +79,9 @@ function MiddlePanel() {
       r: number,
       alpha: number | null,
       count: number | null,
-      dataIndex: number[] | null,
+      blockId: number | null,
       cpcaAlphaP: number | null
-    ) => dispatch(onTypeUpdateOrInitAction(type, r, alpha, count, dataIndex, cpcaAlphaP)),
+    ) => dispatch(onTypeUpdateOrInitAction(type, r, alpha, count, blockId, cpcaAlphaP)),
     [dispatch]
   );
 
@@ -90,9 +90,9 @@ function MiddlePanel() {
       r: number,
       alpha: number | null,
       count: number | null,
-      dataIndex: number[] | null,
+      blockId: number | null,
       cpcaAlphaP: number | null
-    ) => dispatch(onRoundAction(r, alpha, count, dataIndex, cpcaAlphaP)),
+    ) => dispatch(onRoundAction(r, alpha, count, blockId, cpcaAlphaP)),
     [dispatch]
   );
 
@@ -117,16 +117,16 @@ function MiddlePanel() {
       // setLevel(HTTP_LEVEL.pca);
       const value = +e.target.value;
       if (allCpcaAlpha !== value) {
-        getAllCPCA(value, clusterFromRes, heteroList[blockIndex].heteroIndex, allCpcaAlpha);
+        getAllCPCA(value, clusterFromRes, value, allCpcaAlpha);
       }
     },
-    [allCpcaAlpha, getAllCPCA, clusterFromRes, heteroList, blockIndex]
+    [allCpcaAlpha, getAllCPCA, clusterFromRes]
   );
 
   const freshParam = useCallback(() => {
     // console.log('result')
-    getAllCPCA(null, clusterFromRes, heteroList[blockIndex].heteroIndex, allCpcaAlpha);
-  }, [getAllCPCA, clusterFromRes, heteroList, blockIndex, allCpcaAlpha]);
+    getAllCPCA(null, clusterFromRes, blockIndex, allCpcaAlpha);
+  }, [getAllCPCA, clusterFromRes, blockIndex, allCpcaAlpha]);
 
   const x = d3.extent(samples, (d) => d[0]) as any;
   const y = d3.extent(samples, (d) => d[1]) as any;
@@ -148,13 +148,7 @@ function MiddlePanel() {
 
   useEffect(() => {
     if (level === HTTP_LEVEL.labels) {
-      onRoundChange(
-        round,
-        allCpcaAlpha,
-        clusterFromRes,
-        heteroList[blockIndex].heteroIndex,
-        blockCpcaAlpha
-      );
+      onRoundChange(round, allCpcaAlpha, clusterFromRes, blockIndex, blockCpcaAlpha);
     }
   }, [
     round,
@@ -175,7 +169,7 @@ function MiddlePanel() {
       // setNOfCluster(+value);
       setLevel(HTTP_LEVEL.cpca);
       if (+value !== clusterFromRes) {
-        getLists(+value, heteroList[blockIndex].heteroIndex, blockCpcaAlpha);
+        getLists(+value, blockIndex, blockCpcaAlpha);
       }
     } else {
       // setNOfCluster(null);
@@ -184,9 +178,9 @@ function MiddlePanel() {
   };
 
   const freshCount = useCallback(() => {
-    getLists(null, heteroList[blockIndex].heteroIndex, blockCpcaAlpha);
+    getLists(null, blockIndex, blockCpcaAlpha);
     setLevel(HTTP_LEVEL.cpca);
-  }, [blockCpcaAlpha, blockIndex, getLists, heteroList, setLevel]);
+  }, [blockCpcaAlpha, blockIndex, getLists, setLevel]);
 
   const $inputAlpha = useRef(null);
   useEffect(() => {

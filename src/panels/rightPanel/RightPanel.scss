@@ -139,6 +139,7 @@
           flex-direction: column;
           justify-content: space-around;
           height: 100%;
+          user-select: none;
 
           span {
             writing-mode: tb;
