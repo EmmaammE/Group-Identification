@@ -13,11 +13,11 @@ function App() {
   console.log('loading', loading);
   return (
     <div className="App">
-      <div className="loader" style={{ display: loading ? 'flex' : 'none' }}>
+      {/* <div className="loader" style={{ display: loading ? 'flex' : 'none' }}>
         <div className="ball first" />
         <div className="ball second" />
         <div className="ball third" />
-      </div>
+      </div> */}
       <LeftPanel />
       <MiddlePanel />
       <RightPanel />

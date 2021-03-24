@@ -24,9 +24,9 @@ import {
 import HTTP_LEVEL from '../../utils/level';
 import PureRect from '../../components/PairRect.tsx/PureRect';
 import { getDatasetInfo } from '../../utils/getType';
-import REFRESH from '../../assets/refresh.svg';
 import useFetch from '../../utils/useFetch';
 import usePrevious from '../../utils/usePrevious';
+import IconUrl from '../../components/ui/getIcon';
 
 const margin = { t: 20, r: 20, b: 35, l: 55 };
 const WIDTH = 25;
@@ -376,7 +376,7 @@ function RightPanel() {
                     ref={$inputAlpha}
                   />
                   <span className={inputStyles.icon} onClick={freshCount}>
-                    <img src={REFRESH} alt="refresh" />
+                    <img src={IconUrl[alphaIconStatus]} alt="refresh" />
                   </span>
                 </div>
               </div>

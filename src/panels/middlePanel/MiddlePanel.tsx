@@ -222,7 +222,7 @@ function MiddlePanel() {
               <Dropdown items={displayItems} index={dataTypeIndex} setIndex={handleDropDown} />
             </div>
 
-            <div className="row">
+            <div className="info-row">
               <p className="label">Contrastive parameter: </p>
               <div className={inputStyles.wrapper}>
                 <input

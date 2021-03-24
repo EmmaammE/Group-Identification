@@ -5,7 +5,7 @@
 
   /* width: 100%; */
   min-width: 60px;
-  max-width: 70px;
+  max-width: 75px;
   background-color: var(--background-color, #fff);
   margin-left: 4px;
   height: 24px;
@@ -34,8 +34,9 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 4px;
+  padding: 2px 4px;
   transition: background 300ms ease-in-out;
+  border-left: 1px solid #bbb;
 }
 
 .icon img {
