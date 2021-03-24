@@ -24,6 +24,7 @@ import ICON from '../../assets/convex.svg';
 import { getType, setType } from '../../utils/getType';
 import REFRESH from '../../assets/refresh.svg';
 import http from '../../utils/http';
+import { setIndexAction } from '../../store/reducers/blockIndex';
 
 const chartProps: ChartProps = {
   width: 400,
@@ -71,6 +72,7 @@ function MiddlePanel() {
       dispatch(onListAction(count, blockId, cpcaAlphaP)),
     [dispatch]
   );
+  const updateBlock = useCallback((i) => dispatch(setIndexAction(i)), [dispatch]);
 
   const blockCpcaAlpha = useSelector((state: StateType) => state.service.cpca.alpha);
   const onTypeUpdateOrInit = useCallback(
@@ -169,7 +171,12 @@ function MiddlePanel() {
       // setNOfCluster(+value);
       setLevel(HTTP_LEVEL.cpca);
       if (+value !== clusterFromRes) {
-        getLists(+value, blockIndex, blockCpcaAlpha);
+        if (blockIndex === -1) {
+          getLists(+value, 0, blockCpcaAlpha);
+          updateBlock(0);
+        } else {
+          getLists(+value, blockIndex, blockCpcaAlpha);
+        }
       }
     } else {
       // setNOfCluster(null);

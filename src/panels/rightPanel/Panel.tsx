@@ -29,6 +29,7 @@ import { getDatasetInfo, getType } from '../../utils/getType';
 import REFRESH from '../../assets/refresh.svg';
 import http from '../../utils/http';
 import useFetch from '../../utils/useFetch';
+import usePrevious from '../../utils/usePrevious';
 
 const margin = { t: 20, r: 20, b: 35, l: 55 };
 const WIDTH = 25;
@@ -183,6 +184,14 @@ function RightPanel() {
     }
   }, [annoList, annoListStatus]);
 
+  const previousRound = usePrevious(round);
+
+  useEffect(() => {
+    if (round !== previousRound) {
+      setAnnoListStatus(Array.from({ length: annoList.length }, () => 0));
+    }
+  }, [annoList.length, previousRound, round]);
+
   const colorScale = useMemo(() => {
     const extent: number =
       pcArr[0].length > 0
@@ -226,8 +235,8 @@ function RightPanel() {
     const tempHeteData: number[] = [];
 
     if (typeIndex === 1) {
-      // eslint-disable-next-line no-nested-ternary
       const pointsIndex =
+        // eslint-disable-next-line no-nested-ternary
         blockIndex.length > 0 ? blockIndex : heteroList[index] ? heteroList[index].heteroIndex : [];
       pointsIndex.forEach((heteroIndex) => {
         const d = attribute[heteroIndex];
