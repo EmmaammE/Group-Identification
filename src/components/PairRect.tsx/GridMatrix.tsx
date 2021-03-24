@@ -10,6 +10,7 @@ import ICON from '../../assets/convex.svg';
 import { getType } from '../../utils/getType';
 import { StateType } from '../../types/data';
 import { getCPCA } from '../../store/reducers/service';
+import { setIndexAction } from '../../store/reducers/blockIndex';
 
 interface GridMatrixProps {
   // 一个二维数组，表示点的投影坐标
@@ -27,6 +28,7 @@ interface GridMatrixProps {
   chosePoint: number;
   setChosePoint: Function;
   setStrokePoints: Function;
+  gridPointsIndex: number[];
   // 设置选择格子之后，格子点的坐标
   setBlockIndex: Function;
 }
@@ -72,6 +74,7 @@ const GridMatrix = ({
   chosePoint,
   setChosePoint,
   setStrokePoints,
+  gridPointsIndex,
   setBlockIndex,
 }: GridMatrixProps) => {
   const $chart = useRef(null);
@@ -110,6 +113,7 @@ const GridMatrix = ({
     [dispatch]
   );
   const cpacaAlphaFromStore = useSelector((state: StateType) => state.service.cpca.alpha);
+  const updateBlock = useCallback((i) => dispatch(setIndexAction(i)), [dispatch]);
 
   useEffect(() => {
     setTransform(
@@ -118,8 +122,10 @@ const GridMatrix = ({
   }, [xLabelsArr.length, yLabelsArr.length]);
 
   useEffect(() => {
-    setClickGrid([-1, -1, 0]);
-    setBlockIndex([]);
+    if (blockIndex !== -1) {
+      setClickGrid([-1, -1, 0]);
+      setBlockIndex([]);
+    }
   }, [blockIndex, setBlockIndex]);
 
   const $svg = useRef(null);
@@ -207,13 +213,6 @@ const GridMatrix = ({
 
   const type = getType();
 
-  const heteroPoints: [number, number][] = useMemo(() => {
-    if (type === 'local') {
-      return points.filter((d, k) => heteroIndex.has(k)).map((point) => [point[0], point[1]]);
-    }
-    return heteroPointsFromStore.map((point) => [xScale(point[0]), yScale(point[1])]);
-  }, [heteroIndex, heteroPointsFromStore, points, type, xScale, yScale]);
-
   const quadtree = d3
     .quadtree<any>()
     .extent([
@@ -283,6 +282,24 @@ const GridMatrix = ({
     // console.log(arr);
     return arr;
   }, [gridSize, normScale, search, xLabelsArr]);
+
+  const heteroPoints: [number, number][] = useMemo(() => {
+    if (clickGrid[2] !== 0)
+      return gridPointsIndex.map((index) => [points[index][0], points[index][1]]);
+    if (type === 'local') {
+      return points.filter((d, k) => heteroIndex.has(k)).map((point) => [point[0], point[1]]);
+    }
+    return heteroPointsFromStore.map((point) => [xScale(point[0]), yScale(point[1])]);
+  }, [
+    clickGrid,
+    gridPointsIndex,
+    heteroIndex,
+    heteroPointsFromStore,
+    points,
+    type,
+    xScale,
+    yScale,
+  ]);
 
   // console.log(heteroPoints)
   const hull = useMemo(() => d3.polygonHull(heteroPoints), [heteroPoints]);
@@ -418,9 +435,10 @@ const GridMatrix = ({
       const pointsId = gridPoints[i][j].map((point) => point[4]);
       updateCPCA(pointsId, cpacaAlphaFromStore);
       setBlockIndex(pointsId);
+      updateBlock(-1);
       // setStrokePoints(gridPoints[i][j]);
     },
-    [cpacaAlphaFromStore, gridPoints, setBlockIndex, updateCPCA]
+    [cpacaAlphaFromStore, gridPoints, setBlockIndex, updateBlock, updateCPCA]
   );
 
   const pointsCount = useMemo(

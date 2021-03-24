@@ -130,6 +130,12 @@ function RightPanel() {
   }, [channelIndex, dimension, propertyIndex, setAttribte]);
 
   useEffect(() => {
+    if (blockIndex.length > 0) {
+      setChosePoint(blockIndex[0]);
+    }
+  }, [blockIndex, setChosePoint]);
+
+  useEffect(() => {
     if (chosePoint !== -1) {
       setInstance({
         dataIndex: chosePoint,
@@ -220,21 +226,21 @@ function RightPanel() {
     const tempHeteData: number[] = [];
 
     if (typeIndex === 1) {
-      // 块内的点
-      if (heteroList[index]) {
-        heteroList[index].heteroIndex.forEach((heteroIndex) => {
-          const d = attribute[heteroIndex];
-          // 如果不一致
-          if (heteroLabels[heteroIndex] === false) {
-            temp[1].push(d);
-          } else {
-            temp[0].push(d);
-          }
-          tempHeteData.push(d);
+      // eslint-disable-next-line no-nested-ternary
+      const pointsIndex =
+        blockIndex.length > 0 ? blockIndex : heteroList[index] ? heteroList[index].heteroIndex : [];
+      pointsIndex.forEach((heteroIndex) => {
+        const d = attribute[heteroIndex];
+        // 如果不一致
+        if (heteroLabels[heteroIndex] === false) {
+          temp[1].push(d);
+        } else {
+          temp[0].push(d);
+        }
+        tempHeteData.push(d);
 
-          setHeteData(tempHeteData);
-        });
-      }
+        setHeteData(tempHeteData);
+      });
     } else {
       attribute.forEach((d, i) => {
         // 如果不一致
@@ -250,7 +256,7 @@ function RightPanel() {
     }
 
     return temp;
-  }, [attribute, heteroLabels, heteroList, index, typeIndex]);
+  }, [attribute, blockIndex, heteroLabels, heteroList, index, typeIndex]);
 
   const handleHover = useCallback(
     (id: number) => {
@@ -313,8 +319,12 @@ function RightPanel() {
   const $inputAlpha = useRef(null);
 
   const freshCount = useCallback(() => {
-    updateCPCA(heteroList[index].heteroIndex, null);
-  }, [heteroList, index, updateCPCA]);
+    if (blockIndex.length > 0) {
+      updateCPCA(blockIndex, null);
+    } else if (heteroList[index]) {
+      updateCPCA(heteroList[index].heteroIndex, null);
+    }
+  }, [blockIndex, heteroList, index, updateCPCA]);
 
   useEffect(() => {
     setParam(cpacaAlphaFromStore);
@@ -472,6 +482,7 @@ function RightPanel() {
             chosePoint={chosePoint}
             setChosePoint={setChosePoint}
             setStrokePoints={setPoints}
+            gridPointsIndex={blockIndex}
             setBlockIndex={setBlockIndex}
           />
         </div>
