@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import * as d3 from 'd3';
 import Overview, { OverviewData } from '../../components/overview/Overview';
 import './style.scss';
 import Gradient from '../../components/ui/Gradient';
@@ -48,9 +47,6 @@ const initInfo: Info = {
   trainingDataSize: '',
 };
 
-// inputData is a nested array which can be converted into an ndarray
-// alternatively, it can be an array of coordinates (second argument should be specified as 'sparse')
-
 const GRADIENT = ['#efefef', '#aa815d'];
 const datasetNameHash: any = {
   mnist: 'MNIST',
@@ -84,7 +80,6 @@ const labelNames: any = {
 };
 
 function LeftPanel() {
-  // TODO 修改local数据集
   const [index, setIndex] = useState(-1);
 
   // overview显示的范围（数组下标)
@@ -96,6 +91,7 @@ function LeftPanel() {
   // weights接口的数据
   const [rawWeights, setRawWeights] = useState<any>(null);
   const round = useSelector((state: StateType) => state.basic.round);
+  const dataSize = useSelector((state: StateType) => state.basic.dataSize);
 
   // client Names
   const [names, setClientNames] = useState<string[]>([]);
@@ -273,8 +269,8 @@ function LeftPanel() {
               <Dropdown items={names} setIndex={onDropdownChange} index={index} />
             </div>
             <p>Size of the local data: </p>
-            <p>{info.trainingDataSize} records in the training set</p>
-            <p>{info.testDataSize} records in the test set</p>
+            <p>{dataSize.trainSize || ''} records in the training set</p>
+            <p>{dataSize.testSize || ''} records in the test set</p>
           </div>
         </div>
 

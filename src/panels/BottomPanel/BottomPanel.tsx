@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import AnnoLineChart from '../../components/lineChart/AnnLineChart';
 import Dropdown from '../../components/ui/Dropdown';
-import { fetchLists, setUpdateAction } from '../../store/reducers/basic';
+import { fetchLists, setDataSize, setUpdateAction } from '../../store/reducers/basic';
 import { setIndexAction } from '../../store/reducers/blockIndex';
 import { setLevelAction } from '../../store/reducers/service';
 import { StateType } from '../../types/data';
@@ -31,6 +31,11 @@ const BottomPanel = () => {
   // const toggleUpdate = useCallback(() => dispatch(setUpdateAction()), [dispatch]);
 
   const rawList = useSelector((state: StateType) => state.basic.annoLists);
+  const updateDatasize = useCallback(
+    (dataSize, trainSize) => dispatch(setDataSize(dataSize, trainSize)),
+    [dispatch]
+  );
+
   const annoList = useMemo(() => {
     const data: { [key: number]: any } = {};
     rawList.forEach((item: any) => {
@@ -76,9 +81,11 @@ const BottomPanel = () => {
             'Total Accuracy': res.totAcc,
           });
           setLevel(HTTP_LEVEL.client + 1);
+          // console.log(res);
+          updateDatasize(res.testSize, res.trainSize);
         });
     }
-  }, [clientName, setLevel]);
+  }, [clientName, setLevel, updateDatasize]);
 
   useEffect(() => {
     if (datum) {

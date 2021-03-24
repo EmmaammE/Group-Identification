@@ -4,18 +4,16 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import * as d3 from 'd3';
-import { local } from 'd3';
 import { setIndexAction } from '../../store/reducers/blockIndex';
 import CpLineChart from '../../components/lineChart/CpLineChart';
 import GridMatrix from '../../components/PairRect.tsx/GridMatrix';
 import './RightPanel.scss';
 import Dropdown from '../../components/ui/Dropdown';
-import { mmultiply, transpose } from '../../utils/mm';
 import PairRect from '../../components/PairRect.tsx/PairRect';
 import { StateType } from '../../types/data';
 import Gradient from '../../components/ui/Gradient';
 import inputStyles from '../../styles/input.module.css';
-import { fetchLists, setPropertyAction, setUpdateAction } from '../../store/reducers/basic';
+import { fetchLists, setPropertyAction } from '../../store/reducers/basic';
 import Icon from '../../components/ui/JoinIcon';
 import {
   setLevelAction,
@@ -25,9 +23,8 @@ import {
 } from '../../store/reducers/service';
 import HTTP_LEVEL from '../../utils/level';
 import PureRect from '../../components/PairRect.tsx/PureRect';
-import { getDatasetInfo, getType } from '../../utils/getType';
+import { getDatasetInfo } from '../../utils/getType';
 import REFRESH from '../../assets/refresh.svg';
-import http from '../../utils/http';
 import useFetch from '../../utils/useFetch';
 import usePrevious from '../../utils/usePrevious';
 
@@ -310,6 +307,9 @@ function RightPanel() {
     return new Set<number>();
   }, [annoList, strokeId, annoListStatus]);
 
+  const [alphaIconStatus, setAlphaIconStatus] = useState<0 | 1>(0);
+  const $inputAlpha = useRef(null);
+
   const handleParamChange = useCallback(
     (e: any) => {
       const value = +e.target.value;
@@ -320,12 +320,13 @@ function RightPanel() {
           updateCPCA(heteroList[index].heteroIndex, value);
         }
         setLevel(HTTP_LEVEL.cpca);
+        if (alphaIconStatus === 1) {
+          setAlphaIconStatus(0);
+        }
       }
     },
-    [blockIndex, cpacaAlphaFromStore, heteroList, index, setLevel, updateCPCA]
+    [alphaIconStatus, blockIndex, cpacaAlphaFromStore, heteroList, index, setLevel, updateCPCA]
   );
-
-  const $inputAlpha = useRef(null);
 
   const freshCount = useCallback(() => {
     if (blockIndex.length > 0) {
@@ -333,6 +334,8 @@ function RightPanel() {
     } else if (heteroList[index]) {
       updateCPCA(heteroList[index].heteroIndex, null);
     }
+
+    setAlphaIconStatus(1);
   }, [blockIndex, heteroList, index, updateCPCA]);
 
   useEffect(() => {
@@ -524,9 +527,11 @@ function RightPanel() {
           <p className="title">Control Panel</p>
           <div className="lists">
             <div className="list-content">
-              <p>#Selected records: {strokePoints.length}</p>
+              <div className="row">
+                <p>Overlap lists:</p>
+                <p>#Selected records: {strokePoints.length}</p>
+              </div>
 
-              <p>Overlap lists:</p>
               <div className="list-area">
                 {annoList.map(({ round: r, text, dataIndex }, i) => (
                   <div

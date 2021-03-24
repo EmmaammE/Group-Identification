@@ -432,7 +432,7 @@ const GridMatrix = ({
       // console.log('clickHandle')
       setClickGrid([i, j, 1]);
 
-      const pointsId = gridPoints[i][j].map((point) => point[4]);
+      const pointsId = gridPoints[i][j].filter((point) => point[2] === 1).map((point) => point[4]);
       updateCPCA(pointsId, cpacaAlphaFromStore);
       setBlockIndex(pointsId);
       updateBlock(-1);
@@ -533,7 +533,10 @@ const GridMatrix = ({
           const x = posX + left;
           const y = posY + top;
 
-          if (x >= left + R && x <= left + width - R && y >= top + R && y <= top + width - R) {
+          if (
+            tmpT.k === 1 ||
+            (x >= left + R && x <= left + width - R && y >= top + R && y <= top + width - R)
+          ) {
             // ctx.moveTo(point[0], point[1]);
             ctx.moveTo(x, y);
             ctx.beginPath();
@@ -651,7 +654,7 @@ const GridMatrix = ({
       </div>
 
       <div className="chart-container">
-        <p className="yLabel-title">Output label (federated learning model) </p>
+        <p className="yLabel-title">Output (federated learning model) </p>
 
         <div className="xLabels">
           <div className="title">

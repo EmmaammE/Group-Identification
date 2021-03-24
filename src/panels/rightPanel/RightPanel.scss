@@ -320,7 +320,7 @@
     .btn-area {
       display: flex;
       justify-content: flex-end;
-      margin-bottom: 5px;
+      margin-top: 14px;
     }
   }
 
@@ -380,7 +380,7 @@
 
     .list-area {
       overflow: auto;
-      height: 15vh;
+      min-height: 15vh;
       cursor: pointer;
     }
 
@@ -388,11 +388,12 @@
       display: flex;
       flex-direction: column;
       flex: 1;
+      padding: 14px 14px 0 14px;
 
       textarea {
         display: flex;
         flex: 1;
-        margin: 5px;
+        // margin: 12px;
         padding: 5px;
         background: #f8f3ed;
         border: 1px solid #fff;

@@ -25,6 +25,7 @@ import { getType, setType } from '../../utils/getType';
 import REFRESH from '../../assets/refresh.svg';
 import http from '../../utils/http';
 import { setIndexAction } from '../../store/reducers/blockIndex';
+import IconUrl from '../../components/ui/getIcon';
 
 const chartProps: ChartProps = {
   width: 400,
@@ -45,6 +46,7 @@ const chartProps: ChartProps = {
 };
 
 const items = ['local', 'stratified', 'systematic'];
+const displayItems = ['Local', 'Stratified', 'Systematic'];
 
 function MiddlePanel() {
   const [dataTypeIndex, setDataIndex] = useState<number>(0);
@@ -98,12 +100,6 @@ function MiddlePanel() {
     [dispatch]
   );
 
-  const $inputCount = useRef(null);
-
-  useEffect(() => {
-    ($inputCount as any).current.value = clusterFromRes;
-  }, [clusterFromRes]);
-
   const nOfConsistent = useSelector((state: StateType) =>
     dataTypeIndex === 0
       ? state.service.heteroLabels.filter((d) => d).length
@@ -112,23 +108,6 @@ function MiddlePanel() {
   const level = useSelector((state: StateType) => state.service.level);
 
   const [topStatus, setTopStatus] = useState<number>(1);
-
-  // alpha变化
-  const handleParamChange = useCallback(
-    (e: any) => {
-      // setLevel(HTTP_LEVEL.pca);
-      const value = +e.target.value;
-      if (allCpcaAlpha !== value) {
-        getAllCPCA(value, clusterFromRes, value, allCpcaAlpha);
-      }
-    },
-    [allCpcaAlpha, getAllCPCA, clusterFromRes]
-  );
-
-  const freshParam = useCallback(() => {
-    // console.log('result')
-    getAllCPCA(null, clusterFromRes, blockIndex, allCpcaAlpha);
-  }, [getAllCPCA, clusterFromRes, blockIndex, allCpcaAlpha]);
 
   const x = d3.extent(samples, (d) => d[0]) as any;
   const y = d3.extent(samples, (d) => d[1]) as any;
@@ -163,6 +142,14 @@ function MiddlePanel() {
     heteroList,
   ]);
 
+  const [countStatus, setCountStatus] = useState<0 | 1>(0);
+
+  const $inputCount = useRef(null);
+
+  useEffect(() => {
+    ($inputCount as any).current.value = clusterFromRes;
+  }, [clusterFromRes]);
+
   const onInputNumber = (e: any) => {
     const reg = new RegExp('^[0-9]*$');
     const { value } = e.target;
@@ -182,14 +169,41 @@ function MiddlePanel() {
       // setNOfCluster(null);
       ($inputCount as any).current.value = '';
     }
+    if (countStatus) {
+      setCountStatus(0);
+    }
   };
 
   const freshCount = useCallback(() => {
     getLists(null, blockIndex, blockCpcaAlpha);
     setLevel(HTTP_LEVEL.cpca);
+    setCountStatus(1);
   }, [blockCpcaAlpha, blockIndex, getLists, setLevel]);
 
   const $inputAlpha = useRef(null);
+  const [alphaIconStatus, setAlphaStatus] = useState<0 | 1>(0);
+
+  // alpha变化
+  const handleParamChange = useCallback(
+    (e: any) => {
+      // setLevel(HTTP_LEVEL.pca);
+      const value = +e.target.value;
+      if (allCpcaAlpha !== value) {
+        getAllCPCA(value, clusterFromRes, value, allCpcaAlpha);
+        if (alphaIconStatus === 1) {
+          setAlphaStatus(0);
+        }
+      }
+    },
+    [allCpcaAlpha, getAllCPCA, clusterFromRes, alphaIconStatus]
+  );
+
+  const freshParam = useCallback(() => {
+    // console.log('result')
+    getAllCPCA(null, clusterFromRes, blockIndex, allCpcaAlpha);
+    setAlphaStatus(1);
+  }, [getAllCPCA, clusterFromRes, blockIndex, allCpcaAlpha]);
+
   useEffect(() => {
     ($inputAlpha as any).current.value = allCpcaAlpha?.toFixed(2);
   }, [allCpcaAlpha]);
@@ -205,7 +219,7 @@ function MiddlePanel() {
           <div className="row">
             <div className="info-row">
               <p>Inputs: </p>
-              <Dropdown items={items} index={dataTypeIndex} setIndex={handleDropDown} />
+              <Dropdown items={displayItems} index={dataTypeIndex} setIndex={handleDropDown} />
             </div>
 
             <div className="row">
@@ -219,7 +233,7 @@ function MiddlePanel() {
                   ref={$inputAlpha}
                 />
                 <span className={inputStyles.icon} onClick={freshParam}>
-                  <img src={REFRESH} alt="refresh" />
+                  <img src={IconUrl[alphaIconStatus]} alt="refresh" />
                 </span>
               </div>
             </div>
@@ -241,7 +255,7 @@ function MiddlePanel() {
 
         <div>
           <div className="info-container">
-            <h3>Inconsistent Cluster Analysis</h3>
+            <h3>Inconsistency Clusters</h3>
             <div className="row">
               <div className="input-wrapper">
                 <p className="label">#Clusters:</p>
@@ -254,7 +268,7 @@ function MiddlePanel() {
                     ref={$inputCount}
                   />
                   <span className={inputStyles.icon} onClick={freshCount}>
-                    <img src={REFRESH} alt="refresh" />
+                    <img src={IconUrl[countStatus]} alt="refresh" />
                   </span>
                 </div>
               </div>

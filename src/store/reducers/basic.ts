@@ -11,6 +11,7 @@ const SET_HETERO_POINTS = 'SET_HETERO_POINTS';
 // 在mouseout mouseover标记时更新
 const SET_ANNOPOINTS = 'SET_ANNOPOINTS';
 const SET_LABEL_NAMES = 'SET_LABEL_NAMES';
+const SET_DATA = 'SET_DATA';
 
 export const setRoundAction = (index: number) => ({
   type: SET_ROUND,
@@ -74,6 +75,16 @@ export const setAnnoPointsAction = (points: number[]) => ({
   type: SET_ANNOPOINTS,
   data: points
 })
+
+export const setDataSize = (testSize: number, trainSize: number) => ({
+  type: SET_DATA,
+  data: {
+    dataSize: {
+      testSize,
+      trainSize,
+    }
+  }
+})
 export interface BasicData {
   // 当前分析的round(数组下标)
   round: number,
@@ -92,7 +103,11 @@ export interface BasicData {
   // 标记的点在原始数据中的序号
   annoPoints: number[],
   // label对应的实际名字
-  labelNames: string[]
+  labelNames: string[],
+  dataSize: {
+    testSize: number,
+    trainSize: number,
+  }
 }
 
 const initState: BasicData = {
@@ -105,11 +120,17 @@ const initState: BasicData = {
   annoLists: [],
   heteroPoints: [],
   annoPoints: [],
-  labelNames: []
+  labelNames: [],
+  dataSize: {
+    testSize: 0,
+    trainSize: 0
+  }
 }
 
 const basicReducer = (state = initState, action: any ) => {
   switch(action.type) {
+    case SET_DATA:
+      return {...state, ...action.data}
     case SET_ROUND:
       return {...state, round: action.data}
     case SET_PROPERTY :
