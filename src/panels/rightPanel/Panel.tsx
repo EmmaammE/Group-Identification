@@ -310,6 +310,10 @@ function RightPanel() {
   const [alphaIconStatus, setAlphaIconStatus] = useState<0 | 1>(0);
   const $inputAlpha = useRef(null);
 
+  useEffect(() => {
+    setAlphaIconStatus(0);
+  }, [heteroList, blockIndex]);
+
   const handleParamChange = useCallback(
     (e: any) => {
       const value = +e.target.value;

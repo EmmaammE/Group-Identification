@@ -648,7 +648,7 @@ const GridMatrix = ({
 
           <div className="convex-legend">
             <img src={ICON} alt="convex" />
-            <span>Convex of the selected cluster</span>
+            <span>Convex hull of the selected cluster</span>
           </div>
         </div>
       </div>

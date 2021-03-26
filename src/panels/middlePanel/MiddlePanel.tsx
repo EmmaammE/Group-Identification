@@ -117,10 +117,11 @@ function MiddlePanel() {
       // setLevel(HTTP_LEVEL.sampling);
       setDataIndex(e);
       setType(items[e]);
+      updateBlock(0);
 
       onTypeUpdateOrInit(items[e], round, allCpcaAlpha, clusterFromRes, null, blockCpcaAlpha);
     },
-    [allCpcaAlpha, blockCpcaAlpha, clusterFromRes, onTypeUpdateOrInit, round]
+    [allCpcaAlpha, blockCpcaAlpha, clusterFromRes, onTypeUpdateOrInit, round, updateBlock]
   );
 
   useEffect(() => {
@@ -275,14 +276,14 @@ function MiddlePanel() {
 
               <div className="convex-legend">
                 <img src={ICON} alt="convex" />
-                <span>Convex</span>
+                <span>Convex hull</span>
               </div>
 
               <div className="input-wrapper">
                 <span>Density:</span>
                 <div className="legend-wrapper">
                   <p>0</p>
-                  <svg width="80" viewBox="0 0 80 15">
+                  <svg width="40" viewBox="0 0 40 15">
                     <defs>
                       <linearGradient id="#fff#000" x1="0%" y1="0%" x2="100%" y2="0%">
                         <stop offset="0%" stopColor="#fff" />

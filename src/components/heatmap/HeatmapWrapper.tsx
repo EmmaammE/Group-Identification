@@ -204,8 +204,9 @@ const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
                 <span>{size > 0 ? ` (${size})` : ''}</span>
               </p>
               <p>
-                {fedHeteroPointsAcc[i] !== undefined &&
-                  `Accuracy: ${d3.format('.2p')(fedHeteroPointsAcc[i])}`}
+                {fedHeteroPointsAcc[i] !== undefined
+                  ? `Accuracy: ${d3.format('.2p')(fedHeteroPointsAcc[i])}`
+                  : '    '}
               </p>
             </div>
           );
