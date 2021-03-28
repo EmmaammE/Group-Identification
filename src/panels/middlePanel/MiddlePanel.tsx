@@ -131,6 +131,8 @@ function MiddlePanel() {
   useEffect(() => {
     if (level === HTTP_LEVEL.labels) {
       onRoundChange(round, allCpcaAlpha, clusterFromRes, blockIndex, blockCpcaAlpha);
+      setCountStatus(0);
+      setAlphaStatus(0);
     }
   }, [
     round,

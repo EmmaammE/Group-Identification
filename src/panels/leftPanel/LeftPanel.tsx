@@ -118,16 +118,19 @@ function LeftPanel() {
   const onDropdownChange = (i: any) => {
     setIndex(i);
     // console.log('test')
-    if (index !== -1) {
-      initBasic();
-      initIdentity();
-      setRound(0);
-      setLevel(HTTP_LEVEL.client);
-    }
+    // if (index !== -1) {
+
+    // }
   };
 
   const onDatasetChange = (i: any) => {
     setDatasetIndex(i);
+    setIndex(-1);
+    initBasic();
+    initIdentity();
+    setRound(0);
+    setLevel(HTTP_LEVEL.client);
+    setRawWeights(null);
 
     fetch('/fl-hetero/datasets/', {
       method: 'POST',
@@ -277,17 +280,15 @@ function LeftPanel() {
         <div className="overview-wrapper">
           <div className="dashed-divider" />
 
-          <h3>Parameter Projection</h3>
+          <h3>Parameters Projection</h3>
           <div className="overview-content">
             <div className="info">
-              {/* <div className="row"> */}
               <p>Communication round range:</p>
               <RangeSlider
                 range={range}
                 setRange={setRange}
                 extent={rawWeights !== null ? rawWeights.serverWeights.length : range[1] + 1}
               />
-              {/* </div> */}
 
               <div>
                 <svg height="20px" viewBox="0 0 300 20">
@@ -337,6 +338,10 @@ function LeftPanel() {
                     width="90px"
                   />
                 </div>
+              </div>
+
+              <div className="row">
+                <p>Layer: </p>
               </div>
             </div>
 

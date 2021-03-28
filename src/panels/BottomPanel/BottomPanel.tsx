@@ -2,10 +2,11 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import AnnoLineChart from '../../components/lineChart/AnnLineChart';
 import Dropdown from '../../components/ui/Dropdown';
-import { fetchLists, setDataSize, setUpdateAction } from '../../store/reducers/basic';
+import { fetchLists, setDataSize } from '../../store/reducers/basic';
 import { setIndexAction } from '../../store/reducers/blockIndex';
 import { setLevelAction } from '../../store/reducers/service';
 import { StateType } from '../../types/data';
+import http from '../../utils/http';
 import HTTP_LEVEL from '../../utils/level';
 import './BottomPanel.scss';
 
@@ -25,7 +26,6 @@ const BottomPanel = () => {
 
   const [lineData, setLineData] = useState<number[]>([]);
   const [datum, setDatum] = useState<any>(null);
-
   // const update = useSelector((state: StateType) => state.basic.update);
   const dispatch = useDispatch();
   // const toggleUpdate = useCallback(() => dispatch(setUpdateAction()), [dispatch]);
@@ -99,6 +99,17 @@ const BottomPanel = () => {
     }
   }, [getList, level]);
 
+  const deleteAnn = useCallback(
+    (id: number) => {
+      http('/fl-hetero/annotation/', {
+        command: 'del',
+        annotationId: id,
+      });
+      getList();
+    },
+    [getList]
+  );
+
   return (
     <div id="BottomPanel">
       <div className="row">
@@ -114,6 +125,7 @@ const BottomPanel = () => {
         margin={lineChartMargin}
         list={annoList}
         datumKey={items[index]}
+        deleteAnn={deleteAnn}
       />
     </div>
   );

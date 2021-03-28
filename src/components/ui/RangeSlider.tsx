@@ -69,8 +69,8 @@ const RangeSlider = ({ range, setRange, extent }: RangeSliderProps) => {
         <svg width="290px" viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
           <defs>
             <linearGradient id="range" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#fff" />
-              <stop offset="100%" stopColor="#000" />
+              <stop offset="0%" stopColor="#efefef" />
+              <stop offset="100%" stopColor="#333" />
             </linearGradient>
           </defs>
 

@@ -63,7 +63,7 @@ function Overview({ data, flag, round, colorExtent }: OverviewProps) {
 
   // console.log(xScale(0), yScale(0), '初始值');
   const colorScaleLinear = d3
-    .scaleSequential(d3.interpolateRgb('#efefef', '#777'))
+    .scaleSequential(d3.interpolateRgb('#efefef', '#333'))
     .domain([0, data.server.length - 1]);
 
   return (

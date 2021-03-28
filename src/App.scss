@@ -9,6 +9,54 @@
   --lines-color: #eee;
 }
 
+.loader {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--disabled-color);
+  z-index: 2;
+  user-select: none;
+  justify-content: center;
+  align-items: center;
+
+  $size: 6px;
+
+  display: flex;
+
+  .ball {
+    display: inline-block;
+    width: $size;
+    height: $size;
+    background-color: black;
+    border-radius: 50%;
+    animation: 1s ease-in-out 0s infinite alternate none running grow;
+
+    &.second {
+      animation-delay: 0.3s;
+    }
+
+    &.third {
+      animation-delay: 0.6s;
+    }
+  }
+
+  .ball + .ball {
+    margin-left: $size * 4;
+  }
+}
+
+@keyframes grow {
+  0% {
+    transform: scale(1);
+  }
+
+  100% {
+    transform: scale(1.5);
+  }
+}
+
 .row {
   display: flex;
   justify-content: space-between;
@@ -29,54 +77,6 @@
   height: 100vh;
   overflow: hidden;
   position: relative;
-
-  .loader {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: var(--disabled-color);
-    z-index: 2;
-    user-select: none;
-    justify-content: center;
-    align-items: center;
-
-    $size: 6px;
-
-    display: flex;
-
-    .ball {
-      display: inline-block;
-      width: $size;
-      height: $size;
-      background-color: black;
-      border-radius: 50%;
-      animation: 1s ease-in-out 0s infinite alternate none running grow;
-
-      &.second {
-        animation-delay: 0.3s;
-      }
-
-      &.third {
-        animation-delay: 0.6s;
-      }
-    }
-
-    .ball + .ball {
-      margin-left: $size * 4;
-    }
-  }
-
-  @keyframes grow {
-    0% {
-      transform: scale(1);
-    }
-
-    100% {
-      transform: scale(1.5);
-    }
-  }
 
   $height: 77vh;
   $line-height: 4.5vh;

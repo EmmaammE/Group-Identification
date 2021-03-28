@@ -212,6 +212,7 @@ function RightPanel() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        command: 'add',
         dataIndex: strokePoints,
         text: annoText,
       }),

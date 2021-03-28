@@ -2,13 +2,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { useDispatch, useSelector } from 'react-redux';
-import { url } from 'inspector';
+import { useModal } from 'react-modal-hook';
 import Triangle from '../markers/Triangle';
 import { setRoundAction, setAnnoPointsAction } from '../../store/reducers/basic';
 import { StateType } from '../../types/data';
 import chat from '../../assets/chat.svg';
 import { setLevelAction } from '../../store/reducers/service';
 import HTTP_LEVEL from '../../utils/level';
+import ConfirmDialog from '../ui/ConfirmDialog';
 
 export interface LineChartProps {
   margin: {
@@ -20,6 +21,7 @@ export interface LineChartProps {
   data: { [key: string]: number[] };
   list: { [key: string]: any };
   datumKey: string;
+  deleteAnn: Function;
 }
 
 const WIDTH = 1920;
@@ -29,10 +31,11 @@ const xTicks = 20;
 const yTicks = 5;
 
 const DRAG_PADDING = 20;
+const axisBreakspcae = 20;
 
-const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps) => {
+const AnnoLineChart = ({ margin, data: rawData, list, datumKey, deleteAnn }: LineChartProps) => {
   const widthMap: number = WIDTH - margin.l - margin.r;
-  const heightMap: number = HEIGHT - margin.t - margin.b;
+  const heightMap: number = HEIGHT - margin.t - margin.b - axisBreakspcae;
 
   const round = useSelector((state: StateType) => state.basic.round);
   const dispatch = useDispatch();
@@ -49,12 +52,27 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
   const [tipId, setTipid] = useState<number>(-1);
 
   const setAnnoPoints = useCallback((param) => dispatch(setAnnoPointsAction(param)), [dispatch]);
+  const [deleteAnnItem, setDeleteAnnItem] = useState<any>(null);
 
-  // const yScale = d3
-  //   .scaleSymlog()
-  //   .range([heightMap / 2 - PADDING, 0])
-  //   .domain([0, d3.max(data.flat()) as number])
-  //   .nice();
+  const deleteAnnHandler = (id: number) => {
+    deleteAnn(id);
+  };
+
+  const [showConfirmModal, hideConfirmModal] = useModal(
+    ({ in: open }) => (
+      <ConfirmDialog
+        open={open}
+        title="Delete annotation?"
+        confirmLabel="DELETE"
+        onConfirm={() => deleteAnnHandler(deleteAnnItem)}
+        onCancel={hideConfirmModal}
+      >
+        Do you really want to delete the annotation {chatPos[deleteAnnItem].text} ?
+      </ConfirmDialog>
+    ),
+    [deleteAnnItem]
+  );
+
   const yScale = d3
     .scaleLinear()
     .range([heightMap, 0])
@@ -75,6 +93,22 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
   useEffect(() => {
     setPos(widthMap);
   }, [rawData, widthMap]);
+
+  const zigzag = useMemo(() => {
+    const numZags = 5;
+    const zagDist = (axisBreakspcae - 3) / numZags;
+
+    let curZig = heightMap;
+    let d = `M0,${curZig}`;
+    for (let i = 0; i < numZags; i++) {
+      curZig += zagDist;
+      d += i % 2 === 0 ? `L3,${curZig}` : `L-3,${curZig}`;
+    }
+
+    d += `L0,${heightMap + axisBreakspcae}`;
+
+    return d;
+  }, [heightMap]);
 
   useEffect(() => {
     const xAxis = d3.axisBottom(xScale).ticks(xTicks);
@@ -97,7 +131,7 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
       d3
         .axisBottom(xScale)
         .ticks(xTicks)
-        .tickSize(heightMap)
+        .tickSize(heightMap + axisBreakspcae)
         .tickFormat('' as any) as any
     );
   }, [data, widthMap, xScale, yScale, $lines, heightMap]);
@@ -151,6 +185,7 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
             y: indexScale(j),
             r: anno.round,
             dataIndex: anno.dataIndex,
+            id: j,
           });
         });
       });
@@ -179,6 +214,12 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
     setTipPos([-400, 400]);
   };
 
+  const onDeleteAnn = (e: any, id: number) => {
+    e.preventDefault();
+    setDeleteAnnItem(id);
+    showConfirmModal();
+  };
+
   return (
     <>
       <svg width="100%" viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
@@ -186,7 +227,11 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
           <Triangle />
         </defs>
         <g transform={`translate(${margin.l}, ${margin.t})`}>
-          <g transform={`translate(0, ${heightMap})`} className="axes x-axis" ref={$xaxis} />
+          <g
+            transform={`translate(0, ${heightMap + axisBreakspcae})`}
+            className="axes x-axis"
+            ref={$xaxis}
+          />
           <g className="axes y-axis" ref={$yaxis} />
 
           <g ref={$lines} className="lines">
@@ -194,11 +239,13 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
             <g className="xline" />
           </g>
 
+          <path d={zigzag} stroke="#333" fill="none" />
+
           <line
             x1={0}
             x2={widthMap + 5}
-            y1={heightMap}
-            y2={heightMap}
+            y1={heightMap + axisBreakspcae}
+            y2={heightMap + axisBreakspcae}
             stroke="rgba(0,0,0,0.8)"
             markerEnd="url(#arrow)"
           />
@@ -227,6 +274,7 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
                 style={{
                   opacity: tipId === i ? 0 : 1,
                 }}
+                onContextMenu={(event) => onDeleteAnn(event, chatItem.id)}
               />
             ))}
           </g>
@@ -252,7 +300,7 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey }: LineChartProps
               x1="0"
               y1="0"
               x2="0"
-              y2={heightMap - DRAG_PADDING}
+              y2={heightMap - DRAG_PADDING + axisBreakspcae}
               strokeWidth="3"
               stroke="var(--primary-color)"
             />

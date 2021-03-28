@@ -85,7 +85,10 @@ const GridMatrix = ({
 
   const xLabelsArr = useMemo(() => Array.from(new Set(xLabels)).sort(), [xLabels]);
   const yLabelsArr = useMemo(
-    () => Array.from(new Set(yLabels)).sort((a, b) => order(a, xLabelsArr) - order(b, xLabelsArr)),
+    () =>
+      Array.from(new Set(yLabels))
+        .sort()
+        .sort((a, b) => order(a, xLabelsArr) - order(b, xLabelsArr)),
     [yLabels, xLabelsArr]
   );
 
@@ -314,15 +317,20 @@ const GridMatrix = ({
           [svgWidth, svgHeight],
         ])
         .duration(300)
-        .on('zoom', ({ transform }) => {
-          if (transform.k === 1) {
+        .on('zoom', (event) => {
+          const {
+            transform: { x, y, k },
+          } = event;
+
+          if (k === 1) {
             setTransform(t.map(() => d3.zoomIdentity));
           } else {
-            setTransform(t.map(() => transform));
+            setTransform(t.map(() => d3.zoomIdentity.translate(x, y).scale(k)));
           }
         });
 
     d3.select($svg.current)
+      // .call(zoomerFactory() as any);
       .selectAll('.cluster')
       .each(function callZoom() {
         d3.select(this).call(zoomerFactory() as any);

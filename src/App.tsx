@@ -1,6 +1,7 @@
 import React from 'react';
 import './App.scss';
 import { useSelector } from 'react-redux';
+import { ModalProvider } from 'react-modal-hook';
 import RightPanel from './panels/rightPanel/Panel';
 import BottomPanel from './panels/BottomPanel/BottomPanel';
 import LeftPanel from './panels/leftPanel/LeftPanel';
@@ -13,15 +14,17 @@ function App() {
   console.log('loading', loading);
   return (
     <div className="App">
-      {/* <div className="loader" style={{ display: loading ? 'flex' : 'none' }}>
-        <div className="ball first" />
-        <div className="ball second" />
-        <div className="ball third" />
-      </div> */}
-      <LeftPanel />
-      <MiddlePanel />
-      <RightPanel />
-      <BottomPanel />
+      <ModalProvider>
+        <div className="loader" style={{ display: loading ? 'flex' : 'none' }}>
+          <div className="ball first" />
+          <div className="ball second" />
+          <div className="ball third" />
+        </div>
+        <LeftPanel />
+        <MiddlePanel />
+        <RightPanel />
+        <BottomPanel />
+      </ModalProvider>
     </div>
   );
 }

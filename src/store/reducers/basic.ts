@@ -1,51 +1,48 @@
-const SET_ROUND = 'SET_ROUND';
-const SET_PROPERTY = 'SET_PROPERTY';
-const SET_NAME = 'SET_NAME';
-const SET_UPDATE = 'SET_UPDATE';
-const SET_POS = 'SET_POS';
-const SET_SIZE = 'SET_SIZE';
 const SET_LISTS = 'SET_LISTS';
 const INIT_BASIC = 'INIT_BASIC';
-// 分块后，计算了cpca的点的坐标
-const SET_HETERO_POINTS = 'SET_HETERO_POINTS';
-// 在mouseout mouseover标记时更新
-const SET_ANNOPOINTS = 'SET_ANNOPOINTS';
-const SET_LABEL_NAMES = 'SET_LABEL_NAMES';
+
 const SET_DATA = 'SET_DATA';
 
 export const setRoundAction = (index: number) => ({
-  type: SET_ROUND,
-  data: index
+  type: SET_DATA,
+  data: {
+    round: index
+  }
 })
 
 export const setPropertyAction = (index: number) => ({
-  type: SET_PROPERTY,
-  data: index
+  type: SET_DATA,
+  data: {
+    propertyIndex: index
+  }
 })
 
 export const setNameAction = (name: string) => ({
-  type: SET_NAME,
-  data: name
-})
-
-export const setUpdateAction = () => ({
-  type: SET_UPDATE,
+  type: SET_DATA,
+  data: {
+    clientName: name
+  }
 })
 
 export const setPosAction = (x: number, y: number) => ({
-  type: SET_POS,
-  x,
-  y
+  type: SET_DATA,
+  data: {
+    pos: [x, y]
+  }
 })
 
 export const setSizeAction = (size: number) => ({
-  type: SET_SIZE,
-  data: size
+  type: SET_DATA,
+  data: {
+    size,
+  }
 })
 
 export const setLabelNamesAction = (names: string[]) => ({
-  type: SET_LABEL_NAMES,
-  data: names
+  type: SET_DATA,
+  data: {
+    labelNames: names
+  }
 })
 
 export const fetchLists = () => (dispatch: any) => {
@@ -66,14 +63,20 @@ export const initBasicData = () => ({
   type: INIT_BASIC
 })
 
+// 分块后，计算了cpca的点的坐标
 export const setHeteroPointsAction = (points: number[][]) => ({
-  type: SET_HETERO_POINTS,
-  data: points
+  type: SET_DATA,
+  data: {
+    heteroPoints: points
+  }
 })
 
+// 在mouseout mouseover标记时更新
 export const setAnnoPointsAction = (points: number[]) => ({
-  type: SET_ANNOPOINTS,
-  data: points
+  type: SET_DATA,
+  data: {
+    annoPoints: points
+  }
 })
 
 export const setDataSize = (testSize: number, trainSize: number) => ({
@@ -131,26 +134,8 @@ const basicReducer = (state = initState, action: any ) => {
   switch(action.type) {
     case SET_DATA:
       return {...state, ...action.data}
-    case SET_ROUND:
-      return {...state, round: action.data}
-    case SET_PROPERTY :
-      return {...state, propertyIndex: action.data}
-    case SET_NAME:
-      return {...state, clientName: action.data}
-    case SET_LABEL_NAMES:
-      return {...state, labelNames: action.data}
-    // case SET_UPDATE:
-      // return {...state, update: !state.update}
-    case SET_POS:
-      return {...state, pos:[action.x, action.y]}
-    case SET_SIZE:
-      return {...state, size: action.data}
     case SET_LISTS:
       return {...state, annoLists: action.data}
-    case SET_HETERO_POINTS:
-      return {...state, heteroPoints: action.data}
-    case SET_ANNOPOINTS:
-      return {...state, annoPoints: action.data}
     case INIT_BASIC:
       return {...initState}
     default:
