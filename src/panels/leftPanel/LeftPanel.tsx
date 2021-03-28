@@ -83,7 +83,7 @@ function LeftPanel() {
   const [index, setIndex] = useState(-1);
 
   // overview显示的范围（数组下标)
-  const [range, setRange] = useState<number[]>([0, 9]);
+  const [range, setRange] = useState<number[]>([0, 1]);
 
   const dispatch = useDispatch();
   const updateName = useCallback((n) => dispatch(setNameAction(n)), [dispatch]);
@@ -100,6 +100,13 @@ function LeftPanel() {
   const [datasetIndex, setDatasetIndex] = useState<number>(-1);
 
   const [info, setInfo] = useState<Info>(initInfo);
+
+  const [layerItem, setLayerItems] = useState<string[]>([]);
+  // Overview选哪一层
+  const [layerIndex, setLayerIndex] = useState<number>(0);
+  const onLayerChange = useCallback((i) => {
+    setLayerIndex(i);
+  }, []);
 
   const initBasic = useCallback(() => dispatch(initBasicData()), [dispatch]);
   const initIdentity = useCallback(() => dispatch(initIdentityAction()), [dispatch]);
@@ -199,9 +206,10 @@ function LeftPanel() {
         .then((res) => res.json())
         .then((res) => {
           setRawWeights(res);
-          setRange([0, res.serverWeights.length - 1]);
-          setRound(res.serverWeights.length - 1);
+          setRange([0, res.serverWeights[0].length - 1]);
+          setRound(res.serverWeights[0].length - 1);
           setLevel(HTTP_LEVEL.sampling);
+          setLayerItems(res.layerNames);
         });
     }
   }, [index, level, setLevel, setRound]);
@@ -224,21 +232,25 @@ function LeftPanel() {
     }
     const { serverWeights, clientWeights, cosines, weight0 } = rawWeights;
     return {
-      server: serverWeights.filter((d: any, i: number) => i >= range[0] && i <= range[1]),
-      local: clientWeights.filter((d: any, i: number) => i >= range[0] && i <= range[1]),
-      cosines: cosines.filter((d: any, i: number) => i >= range[0] && i <= range[1]),
-      weight0: range[0] === 0 ? weight0 : serverWeights[range[0] - 1],
+      server: serverWeights[layerIndex].filter(
+        (d: any, i: number) => i >= range[0] && i <= range[1]
+      ),
+      local: clientWeights[layerIndex].filter(
+        (d: any, i: number) => i >= range[0] && i <= range[1]
+      ),
+      cosines: cosines[layerIndex].filter((d: any, i: number) => i >= range[0] && i <= range[1]),
+      weight0: range[0] === 0 ? weight0 : serverWeights[layerIndex][range[0] - 1],
     };
-  }, [range, rawWeights]);
+  }, [layerIndex, range, rawWeights]);
 
   const cosineExtent = useMemo(() => {
     // 从最大到最小
     if (rawWeights) {
-      return [1, +(Math.floor(Math.min(...rawWeights.cosines) * 100) / 100).toFixed(2)];
+      return [1, +(Math.floor(Math.min(...rawWeights.cosines[layerIndex]) * 100) / 100).toFixed(2)];
       // return extent
     }
     return [1, -1];
-  }, [rawWeights]);
+  }, [layerIndex, rawWeights]);
 
   return (
     <div id="LeftPanel" className="panel">
@@ -287,7 +299,7 @@ function LeftPanel() {
               <RangeSlider
                 range={range}
                 setRange={setRange}
-                extent={rawWeights !== null ? rawWeights.serverWeights.length : range[1] + 1}
+                extent={rawWeights !== null ? rawWeights.serverWeights[0].length : range[1] + 1}
               />
 
               <div>
@@ -340,8 +352,9 @@ function LeftPanel() {
                 </div>
               </div>
 
-              <div className="row">
-                <p>Layer: </p>
+              <div className="row layer-select">
+                <p>Layer in the neural network: </p>
+                <Dropdown items={layerItem} setIndex={onLayerChange} index={layerIndex} />
               </div>
             </div>
 

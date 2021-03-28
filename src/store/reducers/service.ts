@@ -205,90 +205,100 @@ export default identifyReducer;
 export const onTypeUpdateOrInitAction = (type: string, round: number, alpha: number|null, count: number|null, clusterId:number|null, cpcaAlphaP: number|null) => async (dispatch: any) => {
   await dispatch(loading(true));
   
-  const res1 = await http('/fl-hetero/sampling/', {
-    samplingType: type,
-  });
-
-  const {groundTruthLabel, outputLabel, consistencyLabel, localOutputLabel}= await http('/fl-hetero/labels/',  {
-    "round": round,
-  })
-
-  const {alpha: resAlpha,  projectedData} = await http('/fl-hetero/cpca/all/', {
-    alpha: alpha || defaultAllAlpha
-  })
-
-  // instance.handle('all', undefined);
-
-  const res4 = await http('/fl-hetero/cluster/', {
-    "nrOfClusters": count || defaultCount
-  })
-
-  const dataIndexP = res4.clusterList[clusterId||0].heteroIndex;
-  const {alpha: cpcaAlpha, cPC1, cPC2, projectedData: localData} = await http('/fl-hetero/cpca/cluster/', {
-    "dataIndex": dataIndexP,
-    "alpha": cpcaAlphaP || defaultAlpha
-  })
-
-  // instance.handle('block', dataIndexP);
-
-  // truth: labelNames[groundTruth[chosePoint]],
-  // output: labelNames[outputLabels[chosePoint]],
-  // client: labelNames[localLabels[chosePoint]],
-  // 联邦
-  // const correctServerOutput = outputLabel.filter((label: any, i: number) => label === groundTruthLabel[i]).length;
-  // // local
-  // const correctLocalOutput = localOutputLabel.filter((label: any, i: number) => label === groundTruthLabel[i]).length;
-
-  // console.log(correctServerOutput, correctLocalOutput, groundTruthLabel.length);
-
-  if(type === 'local') {
-    dispatch({
-      type: INIT_OR_UPDATE,
-      data: {
-        localData,
-        samples: projectedData,
-        groundTruth: groundTruthLabel,
-        outputLabels: outputLabel,
-        heteroLabels: consistencyLabel,
-        localOutputLabel,
-        heteroList: res4,
-        allCPCA: {
-          cpc1: [],
-          cpc2: [],
-          alpha: resAlpha,
-        },
-        cpca: {
-          "tensor": [
-            cPC1,
-            cPC2,
-          ],
-          "alpha": cpcaAlpha
-        },
-        level: HTTP_LEVEL.cpca,
-        loading: false
-      }
+  try {
+    const res1 = await http('/fl-hetero/sampling/', {
+      samplingType: type,
+    });
+  
+    const {groundTruthLabel, outputLabel, consistencyLabel, localOutputLabel}= await http('/fl-hetero/labels/',  {
+      "round": round,
     })
-  } else {
+  
+    const {alpha: resAlpha,  projectedData} = await http('/fl-hetero/cpca/all/', {
+      alpha: alpha || defaultAllAlpha
+    })
+  
+    // instance.handle('all', undefined);
+  
+    const res4 = await http('/fl-hetero/cluster/', {
+      "nrOfClusters": count || defaultCount
+    })
+  
+    const dataIndexP = res4.clusterList[clusterId||0].heteroIndex;
+    const {alpha: cpcaAlpha, cPC1, cPC2, projectedData: localData} = await http('/fl-hetero/cpca/cluster/', {
+      "dataIndex": dataIndexP,
+      "alpha": cpcaAlphaP || defaultAlpha
+    })
+  
+    // instance.handle('block', dataIndexP);
+  
+    // truth: labelNames[groundTruth[chosePoint]],
+    // output: labelNames[outputLabels[chosePoint]],
+    // client: labelNames[localLabels[chosePoint]],
+    // 联邦
+    // const correctServerOutput = outputLabel.filter((label: any, i: number) => label === groundTruthLabel[i]).length;
+    // // local
+    // const correctLocalOutput = localOutputLabel.filter((label: any, i: number) => label === groundTruthLabel[i]).length;
+  
+    // console.log(correctServerOutput, correctLocalOutput, groundTruthLabel.length);
+  
+    if(type === 'local') {
+      dispatch({
+        type: INIT_OR_UPDATE,
+        data: {
+          localData,
+          samples: projectedData,
+          groundTruth: groundTruthLabel,
+          outputLabels: outputLabel,
+          heteroLabels: consistencyLabel,
+          localOutputLabel,
+          heteroList: res4,
+          allCPCA: {
+            cpc1: [],
+            cpc2: [],
+            alpha: resAlpha,
+          },
+          cpca: {
+            "tensor": [
+              cPC1,
+              cPC2,
+            ],
+            "alpha": cpcaAlpha
+          },
+          level: HTTP_LEVEL.cpca,
+          loading: false
+        }
+      })
+    } else {
+      dispatch({
+        type: INIT_OR_UPDATE,
+        data: {
+          localData,
+          samples: projectedData,
+          samplesHeteroLabels: consistencyLabel,
+          heteroList: res4,
+          allCPCA: {
+            cpc1: [],
+            cpc2: [],
+            alpha: resAlpha,
+          },
+          cpca: {
+            "tensor": [
+              cPC1,
+              cPC2,
+            ],
+            "alpha": cpcaAlpha
+          },
+          level: HTTP_LEVEL.cpca,
+          loading: false
+        }
+      })
+    }
+  } catch(err) {
+    console.log(err);
     dispatch({
       type: INIT_OR_UPDATE,
       data: {
-        localData,
-        samples: projectedData,
-        samplesHeteroLabels: consistencyLabel,
-        heteroList: res4,
-        allCPCA: {
-          cpc1: [],
-          cpc2: [],
-          alpha: resAlpha,
-        },
-        cpca: {
-          "tensor": [
-            cPC1,
-            cPC2,
-          ],
-          "alpha": cpcaAlpha
-        },
-        level: HTTP_LEVEL.cpca,
         loading: false
       }
     })
@@ -298,72 +308,82 @@ export const onTypeUpdateOrInitAction = (type: string, round: number, alpha: num
 export const onRoundAction = (round: number, alpha: number|null, count: number|null, clusterId: number|null, cpcaAlphaP: number|null) => async (dispatch: any) => {
   await dispatch(loading(true));
 
-  const res2 = await http('/fl-hetero/labels/',  {
-    "round": round,
-  })
-
-  const {alpha: resAlpha,  projectedData} = await http('/fl-hetero/cpca/all/', {
-    alpha: alpha || defaultAllAlpha
-  })
-
-  const res4 = await http('/fl-hetero/cluster/', {
-    "nrOfClusters": count || defaultCount
-  })
-
-  const dataIndexP = res4.clusterList[clusterId || 0].heteroIndex;
-  const {alpha: cpcaAlpha, cPC1, cPC2, projectedData: localData} = await http('/fl-hetero/cpca/cluster/', {
-    "dataIndex": dataIndexP,
-    "alpha": cpcaAlphaP || defaultAlpha
-  })
-
-  if(getType() === 'local') {
-    dispatch({
-      type: INIT_OR_UPDATE,
-      data: {
-        localData,
-        samples: projectedData,
-        groundTruth: res2.groundTruthLabel,
-        outputLabels: res2.outputLabel,
-        heteroLabels: res2.consistencyLabel,
-        localOutputLabel: res2.localOutputLabel,
-        heteroList: res4,
-        allCPCA: {
-          cpc1: [],
-          cpc2: [],
-          alpha: resAlpha,
-        },
-        cpca: {
-          "tensor": [
-            cPC1,
-            cPC2,
-          ],
-          "alpha": cpcaAlpha
-        },
-        level: HTTP_LEVEL.cpca,
-        loading: false
-      }
+  try {
+    const res2 = await http('/fl-hetero/labels/',  {
+      "round": round,
     })
-  } else {
+  
+    const {alpha: resAlpha,  projectedData} = await http('/fl-hetero/cpca/all/', {
+      alpha: alpha || defaultAllAlpha
+    })
+  
+    const res4 = await http('/fl-hetero/cluster/', {
+      "nrOfClusters": count || defaultCount
+    })
+  
+    const dataIndexP = res4.clusterList[clusterId || 0].heteroIndex;
+    const {alpha: cpcaAlpha, cPC1, cPC2, projectedData: localData} = await http('/fl-hetero/cpca/cluster/', {
+      "dataIndex": dataIndexP,
+      "alpha": cpcaAlphaP || defaultAlpha
+    })
+  
+    if(getType() === 'local') {
+      dispatch({
+        type: INIT_OR_UPDATE,
+        data: {
+          localData,
+          samples: projectedData,
+          groundTruth: res2.groundTruthLabel,
+          outputLabels: res2.outputLabel,
+          heteroLabels: res2.consistencyLabel,
+          localOutputLabel: res2.localOutputLabel,
+          heteroList: res4,
+          allCPCA: {
+            cpc1: [],
+            cpc2: [],
+            alpha: resAlpha,
+          },
+          cpca: {
+            "tensor": [
+              cPC1,
+              cPC2,
+            ],
+            "alpha": cpcaAlpha
+          },
+          level: HTTP_LEVEL.cpca,
+          loading: false
+        }
+      })
+    } else {
+      dispatch({
+        type: INIT_OR_UPDATE,
+        data: {
+          localData,
+          samples: projectedData,
+          samplesHeteroLabels: res2.consistencyLabel,
+          heteroList: res4,
+          allCPCA: {
+            cpc1: [],
+            cpc2: [],
+            alpha: resAlpha,
+          },
+          cpca: {
+            "tensor": [
+              cPC1,
+              cPC2,
+            ],
+            "alpha": cpcaAlpha
+          },
+          level: HTTP_LEVEL.cpca,
+          loading: false
+        }
+      })
+    }
+  } catch(err) {
+    console.log(err);
     dispatch({
       type: INIT_OR_UPDATE,
       data: {
-        localData,
-        samples: projectedData,
-        samplesHeteroLabels: res2.consistencyLabel,
-        heteroList: res4,
-        allCPCA: {
-          cpc1: [],
-          cpc2: [],
-          alpha: resAlpha,
-        },
-        cpca: {
-          "tensor": [
-            cPC1,
-            cPC2,
-          ],
-          "alpha": cpcaAlpha
-        },
-        level: HTTP_LEVEL.cpca,
         loading: false
       }
     })

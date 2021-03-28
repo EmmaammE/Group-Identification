@@ -76,9 +76,6 @@ function RightPanel() {
 
   const pos = useSelector((state: StateType) => state.basic.pos);
 
-  // TODO 去掉
-  const size = useSelector((state: StateType) => state.basic.size);
-
   const annoList = useSelector((state: StateType) => state.basic.annoLists);
   const [chosedAnnList, setChoseAnnList] = useState<Set<number>>(new Set());
 
@@ -116,6 +113,8 @@ function RightPanel() {
   const { data: attribute, setRequest: setAttribte } = useFetch('/fl-hetero/attribute/', null);
   // { "dataIndex": number,  }
   const { data: instance, setRequest: setInstance } = useFetch('/fl-hetero/instance/', null);
+
+  const [dimensionTypeIndex, setDimensionType] = useState(0);
 
   const { dimension } = getDatasetInfo();
 
@@ -363,6 +362,13 @@ function RightPanel() {
     };
   }, [chosePoint, groundTruth, labelNames, localLabels, outputLabels]);
 
+  const showPC = useMemo(() => {
+    if (dimensionTypeIndex === 0) {
+      return pcArr;
+    }
+    return [[], []];
+  }, [dimensionTypeIndex, pcArr]);
+
   return (
     <div className="panel" id="RightPanel">
       <h2>Heterogenity Examination</h2>
@@ -371,6 +377,33 @@ function RightPanel() {
           <div className="row">
             <div className="info-panel">
               <div className="row">
+                <span>Algorithm: </span>
+                <Dropdown
+                  items={['ccPCA', 'Grad-CAM ']}
+                  setIndex={setDimensionType}
+                  index={dimensionTypeIndex}
+                />
+              </div>
+              <div className="row">
+                <span>Weights:</span>
+                <Gradient
+                  colors={['#c21317', '#fff', '#1365c2']}
+                  legends={[colorScale.domain()[0], colorScale.domain()[2]]}
+                  width="80"
+                />
+              </div>
+            </div>
+
+            <div>
+              <div
+                className="row"
+                style={{
+                  // visibility: dimensionTypeIndex === 0 ? 'visible': 'hidden',
+                  opacity: dimensionTypeIndex === 0 ? 1 : 0,
+                  pointerEvents: dimensionTypeIndex === 1 ? 'none' : 'auto',
+                  transition: 'all 300ms ease-in-out',
+                }}
+              >
                 <p className="label">Contrastive parameter: </p>
                 <div className={inputStyles.wrapper}>
                   <input
@@ -385,45 +418,39 @@ function RightPanel() {
                   </span>
                 </div>
               </div>
-              <div className="row">
-                <p>Dimension weights:</p>
-                <Gradient
-                  colors={['#c21317', '#fff', '#1365c2']}
-                  legends={[colorScale.domain()[0], colorScale.domain()[2]]}
-                  width="80"
-                />
-              </div>
-            </div>
 
-            <div
-              className="rgb-values"
-              style={{
-                opacity: dimension < pcArr[0].length ? 1 : 0,
-              }}
-            >
-              <span
-                onClick={() => setChannelIndex(0)}
-                style={{ border: channelIndex === 0 ? '2px solid #aaa' : '2px solid #fff' }}
+              <div
+                className="rgb-values"
+                style={
+                  {
+                    // opacity: (dimension < pcArr[0].length && dimensionTypeIndex === 0) ? 1 : 0,
+                  }
+                }
               >
-                R
-              </span>
-              <span
-                onClick={() => setChannelIndex(1)}
-                style={{ border: channelIndex === 1 ? '2px solid #aaa' : '2px solid #fff' }}
-              >
-                G
-              </span>
-              <span
-                onClick={() => setChannelIndex(2)}
-                style={{ border: channelIndex === 2 ? '2px solid #aaa' : '2px solid #fff' }}
-              >
-                B
-              </span>
+                <span
+                  onClick={() => setChannelIndex(0)}
+                  style={{ border: channelIndex === 0 ? '2px solid #aaa' : '2px solid #fff' }}
+                >
+                  R
+                </span>
+                <span
+                  onClick={() => setChannelIndex(1)}
+                  style={{ border: channelIndex === 1 ? '2px solid #aaa' : '2px solid #fff' }}
+                >
+                  G
+                </span>
+                <span
+                  onClick={() => setChannelIndex(2)}
+                  style={{ border: channelIndex === 2 ? '2px solid #aaa' : '2px solid #fff' }}
+                >
+                  B
+                </span>
+              </div>
             </div>
           </div>
           <div className="pair-rects">
-            {pcArr[0].length > 0 &&
-              pcArr.map((pc, i) => (
+            {showPC[0].length > 0 &&
+              showPC.map((pc, i) => (
                 <PairRect key={i} data={pc} title={i} color={colorScale} channel={channelIndex} />
               ))}
           </div>
