@@ -145,7 +145,7 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey, deleteAnn }: Lin
         })
         .on('end', ({ x }) => {
           const d = xScale.invert(x);
-          const fixedValue = Math.max(1, Math.round(d));
+          const fixedValue = Math.min(data.length, Math.max(1, Math.round(d)));
           if (round !== fixedValue - 1) {
             setRound(fixedValue - 1);
             setLevel(HTTP_LEVEL.labels);
@@ -156,7 +156,7 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey, deleteAnn }: Lin
             setPos(posX);
           }
         }),
-    [pos, round, setLevel, setRound, xScale]
+    [data.length, pos, round, setLevel, setRound, xScale]
   );
 
   useEffect(() => {

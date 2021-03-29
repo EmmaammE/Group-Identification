@@ -53,6 +53,7 @@ export interface IdentifyData {
   "loading": boolean,
   "level": number,
   "chosePoint": number,
+  "gradImages": number[][]
 }
 
 const initState: any= {
@@ -81,6 +82,7 @@ const initState: any= {
    "loading": false,
    "level": 0,
    "chosePoint": -1,
+   "gradImages": [[], []]
 };
 
 export const initIdentityAction = () => ({
@@ -126,6 +128,30 @@ export const getHeteList = (count: number|null) => async (dispatch: any) => {
     dispatch({
       type: SET_HETELIST,
       data: res
+    })
+  } catch(err) {
+    console.log(err);
+  }
+}
+
+export const getGradImages = (dataIndex: number[]) => async (dispatch: any) => {
+  try {
+    await dispatch(loading(true));
+
+    const {fed, local} = await http('/fl-hetero/grad_images/'
+      , {
+        "dataIndex": dataIndex,
+      })
+
+    dispatch({
+      type: INIT_OR_UPDATE,
+      data: {
+        gradImages: [
+          fed.thermos[0],
+          local.thermos[0]
+        ],
+        loading: false
+      }
     })
   } catch(err) {
     console.log(err);

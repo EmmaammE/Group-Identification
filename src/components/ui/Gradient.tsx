@@ -6,13 +6,14 @@ export interface GradientProps {
   legends: string[] | number[];
   width?: string;
   height?: number;
+  ratio?: string[] | null;
 }
 
-const Gradient = ({ colors, legends, width, height }: GradientProps) => {
+const Gradient = ({ colors, legends, width, height, ratio }: GradientProps) => {
   const scale = d3
     .scaleLinear<string>()
-    .domain([0, colors.length - 1])
-    .range(['0%', '100%']);
+    .domain(Array.from({ length: colors.length }, (d, i) => i))
+    .range(ratio || ['0%', '100%']);
 
   return (
     <div className="legend-wrapper">

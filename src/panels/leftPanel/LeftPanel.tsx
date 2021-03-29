@@ -239,7 +239,7 @@ function LeftPanel() {
         (d: any, i: number) => i >= range[0] && i <= range[1]
       ),
       cosines: cosines[layerIndex].filter((d: any, i: number) => i >= range[0] && i <= range[1]),
-      weight0: range[0] === 0 ? weight0 : serverWeights[layerIndex][range[0] - 1],
+      weight0: range[0] === 0 ? weight0[layerIndex] : serverWeights[layerIndex][range[0] - 1],
     };
   }, [layerIndex, range, rawWeights]);
 
@@ -254,7 +254,7 @@ function LeftPanel() {
 
   return (
     <div id="LeftPanel" className="panel">
-      <h2>FL Process Observation</h2>
+      <h2>FL Process Monitor</h2>
 
       <div className="content">
         <div className="info-container">
@@ -292,7 +292,7 @@ function LeftPanel() {
         <div className="overview-wrapper">
           <div className="dashed-divider" />
 
-          <h3>Parameters Projection</h3>
+          <h3>Parameter Projection</h3>
           <div className="overview-content">
             <div className="info">
               <p>Communication round range:</p>
@@ -301,6 +301,11 @@ function LeftPanel() {
                 setRange={setRange}
                 extent={rawWeights !== null ? rawWeights.serverWeights[0].length : range[1] + 1}
               />
+
+              <div className="row layer-select">
+                <p>Layer in the neural network: </p>
+                <Dropdown items={layerItem} setIndex={onLayerChange} index={layerIndex} />
+              </div>
 
               <div>
                 <svg height="20px" viewBox="0 0 300 20">
@@ -350,11 +355,6 @@ function LeftPanel() {
                     width="90px"
                   />
                 </div>
-              </div>
-
-              <div className="row layer-select">
-                <p>Layer in the neural network: </p>
-                <Dropdown items={layerItem} setIndex={onLayerChange} index={layerIndex} />
               </div>
             </div>
 

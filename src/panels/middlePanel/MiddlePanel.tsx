@@ -213,11 +213,11 @@ function MiddlePanel() {
 
   return (
     <div id="MiddlePanel" className="panel">
-      <h2>Model Output Comparison</h2>
+      <h2>Output Comparison</h2>
 
       <div className="content">
         <div className="scatter-container">
-          <h3>Output Comparison</h3>
+          <h3>Overview</h3>
 
           <div className="row">
             <div className="info-row">

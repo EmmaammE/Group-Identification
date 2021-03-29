@@ -20,6 +20,7 @@ import {
   setChosePointAction,
   defaultAlpha,
   getCPCA,
+  getGradImages,
 } from '../../store/reducers/service';
 import HTTP_LEVEL from '../../utils/level';
 import PureRect from '../../components/PairRect.tsx/PureRect';
@@ -31,6 +32,10 @@ import IconUrl from '../../components/ui/getIcon';
 const margin = { t: 20, r: 20, b: 35, l: 55 };
 const WIDTH = 25;
 
+const RECTS_TITLE = [
+  ['cPC1', 'cPC2'],
+  ['Stand-alone training model', 'Federated learning model'],
+];
 const areEqual = (first: number[], second: number[]) => {
   if (first.length !== second.length) {
     return false;
@@ -99,7 +104,11 @@ function RightPanel() {
     (dataIndex: number[], alpha: number | null) => dispatch(getCPCA(dataIndex, alpha)),
     [dispatch]
   );
-
+  const updateGradImages = useCallback(
+    (dataIndex: number[]) => dispatch(getGradImages(dataIndex)),
+    [dispatch]
+  );
+  const gradImages = useSelector((state: StateType) => state.service.gradImages);
   // 点击格子之后，请求cpca的点的坐标
   const [blockIndex, setBlockIndex] = useState<number[]>([]);
 
@@ -117,6 +126,21 @@ function RightPanel() {
   const [dimensionTypeIndex, setDimensionType] = useState(0);
 
   const { dimension } = getDatasetInfo();
+
+  const onChangeDimensionType = (i: number) => {
+    setDimensionType(i);
+    if (i === 1) {
+      if (blockIndex.length > 0) {
+        updateGradImages(blockIndex);
+      } else if (heteroList[index]) {
+        updateGradImages(heteroList[index].heteroIndex);
+      }
+    }
+  };
+
+  useEffect(() => {
+    setDimensionType(0);
+  }, [blockIndex]);
 
   useEffect(() => {
     if (propertyIndex !== -1) {
@@ -150,23 +174,6 @@ function RightPanel() {
   );
 
   useEffect(() => {
-    let defaultIndex = -1;
-    let maxV = Number.MIN_VALUE;
-
-    const count = channelIndex * dimension;
-    for (let i = 0; i < dimension; i++) {
-      const v = Math.max(pcArr[0][i + count]) + Math.max(pcArr[1][i + count]);
-
-      if (maxV < v) {
-        maxV = v;
-        defaultIndex = i;
-      }
-    }
-
-    updatePropertyIndex(defaultIndex);
-  }, [channelIndex, dimension, pcArr, updatePropertyIndex]);
-
-  useEffect(() => {
     // 每次标注列表更新，更新状态
     if (annoListStatus.length !== annoList.length) {
       const newStatusArr = Array.from({ length: annoList.length }, (d, i) => {
@@ -187,21 +194,6 @@ function RightPanel() {
       setAnnoListStatus(Array.from({ length: annoList.length }, () => 0));
     }
   }, [annoList.length, previousRound, round]);
-
-  const colorScale = useMemo(() => {
-    const extent: number =
-      pcArr[0].length > 0
-        ? Math.max(
-            Math.abs(Math.min(...pcArr[0], ...pcArr[1])),
-            Math.abs(Math.max(...pcArr[0], ...pcArr[1]))
-          )
-        : 1;
-    return d3
-      .scaleLinear<string, number>()
-      .domain([-extent, 0, extent])
-      .range(['#c21317', '#fff', '#1365c2'])
-      .nice();
-  }, [pcArr]);
 
   const addAnn = () => {
     fetch('/fl-hetero/annotation/', {
@@ -366,8 +358,59 @@ function RightPanel() {
     if (dimensionTypeIndex === 0) {
       return pcArr;
     }
-    return [[], []];
-  }, [dimensionTypeIndex, pcArr]);
+    if (gradImages[0].length === 0) {
+      return [[], []];
+    }
+    return gradImages;
+  }, [dimensionTypeIndex, gradImages, pcArr]);
+
+  const colorScale = useMemo(() => {
+    if (dimensionTypeIndex === 0) {
+      const extent: number =
+        pcArr[0].length > 0
+          ? Math.max(
+              Math.abs(Math.min(...pcArr[0], ...pcArr[1])),
+              Math.abs(Math.max(...pcArr[0], ...pcArr[1]))
+            )
+          : 1;
+      return d3
+        .scaleLinear<string, number>()
+        .domain([-extent, 0, extent])
+        .range(['#c21317', '#fff', '#1365c2'])
+        .nice();
+    }
+
+    console.log(d3.interpolateRdYlBu(0.5));
+    console.log(d3.interpolateRdYlBu(0));
+    // d3.interpolateWarm
+    const value = gradImages[0].length > 0 ? Math.max(...showPC[0], ...showPC[1]) : 1;
+    return (
+      d3
+        .scaleLinear<string, number>()
+        .domain([0, value * 0.8, value])
+        // .range([ '#fff', '#1365c2'])
+        // .range(['#ea6a00','#ffff69', '#fff'])
+        .range(['#463f7c', '#cbefea', '#efefef'])
+        .nice()
+    );
+  }, [dimensionTypeIndex, gradImages, pcArr, showPC]);
+
+  useEffect(() => {
+    let defaultIndex = -1;
+    let maxV = Number.MIN_VALUE;
+
+    const count = dimensionTypeIndex === 0 ? channelIndex * dimension : 0;
+    for (let i = 0; i < dimension; i++) {
+      const v = Math.max(showPC[0][i + count]) + Math.max(showPC[1][i + count]);
+
+      if (maxV < v) {
+        maxV = v;
+        defaultIndex = i;
+      }
+    }
+
+    updatePropertyIndex(defaultIndex);
+  }, [channelIndex, dimension, dimensionTypeIndex, pcArr, showPC, updatePropertyIndex]);
 
   return (
     <div className="panel" id="RightPanel">
@@ -375,83 +418,86 @@ function RightPanel() {
       <div className="content">
         <div className="weight-rects r-panel">
           <div className="row">
-            <div className="info-panel">
-              <div className="row">
-                <span>Algorithm: </span>
-                <Dropdown
-                  items={['ccPCA', 'Grad-CAM ']}
-                  setIndex={setDimensionType}
-                  index={dimensionTypeIndex}
-                />
-              </div>
-              <div className="row">
-                <span>Weights:</span>
-                <Gradient
-                  colors={['#c21317', '#fff', '#1365c2']}
-                  legends={[colorScale.domain()[0], colorScale.domain()[2]]}
-                  width="80"
-                />
-              </div>
+            <div className="row left-info">
+              <span>Navigated by: </span>
+              <Dropdown
+                items={['ccPCA', 'Grad-CAM ']}
+                setIndex={onChangeDimensionType}
+                index={dimensionTypeIndex}
+              />
             </div>
 
-            <div>
+            <div
+              className="row"
+              style={{
+                opacity: dimensionTypeIndex === 0 ? 1 : 0,
+                transition: 'all 300ms ease-in-out',
+              }}
+            >
+              <p className="label">Contrastive parameter: </p>
               <div
-                className="row"
+                className={inputStyles.wrapper}
                 style={{
-                  // visibility: dimensionTypeIndex === 0 ? 'visible': 'hidden',
-                  opacity: dimensionTypeIndex === 0 ? 1 : 0,
                   pointerEvents: dimensionTypeIndex === 1 ? 'none' : 'auto',
-                  transition: 'all 300ms ease-in-out',
                 }}
               >
-                <p className="label">Contrastive parameter: </p>
-                <div className={inputStyles.wrapper}>
-                  <input
-                    className={inputStyles.input}
-                    type="text"
-                    defaultValue={param?.toFixed(2)}
-                    onBlur={handleParamChange}
-                    ref={$inputAlpha}
-                  />
-                  <span className={inputStyles.icon} onClick={freshCount}>
-                    <img src={IconUrl[alphaIconStatus]} alt="refresh" />
-                  </span>
-                </div>
-              </div>
-
-              <div
-                className="rgb-values"
-                style={
-                  {
-                    // opacity: (dimension < pcArr[0].length && dimensionTypeIndex === 0) ? 1 : 0,
-                  }
-                }
-              >
-                <span
-                  onClick={() => setChannelIndex(0)}
-                  style={{ border: channelIndex === 0 ? '2px solid #aaa' : '2px solid #fff' }}
-                >
-                  R
-                </span>
-                <span
-                  onClick={() => setChannelIndex(1)}
-                  style={{ border: channelIndex === 1 ? '2px solid #aaa' : '2px solid #fff' }}
-                >
-                  G
-                </span>
-                <span
-                  onClick={() => setChannelIndex(2)}
-                  style={{ border: channelIndex === 2 ? '2px solid #aaa' : '2px solid #fff' }}
-                >
-                  B
+                <input
+                  className={inputStyles.input}
+                  type="text"
+                  defaultValue={param?.toFixed(2)}
+                  onBlur={handleParamChange}
+                  ref={$inputAlpha}
+                />
+                <span className={inputStyles.icon} onClick={freshCount}>
+                  <img src={IconUrl[alphaIconStatus]} alt="refresh" />
                 </span>
               </div>
             </div>
           </div>
+
+          <div className="row">
+            <div className="row left-info">
+              <span>Weights:</span>
+              <Gradient
+                colors={colorScale.range() as string[]}
+                legends={[colorScale.domain()[0], colorScale.domain()[2]]}
+                width="80"
+                ratio={dimensionTypeIndex === 1 ? ['0%', '80%', '100%'] : ['0%', '50%', '100%']}
+              />
+            </div>
+
+            <div className="rgb-values" style={{ opacity: dimension < pcArr[0].length ? 1 : 0 }}>
+              <span
+                onClick={() => setChannelIndex(0)}
+                style={{ border: channelIndex === 0 ? '2px solid #aaa' : '2px solid #fff' }}
+              >
+                R
+              </span>
+              <span
+                onClick={() => setChannelIndex(1)}
+                style={{ border: channelIndex === 1 ? '2px solid #aaa' : '2px solid #fff' }}
+              >
+                G
+              </span>
+              <span
+                onClick={() => setChannelIndex(2)}
+                style={{ border: channelIndex === 2 ? '2px solid #aaa' : '2px solid #fff' }}
+              >
+                B
+              </span>
+            </div>
+          </div>
+
           <div className="pair-rects">
             {showPC[0].length > 0 &&
               showPC.map((pc, i) => (
-                <PairRect key={i} data={pc} title={i} color={colorScale} channel={channelIndex} />
+                <PairRect
+                  key={i}
+                  data={pc}
+                  title={RECTS_TITLE[dimensionTypeIndex][i]}
+                  color={colorScale}
+                  channel={dimensionTypeIndex === 0 ? channelIndex : 0}
+                />
               ))}
           </div>
         </div>

@@ -24,6 +24,11 @@
       fill-opacity: 1;
       stroke: none;
     }
+
+    .selection,
+    .overlay {
+      pointer-events: none;
+    }
   }
 
   .my-handle {
@@ -53,8 +58,11 @@
     .layer-select {
       .select-dropdown {
         height: 22px;
-        margin: 0 24px 0 0;
-        width: 90px;
+        margin: 0 40px 0 0;
+
+        .select {
+          width: 100px;
+        }
       }
     }
 

@@ -19,13 +19,8 @@
     margin: 0 10px;
     flex-direction: column;
 
-    .info-panel {
-      display: flex;
-      flex-direction: column;
-      // flex: 0 0 70%;
-      // .row {
-      //   width: 70%;
-      // }
+    .left-info {
+      flex: 0 0 45%;
     }
 
     .rgb-values {
@@ -182,10 +177,12 @@
 
     .rotate {
       writing-mode: vertical-rl;
-      text-align: center;
       width: 20px;
       height: 90px;
       line-height: 15px;
+      white-space: nowrap;
+      // 对应图像的10px的空隙
+      margin-top: 7px;
     }
 
     .wrapper {
@@ -207,7 +204,10 @@
         position: absolute;
         bottom: 2px;
         left: 20px;
-        // border: 1px solid #000;
+      }
+
+      .pair-canvas {
+        border: 1px dashed #777;
       }
     }
 

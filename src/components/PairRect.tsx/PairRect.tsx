@@ -9,7 +9,7 @@ import { getDatasetInfo } from '../../utils/getType';
 
 export interface PairRectProps {
   data: number[];
-  title: number;
+  title: string;
   color: d3.ScaleLinear<string, number>;
   channel: number;
 }
@@ -68,7 +68,7 @@ const PairRect = ({ data, title, color, channel }: PairRectProps) => {
   const $chart = useRef(null);
   const $rect = useRef(null);
 
-  const [bound, setBound] = useState<any>({ width: 400, height: 400 });
+  const [bound, setBound] = useState<any>({ width: 0, height: 0 });
   const [scale, setScale] = useState<number>(1);
   const dispatch = useDispatch();
 
@@ -111,7 +111,8 @@ const PairRect = ({ data, title, color, channel }: PairRectProps) => {
 
   const handleResize = useCallback(() => {
     const { offsetWidth, offsetHeight } = ($svg as any).current;
-    const size = Math.min(offsetHeight - 30, offsetWidth);
+    // NOTE 10px的空隙
+    const size = Math.min(offsetHeight - 10, offsetWidth);
     setBound({
       width: size,
       height: size,
@@ -185,7 +186,7 @@ const PairRect = ({ data, title, color, channel }: PairRectProps) => {
   return (
     <div className="wrapper">
       <div>
-        <p className="rotate">cPC{title + 1}</p>
+        <p className="rotate">{title}</p>
       </div>
       <div className="chart-wrapper" ref={$svg}>
         <canvas
@@ -193,11 +194,6 @@ const PairRect = ({ data, title, color, channel }: PairRectProps) => {
           ref={$chart}
           width={`${bound.width}px`}
           height={`${bound.height}px`}
-          style={{
-            border: '1px dashed #777',
-            // width: '200px',
-            // height: '200px'
-          }}
         />
 
         <svg width={`${bound.width}px`} height={`${bound.height}px`} className="overlay">
