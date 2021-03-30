@@ -83,9 +83,10 @@ const BottomPanel = () => {
           setLevel(HTTP_LEVEL.client + 1);
           // console.log(res);
           updateDatasize(res.testSize, res.trainSize);
+          getList();
         });
     }
-  }, [clientName, setLevel, updateDatasize]);
+  }, [clientName, getList, setLevel, updateDatasize]);
 
   useEffect(() => {
     if (datum) {
@@ -93,11 +94,11 @@ const BottomPanel = () => {
     }
   }, [datum, index]);
 
-  useEffect(() => {
-    if (level === HTTP_LEVEL.client || level === HTTP_LEVEL.cpca) {
-      getList();
-    }
-  }, [getList, level]);
+  // useEffect(() => {
+  //   if (level === HTTP_LEVEL.client || level === HTTP_LEVEL.cpca) {
+  //     getList();
+  //   }
+  // }, [getList, level]);
 
   const deleteAnn = useCallback(
     (id: number) => {

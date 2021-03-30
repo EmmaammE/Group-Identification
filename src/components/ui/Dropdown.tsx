@@ -2,7 +2,7 @@
 import React from 'react';
 
 interface DropdownProps {
-  items: string[];
+  items: Array<any>;
   index: number;
   setIndex: Function;
 }

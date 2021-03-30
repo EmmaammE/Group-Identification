@@ -127,6 +127,8 @@ function RightPanel() {
 
   const { dimension } = getDatasetInfo();
 
+  const [layerIndex, setLayerIndex] = useState<number>(2);
+
   const onChangeDimensionType = (i: number) => {
     setDimensionType(i);
     if (i === 1) {
@@ -361,8 +363,8 @@ function RightPanel() {
     if (gradImages[0].length === 0) {
       return [[], []];
     }
-    return gradImages;
-  }, [dimensionTypeIndex, gradImages, pcArr]);
+    return gradImages.map((arr) => arr[layerIndex]);
+  }, [dimensionTypeIndex, gradImages, layerIndex, pcArr]);
 
   const colorScale = useMemo(() => {
     if (dimensionTypeIndex === 0) {
@@ -427,32 +429,36 @@ function RightPanel() {
               />
             </div>
 
-            <div
-              className="row"
-              style={{
-                opacity: dimensionTypeIndex === 0 ? 1 : 0,
-                transition: 'all 300ms ease-in-out',
-              }}
-            >
-              <p className="label">Contrastive parameter: </p>
-              <div
-                className={inputStyles.wrapper}
-                style={{
-                  pointerEvents: dimensionTypeIndex === 1 ? 'none' : 'auto',
-                }}
-              >
-                <input
-                  className={inputStyles.input}
-                  type="text"
-                  defaultValue={param?.toFixed(2)}
-                  onBlur={handleParamChange}
-                  ref={$inputAlpha}
-                />
-                <span className={inputStyles.icon} onClick={freshCount}>
-                  <img src={IconUrl[alphaIconStatus]} alt="refresh" />
-                </span>
-              </div>
-            </div>
+            {
+              dimensionTypeIndex === 0 && (
+                <div className="row" style={{ transition: 'all 300ms ease-in-out' }}>
+                  <p className="label">Contrastive parameter: </p>
+                  <div className={inputStyles.wrapper}>
+                    <input
+                      className={inputStyles.input}
+                      type="text"
+                      defaultValue={param?.toFixed(2)}
+                      onBlur={handleParamChange}
+                      ref={$inputAlpha}
+                    />
+                    <span className={inputStyles.icon} onClick={freshCount}>
+                      <img src={IconUrl[alphaIconStatus]} alt="refresh" />
+                    </span>
+                  </div>
+                </div>
+              )
+              // <div
+              //   className="row"
+              //   style={{ transition: 'all 300ms ease-in-out',}}
+              // >
+              //   <p className="label">Layer: </p>
+              //   <Dropdown
+              //     items={Array.from({length: gradImages[0].length}, (d, i) => i)}
+              //     index={layerIndex}
+              //     setIndex={setLayerIndex}
+              //   />
+              // </div>
+            }
           </div>
 
           <div className="row">

@@ -53,7 +53,7 @@ export interface IdentifyData {
   "loading": boolean,
   "level": number,
   "chosePoint": number,
-  "gradImages": number[][]
+  "gradImages": number[][][]
 }
 
 const initState: any= {
@@ -147,8 +147,8 @@ export const getGradImages = (dataIndex: number[]) => async (dispatch: any) => {
       type: INIT_OR_UPDATE,
       data: {
         gradImages: [
-          fed.thermos[0],
-          local.thermos[0]
+          fed.thermos,
+          local.thermos
         ],
         loading: false
       }
