@@ -178,10 +178,11 @@ function MiddlePanel() {
   };
 
   const freshCount = useCallback(() => {
-    getLists(null, blockIndex, blockCpcaAlpha);
+    getLists(null, 0, blockCpcaAlpha);
     setLevel(HTTP_LEVEL.cpca);
     setCountStatus(1);
-  }, [blockCpcaAlpha, blockIndex, getLists, setLevel]);
+    updateBlock(0);
+  }, [blockCpcaAlpha, getLists, setLevel, updateBlock]);
 
   const $inputAlpha = useRef(null);
   const [alphaIconStatus, setAlphaStatus] = useState<0 | 1>(0);

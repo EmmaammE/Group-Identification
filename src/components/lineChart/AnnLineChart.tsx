@@ -49,10 +49,10 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey, deleteAnn }: Lin
 
   const yScaleActual = d3.scaleLinear().range([0, heightActual]).domain([0, yDomain[1]]);
 
-  const axisBreakspace = useMemo(() => (yDomain[0] < yScaleActual.invert(20) ? 0 : 20), [
-    yDomain,
-    yScaleActual,
-  ]);
+  const axisBreakspace = useMemo(
+    () => (yDomain[0] < yScaleActual.invert(20) || yDomain[0] === 0 ? 0 : 20),
+    [yDomain, yScaleActual]
+  );
 
   const heightMap: number = HEIGHT - margin.t - margin.b - axisBreakspace;
 
