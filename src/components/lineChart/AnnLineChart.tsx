@@ -33,13 +33,36 @@ const yTicks = 5;
 const DRAG_PADDING = 20;
 
 const AnnoLineChart = ({ margin, data: rawData, list, datumKey, deleteAnn }: LineChartProps) => {
-  const data = useMemo(() => (rawData && rawData[datumKey]) || [], [datumKey, rawData]);
-  const yDomain = useMemo(() => d3.extent(data), [data]);
-
-  const axisBreakspace = useMemo(() => (yDomain[0] === 0.0 ? 0 : 20), [yDomain]);
-
   const widthMap: number = WIDTH - margin.l - margin.r;
+  const heightActual: number = HEIGHT - margin.t - margin.b;
+
+  const data = useMemo(() => (rawData && rawData[datumKey]) || [], [datumKey, rawData]);
+
+  const yDomain: number[] = useMemo(() => {
+    if (data.length > 0) {
+      return (d3.extent(data) as any).map((d: any, i: number) =>
+        i === 0 ? Math.floor(d * 10) / 10 : Math.ceil(d * 10) / 10
+      );
+    }
+    return [0, 0];
+  }, [data]);
+
+  const yScaleActual = d3.scaleLinear().range([0, heightActual]).domain([0, yDomain[1]]);
+
+  const axisBreakspace = useMemo(() => (yDomain[0] < yScaleActual.invert(20) ? 0 : 20), [
+    yDomain,
+    yScaleActual,
+  ]);
+
   const heightMap: number = HEIGHT - margin.t - margin.b - axisBreakspace;
+
+  const yScale = useMemo(
+    () =>
+      yDomain[0] < yScaleActual.invert(20)
+        ? d3.scaleLinear().range([heightMap, 0]).domain([0, yDomain[1]])
+        : d3.scaleLinear().range([heightMap, 0]).domain(yDomain),
+    [heightMap, yDomain, yScaleActual]
+  );
 
   const round = useSelector((state: StateType) => state.basic.round);
   const dispatch = useDispatch();
@@ -74,11 +97,6 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey, deleteAnn }: Lin
     ),
     [deleteAnnItem]
   );
-
-  const yScale = d3
-    .scaleLinear()
-    .range([heightMap, 0])
-    .domain(d3.extent(data) as any);
 
   const $drag: any = useRef(null);
 
