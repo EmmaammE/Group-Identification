@@ -175,7 +175,7 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey, deleteAnn }: Lin
         const x = xScale(+r + 1);
         const indexScale = d3
           .scaleLinear()
-          .range([heightMap - 45, 40])
+          .range([heightMap - 35, 20])
           .domain([0, list[r].length]);
 
         list[r].forEach((anno: any, j: number) => {
@@ -334,10 +334,6 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey, deleteAnn }: Lin
 
                 <div className="scroll-panel">
                   <p>{chatPos[tipId].text}</p>
-                  {/* <p>
-                    Some yellow masks are classifiedincorrectly by the federatedlearning model. There is also a "banana  mask."
-                  </p> */}
-                  {/* <p> lncorrect labels with "flag masks."</p> */}
                 </div>
               </div>
             )}

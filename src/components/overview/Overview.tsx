@@ -68,7 +68,7 @@ function Overview({ data, flag, round, colorExtent }: OverviewProps) {
 
   return (
     <div id="Overview">
-      <svg viewBox="0 0 400 400">
+      <svg viewBox={`0 0 ${SIZE} ${SIZE}`}>
         <defs>
           {data.cosines.map((v, i) => (
             <marker

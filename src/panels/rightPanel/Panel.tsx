@@ -127,7 +127,13 @@ function RightPanel() {
 
   const { dimension } = getDatasetInfo();
 
-  const [layerIndex, setLayerIndex] = useState<number>(2);
+  const [layerIndex, setLayerIndex] = useState<number>(0);
+
+  useEffect(() => {
+    if (gradImages[0].length > 0) {
+      setLayerIndex(gradImages[0].length - 1);
+    }
+  }, [gradImages]);
 
   const onChangeDimensionType = (i: number) => {
     setDimensionType(i);
@@ -194,6 +200,7 @@ function RightPanel() {
   useEffect(() => {
     if (round !== previousRound) {
       setAnnoListStatus(Array.from({ length: annoList.length }, () => 0));
+      setStrokeId(-1);
     }
   }, [annoList.length, previousRound, round]);
 
@@ -382,8 +389,6 @@ function RightPanel() {
         .nice();
     }
 
-    console.log(d3.interpolateRdYlBu(0.5));
-    console.log(d3.interpolateRdYlBu(0));
     // d3.interpolateWarm
     const value = gradImages[0].length > 0 ? Math.max(...showPC[0], ...showPC[1]) : 1;
     return (

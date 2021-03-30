@@ -309,7 +309,7 @@ function LeftPanel() {
 
               <div>
                 <svg height="20px" viewBox="0 0 300 20">
-                  <circle cx="8" cy="10" r="2" stroke="#000" fill="#fff" />
+                  <circle cx="8" cy="10" r="2.6" stroke="#000" fill="#fff" />
                   <text x="20" y="15">
                     Selected communication round
                   </text>
@@ -347,7 +347,7 @@ function LeftPanel() {
 
               <div className="row">
                 {/* <p>Update disagreement (Cosine) :</p> */}
-                <p>Disagreement (Cosine) :</p>
+                <p>Disagreement (cosine) :</p>
                 <div className="cosine-legend">
                   <Gradient
                     colors={GRADIENT}
