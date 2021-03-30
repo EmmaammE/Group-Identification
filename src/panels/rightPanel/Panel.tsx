@@ -127,13 +127,13 @@ function RightPanel() {
 
   const { dimension } = getDatasetInfo();
 
-  const [layerIndex, setLayerIndex] = useState<number>(0);
+  const [layerIndex, setLayerIndex] = useState<number>(1);
 
-  useEffect(() => {
-    if (gradImages[0].length > 0) {
-      setLayerIndex(gradImages[0].length - 1);
-    }
-  }, [gradImages]);
+  // useEffect(() => {
+  //   if (gradImages[0].length > 0) {
+  //     setLayerIndex(gradImages[0].length - 1);
+  //   }
+  // }, [gradImages]);
 
   const onChangeDimensionType = (i: number) => {
     setDimensionType(i);
