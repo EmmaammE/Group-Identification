@@ -31,17 +31,19 @@ const xTicks = 20;
 const yTicks = 5;
 
 const DRAG_PADDING = 20;
-const axisBreakspcae = 20;
 
 const AnnoLineChart = ({ margin, data: rawData, list, datumKey, deleteAnn }: LineChartProps) => {
+  const data = useMemo(() => (rawData && rawData[datumKey]) || [], [datumKey, rawData]);
+  const yDomain = useMemo(() => d3.extent(data), [data]);
+
+  const axisBreakspace = useMemo(() => (yDomain[0] === 0.0 ? 0 : 20), [yDomain]);
+
   const widthMap: number = WIDTH - margin.l - margin.r;
-  const heightMap: number = HEIGHT - margin.t - margin.b - axisBreakspcae;
+  const heightMap: number = HEIGHT - margin.t - margin.b - axisBreakspace;
 
   const round = useSelector((state: StateType) => state.basic.round);
   const dispatch = useDispatch();
   const setRound = useCallback((i) => dispatch(setRoundAction(i)), [dispatch]);
-
-  const data = useMemo(() => (rawData && rawData[datumKey]) || [], [datumKey, rawData]);
 
   const $lines = useRef(null);
 
@@ -76,8 +78,7 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey, deleteAnn }: Lin
   const yScale = d3
     .scaleLinear()
     .range([heightMap, 0])
-    .domain(d3.extent(data) as any)
-    .nice();
+    .domain(d3.extent(data) as any);
 
   const $drag: any = useRef(null);
 
@@ -95,20 +96,23 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey, deleteAnn }: Lin
   }, [rawData, widthMap]);
 
   const zigzag = useMemo(() => {
-    const numZags = 5;
-    const zagDist = (axisBreakspcae - 3) / numZags;
+    if (axisBreakspace) {
+      const numZags = 5;
+      const zagDist = (axisBreakspace - 3) / numZags;
 
-    let curZig = heightMap;
-    let d = `M0,${curZig}`;
-    for (let i = 0; i < numZags; i++) {
-      curZig += zagDist;
-      d += i % 2 === 0 ? `L3,${curZig}` : `L-3,${curZig}`;
+      let curZig = heightMap;
+      let d = `M0,${curZig}`;
+      for (let i = 0; i < numZags; i++) {
+        curZig += zagDist;
+        d += i % 2 === 0 ? `L3,${curZig}` : `L-3,${curZig}`;
+      }
+
+      d += `L0,${heightMap + axisBreakspace}`;
+
+      return d;
     }
-
-    d += `L0,${heightMap + axisBreakspcae}`;
-
-    return d;
-  }, [heightMap]);
+    return null;
+  }, [axisBreakspace, heightMap]);
 
   useEffect(() => {
     const xAxis = d3.axisBottom(xScale).ticks(xTicks);
@@ -131,10 +135,10 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey, deleteAnn }: Lin
       d3
         .axisBottom(xScale)
         .ticks(xTicks)
-        .tickSize(heightMap + axisBreakspcae)
+        .tickSize(heightMap + axisBreakspace)
         .tickFormat('' as any) as any
     );
-  }, [data, widthMap, xScale, yScale, $lines, heightMap]);
+  }, [data, widthMap, xScale, yScale, $lines, heightMap, axisBreakspace]);
 
   const drag = useMemo(
     () =>
@@ -228,7 +232,7 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey, deleteAnn }: Lin
         </defs>
         <g transform={`translate(${margin.l}, ${margin.t})`}>
           <g
-            transform={`translate(0, ${heightMap + axisBreakspcae})`}
+            transform={`translate(0, ${heightMap + axisBreakspace})`}
             className="axes x-axis"
             ref={$xaxis}
           />
@@ -239,13 +243,13 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey, deleteAnn }: Lin
             <g className="xline" />
           </g>
 
-          <path d={zigzag} stroke="#333" fill="none" />
+          {zigzag && <path d={zigzag} stroke="#333" fill="none" />}
 
           <line
             x1={0}
             x2={widthMap + 5}
-            y1={heightMap + axisBreakspcae}
-            y2={heightMap + axisBreakspcae}
+            y1={heightMap + axisBreakspace}
+            y2={heightMap + axisBreakspace}
             stroke="rgba(0,0,0,0.8)"
             markerEnd="url(#arrow)"
           />
@@ -300,7 +304,7 @@ const AnnoLineChart = ({ margin, data: rawData, list, datumKey, deleteAnn }: Lin
               x1="0"
               y1="0"
               x2="0"
-              y2={heightMap - DRAG_PADDING + axisBreakspcae}
+              y2={heightMap - DRAG_PADDING + axisBreakspace}
               strokeWidth="3"
               stroke="var(--primary-color)"
             />
