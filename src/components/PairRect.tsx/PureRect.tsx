@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import useWindowSize from '../../utils/useResize';
 import { getDatasetInfo } from '../../utils/getType';

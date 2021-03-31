@@ -24,7 +24,6 @@ const BottomPanel = () => {
 
   const [index, setIndex] = useState<number>(0);
 
-  const [lineData, setLineData] = useState<number[]>([]);
   const [datum, setDatum] = useState<any>(null);
   // const update = useSelector((state: StateType) => state.basic.update);
   const dispatch = useDispatch();
@@ -53,7 +52,6 @@ const BottomPanel = () => {
 
   const getList = useCallback(() => dispatch(fetchLists()), [dispatch]);
   const setLevel = useCallback((level: number) => dispatch(setLevelAction(level)), [dispatch]);
-  const level = useSelector((state: StateType) => state.service.level);
   const updateBlock = useCallback((i) => dispatch(setIndexAction(i)), [dispatch]);
 
   useEffect(() => {
@@ -87,12 +85,6 @@ const BottomPanel = () => {
         });
     }
   }, [clientName, getList, setLevel, updateDatasize]);
-
-  useEffect(() => {
-    if (datum) {
-      setLineData(datum[items[index]] as number[]);
-    }
-  }, [datum, index]);
 
   // useEffect(() => {
   //   if (level === HTTP_LEVEL.client || level === HTTP_LEVEL.cpca) {

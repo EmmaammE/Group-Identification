@@ -36,9 +36,6 @@ interface GridMatrixProps {
 // 点的半径
 const R = 3;
 
-const isInCircle = (point: number[], x: number, y: number) =>
-  (point[0] - x) * (point[0] - x) + (point[1] - y) * (point[1] - y) <= R * R + 2;
-
 // const margin = { t: 50, r: 0, b: 0, l: 60 };
 const margin = { t: 0, r: 0, b: 0, l: 0 };
 // 格子之间的缝隙

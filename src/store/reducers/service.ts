@@ -498,13 +498,12 @@ export const onListAction = (count: number|null, clusterId: number|null, cpcaAlp
       }
     })
   } catch(err) {
+    console.error(err);
     dispatch({
       type: INIT_OR_UPDATE,
       data: {
         loading: false
       }
     })
-
-    alert('error')
   }
 }

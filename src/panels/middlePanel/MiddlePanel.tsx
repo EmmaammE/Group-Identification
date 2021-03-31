@@ -13,17 +13,13 @@ import { StateType } from '../../types/data';
 import {
   setLevelAction,
   onTypeUpdateOrInitAction,
-  defaultCount,
   onRoundAction,
   onListAction,
   onAllAlphaAction,
-  instance,
 } from '../../store/reducers/service';
 import HTTP_LEVEL from '../../utils/level';
 import ICON from '../../assets/convex.svg';
-import { getType, setType } from '../../utils/getType';
-import REFRESH from '../../assets/refresh.svg';
-import http from '../../utils/http';
+import { setType } from '../../utils/getType';
 import { setIndexAction } from '../../store/reducers/blockIndex';
 import IconUrl from '../../components/ui/getIcon';
 
@@ -125,7 +121,7 @@ function MiddlePanel() {
   );
 
   useEffect(() => {
-    setType(items[dataTypeIndex]);
+    setType(items[0]);
   }, []);
 
   useEffect(() => {

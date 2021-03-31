@@ -11,7 +11,7 @@ import { StateType } from './types/data';
 function App() {
   const loading = useSelector((state: StateType) => state.service.loading);
 
-  console.log('loading', loading);
+  // console.log('loading', loading);
   return (
     <div className="App">
       <ModalProvider>

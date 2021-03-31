@@ -21,30 +21,21 @@ interface RectData {
   height: number;
 }
 
-function getPixelRatio(context: any) {
-  const dpr = window.devicePixelRatio || 1;
-  const bsr =
-    context.webkitBackingStorePixelRatio ||
-    context.mozBackingStorePixelRatio ||
-    context.msBackingStorePixelRatio ||
-    context.oBackingStorePixelRatio ||
-    context.backingStorePixelRatio ||
-    1;
+// function getPixelRatio(context: any) {
+//   const dpr = window.devicePixelRatio || 1;
+//   const bsr =
+//     context.webkitBackingStorePixelRatio ||
+//     context.mozBackingStorePixelRatio ||
+//     context.msBackingStorePixelRatio ||
+//     context.oBackingStorePixelRatio ||
+//     context.backingStorePixelRatio ||
+//     1;
 
-  return dpr / bsr;
-}
-
-// const color = d3.scaleLinear<string>().domain([-0.3, 0, 0.3]).range(['#0aa6e9', '#fff', '#ea4d40']);
+//   return dpr / bsr;
+// }
 
 const rectWidth = 20;
 const rectHeight = 20;
-
-interface Pro {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
 
 const PairRect = ({ data, title, color, channel }: PairRectProps) => {
   const { dimension } = getDatasetInfo();
@@ -56,20 +47,11 @@ const PairRect = ({ data, title, color, channel }: PairRectProps) => {
   const WIDTH = rectWidth * columnCount;
   const HEIGHT = rectHeight * rowCount;
 
-  // const color = useMemo(() => {
-  //   const extent:number = Math.max(
-  //     Math.abs(Math.min(...data)),
-  //     Math.abs(Math.max(...data))
-  //   )
-  //   return d3.scaleLinear<string>().domain([-extent, 0, extent]).range(['#c21317', '#fff', '#1365c2']);
-  // }, [])
-
   const $svg = useRef(null);
   const $chart = useRef(null);
   const $rect = useRef(null);
 
   const [bound, setBound] = useState<any>({ width: 0, height: 0 });
-  const [scale, setScale] = useState<number>(1);
   const dispatch = useDispatch();
 
   const propertyIndex = useSelector((state: StateType) => state.basic.propertyIndex);
@@ -78,8 +60,6 @@ const PairRect = ({ data, title, color, channel }: PairRectProps) => {
   const xScale = d3.scaleLinear().domain([0, WIDTH]).range([0, bound.width]);
 
   const yScale = d3.scaleLinear().domain([0, HEIGHT]).range([0, bound.height]);
-
-  // const dataScale = d3.scaleLinear().domain(d3.extent(data) as any).range([-0.5,0.5]);
 
   const rectHeightMap = yScale(rectHeight);
   const rectWidthMap = xScale(rectWidth);
@@ -148,7 +128,6 @@ const PairRect = ({ data, title, color, channel }: PairRectProps) => {
     propertyIndex,
     xScale,
     yScale,
-    scale,
     rectWidthMap,
     rectHeightMap,
     color,

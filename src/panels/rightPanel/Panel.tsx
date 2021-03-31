@@ -66,7 +66,7 @@ function RightPanel() {
   const labelNames = useSelector((state: StateType) => state.basic.labelNames);
 
   const dispatch = useDispatch();
-  const setIndex = useCallback((i) => dispatch(setIndexAction(i)), [dispatch]);
+  // const setIndex = useCallback((i) => dispatch(setIndexAction(i)), [dispatch]);
 
   const getList = useCallback(() => dispatch(fetchLists()), [dispatch]);
 
@@ -90,7 +90,7 @@ function RightPanel() {
   const [annoListStatus, setAnnoListStatus] = useState<number[]>([]);
 
   const setLevel = useCallback((level: number) => dispatch(setLevelAction(level)), [dispatch]);
-  const level = useSelector((state: StateType) => state.service.level);
+  // const level = useSelector((state: StateType) => state.service.level);
 
   const [strokeStatus, setStrokeStatus] = useState(0);
   const [strokeId, setStrokeId] = useState(-1);

@@ -1,20 +1,18 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import * as d3 from 'd3';
 import { useDispatch, useSelector } from 'react-redux';
 import Heatmap from './Heatmap';
 import { StateType } from '../../types/data';
-import { getCPCA, instance, loading, setChosePointAction } from '../../store/reducers/service';
+import { getCPCA, setChosePointAction } from '../../store/reducers/service';
 import { setSizeAction, setHeteroPointsAction } from '../../store/reducers/basic';
 import { setIndexAction } from '../../store/reducers/blockIndex';
-import HTTP_LEVEL from '../../utils/level';
-import usePrevious from '../../utils/usePrevious';
 import { getType } from '../../utils/getType';
 
 export const WIDTH = 60;
 export const HEIGHT = 60;
 
 export const MARGIN = { top: 0, right: 0, bottom: 0, left: 0 };
-// const color = d3.scaleLinear<string>().domain([0, 0.2, 1]).range(['#fff', '#ccc', '#666']);
+
 const areEqual = (first: number[][], second: number[][]) => {
   if (first.length !== second.length) {
     return false;
@@ -28,9 +26,6 @@ const areEqual = (first: number[][], second: number[][]) => {
       return false;
     }
   }
-  // if(JSON.stringify(first)!==JSON.stringify(second)) {
-  //   return false;
-  // }
   return true;
 };
 interface HeatmapWrapperProps {
@@ -73,8 +68,6 @@ const HeatmapWrapper = ({ points, x, y, nOfCluster }: HeatmapWrapperProps) => {
     (dataIndex: number[], alpha: number | null) => dispatch(getCPCA(dataIndex, alpha)),
     [dispatch]
   );
-
-  // const loading = useSelector((state: StateType) => state.service.loading);
 
   const densityData = useMemo(
     () =>
