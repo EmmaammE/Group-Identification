@@ -135,7 +135,7 @@ const GridMatrix = ({
 
   const handleResize = useCallback(() => {
     const { offsetWidth, offsetHeight } = ($wrapper as any).current;
-    const size = Math.min(offsetWidth, offsetHeight);
+    const size = Math.min(offsetWidth - 5, offsetHeight);
     if (xLabelsArr.length === 0) {
       setWidth(size);
       setHeight(size);
@@ -638,6 +638,7 @@ const GridMatrix = ({
               legends={['0%', '100%']}
               width="50px"
               height={25}
+              ratio={['0%', '50%', '100%']}
             />
           </div>
         </div>
